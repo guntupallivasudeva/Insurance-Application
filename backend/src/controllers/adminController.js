@@ -98,12 +98,15 @@ const adminController = {
         if (!password || password.length < 6) {
             return res.status(400).json({ success: false, message: 'Password is required and must be at least 6 characters.' });
         }
+        // Check for duplicate email
+        const existingAgent = await Agent.findOne({ email });
+        if (existingAgent) {
+            return res.status(409).json({ success: false, message: 'Agent with this email already exists.' });
+        }
         const agent = new Agent({ name, email, password });
         await agent.save();
-        // Generate JWT token for agent
-        const jwt = (await import('jsonwebtoken')).default;
-        const token = jwt.sign({ userId: agent._id, role: agent.role }, process.env.JWT_SECRET, { expiresIn: '8h' });
-        res.json({ success: true, agent: { _id: agent._id, name: agent.name, email: agent.email, role: agent.role }, token });
+        // Only return agent info, no token
+        res.json({ success: true, agent: { _id: agent._id, name: agent.name, email: agent.email, role: agent.role } });
     },
 
 

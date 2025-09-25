@@ -1,11 +1,7 @@
 import express from 'express';
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@as-integrations/express5';
-import { typeDefs,resolvers } from './graphql/schema.js';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { authMiddleware } from './middleware/authMiddleware.js';
 import adminRoutes from './routes/adminRoutes.js';
 // import paymentRoutes from './routes/paymentRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -24,51 +20,28 @@ app.use(cors());
 //Global middleware for parse JSON bodies for all routes
 app.use(express.json());
 
-const server = new ApolloServer({
-    typeDefs,
-    resolvers
-});
 
 
 
-const startServer = async () => {
-    await server.start();
-    
-    // integrate account rest api routes with /api/v1 base URL
-    app.use('/api/v1/users', userRoutes);
-    app.use('/api/v1/admin', adminRoutes);
-    // app.use('/api/v1/payments', paymentRoutes);
-    app.use('/api/v1/customers', customerRoutes);
-    app.use('/api/v1/agents', agentRoutes);
-    
-    // app.use('/api/v1/agents', agentRoutes);
-    // app.use('/api/v1/policies', policyRoutes);
-    // app.use('/api/v1/claims', claimRoutes);
+// integrate account rest api routes with /api/v1 base URL
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/admin', adminRoutes);
+// app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/customers', customerRoutes);
+app.use('/api/v1/agents', agentRoutes);
 
-    //use express middleware to integrate apollo server with express server
-    app.use(
-        '/graphql',
-        expressMiddleware(server, {
-            context: async ({ req ,res}) =>
-            { 
-                authMiddleware(req,res,()=>{ })
-                return { user: req.user };
-             }
-        }
-    ));
+// app.use('/api/v1/agents', agentRoutes);
+// app.use('/api/v1/policies', policyRoutes);
+// app.use('/api/v1/claims', claimRoutes);
 
-    mongoose.connect(process.env.MONGODB_URL)
+mongoose.connect(process.env.MONGODB_URL)
     .then(() => {
         console.log("Connected to MongoDB");
         const PORT = process.env.PORT || 8000;
         app.listen(PORT, () => {
-            console.log(`Server is ready at http://localhost:${PORT}/graphql`);
+            console.log(`Server is ready at http://localhost:${PORT}/api/v1`);
         });
     })
     .catch((error) => {
         console.error("Error connecting to MongoDB:", error);
     });
-};
-
-//start the express server
-startServer();

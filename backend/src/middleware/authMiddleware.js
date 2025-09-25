@@ -38,17 +38,20 @@ export const authenticateToken = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Optional: Verify user or agent still exists
+        // Optional: Verify user, agent, or admin still exists
         let user = await User.findById(decoded.userId);
         if (!user) {
-            // Try Agent collection if not found in User
             const Agent = (await import('../models/agent.js')).default;
             user = await Agent.findById(decoded.userId);
         }
         if (!user) {
+            const Admin = (await import('../models/admin.js')).default;
+            user = await Admin.findById(decoded.userId);
+        }
+        if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'User/Agent not found'
+                message: 'User/Agent/Admin not found'
             });
         }
 

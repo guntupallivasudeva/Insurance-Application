@@ -49,4 +49,5 @@ userSchema.methods.comparePassword = async function (CustomerPassword) {
     return await bcrypt.compare(CustomerPassword, this.password);
 };
 
-export default mongoose.model('User', userSchema);
+// This model is now for customers only. Collection name: 'customers'.
+export default mongoose.model('Customer', userSchema, 'customers');
