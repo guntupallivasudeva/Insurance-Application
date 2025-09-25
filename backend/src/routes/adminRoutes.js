@@ -2,21 +2,12 @@
 import express from 'express';
 import adminController from '../controllers/adminController.js';
 import { authenticateToken, authorizeRoles } from '../middleware/authMiddleware.js';
-import Admin from '../models/admin.js';
 
 const router = express.Router();
 const adminAuth = [authenticateToken, authorizeRoles('Admin')];
 
 
 // Temporary debug endpoint to list all admins
-router.get('/debug-list-admins', async (req, res) => {
-    try {
-        const admins = await Admin.find({}, { password: 0 });
-        res.json({ success: true, admins });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
 
 // Policy management routes
 router.post('/addpolicies', adminController.addPolicy); // Temporarily remove auth for testing
