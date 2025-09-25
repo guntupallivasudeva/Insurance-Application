@@ -105,6 +105,58 @@ const customerController = {
       nominee: p.nominee
     }));
     res.json({ success: true, policies: result });
+  },
+
+  // Cancel a policy
+  async cancelPolicy(req, res) {
+    try {
+      const { userPolicyId } = req.body;
+      const userId = req.user.userId;
+
+      // Find the user policy and ensure it belongs to the authenticated user
+      const userPolicy = await UserPolicy.findOne({
+        _id: userPolicyId,
+        userId: userId
+      });
+
+      if (!userPolicy) {
+        return res.status(404).json({ 
+          success: false, 
+          message: 'User policy not found or you do not have permission to cancel this policy' 
+        });
+      }
+
+      if (userPolicy.status === 'Cancelled') {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Policy is already cancelled.' 
+        });
+      }
+
+      if (userPolicy.status !== 'Approved') {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Only approved policies can be cancelled.' 
+        });
+      }
+
+      // Update policy status to cancelled
+      userPolicy.status = 'Cancelled';
+      await userPolicy.save();
+
+      res.json({
+        success: true,
+        userPolicyId: userPolicy._id,
+        status: userPolicy.status,
+        message: 'Policy cancelled successfully'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Error cancelling policy',
+        error: error.message
+      });
+    }
   }
 };
 

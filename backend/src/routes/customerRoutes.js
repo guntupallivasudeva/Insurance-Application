@@ -11,5 +11,6 @@ router.post('/pay', customerAuth, customerController.makePayment);
 router.get('/payments', customerAuth, customerController.paymentHistory);
 router.get('/mypolicies', customerAuth, customerController.myPolicies);
 router.post('/raiseclaim', customerAuth, customerController.raiseClaim);
+router.post('/cancelpolicy', customerAuth, customerController.cancelPolicy);
 
 export default router;

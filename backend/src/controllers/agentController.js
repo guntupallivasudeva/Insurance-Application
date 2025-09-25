@@ -1,6 +1,9 @@
 import Agent from '../models/agent.js';
 import jwt from 'jsonwebtoken';
 import Joi from 'joi';
+import UserPolicy from '../models/userPolicy.js';
+import Payment from '../models/payment.js';
+import Claim from '../models/claim.js';
 
 const agentLoginSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -35,11 +38,6 @@ export const loginAgent = async (req, res) => {
     res.status(500).json({ error: 'Failed to login agent: ' + err.message });
   }
 };
-// Agent Controller
-// Handles viewing assigned policies, approving policies, adding claims
-import UserPolicy from '../models/userPolicy.js';
-import Payment from '../models/payment.js';
-import Claim from '../models/claim.js';
 
 const agentController = {
   // Approve claim (agent)
@@ -58,27 +56,28 @@ const agentController = {
     }
     res.json({ success: true, claim });
   },
+
   // View policies assigned to agent
   async assignedPolicies(req, res) {
-  // Allow retrieval by agentId from query or authenticated agent
-  const agentId = req.query.agentId || req.user.userId;
-  const PolicyProduct = (await import('../models/policyProduct.js')).default;
-  // Find products assigned to agent
-  const assignedProducts = await PolicyProduct.find({ assignedAgentId: agentId });
-  const productIds = assignedProducts.map(p => p._id);
-  // Find policies assigned via product or directly via UserPolicy.assignedAgentId
-  const policies = await UserPolicy.find({
-    $or: [
-      { policyProductId: { $in: productIds } },
-      { assignedAgentId: agentId }
-    ]
-  }).populate('policyProductId');
-  // Only return policy name and policy id
-  const result = policies.map(p => ({
-    policyId: p._id,
-    policyName: p.policyProductId?.title || ''
-  }));
-  res.json(result);
+    // Allow retrieval by agentId from query or authenticated agent
+    const agentId = req.query.agentId || req.user.userId;
+    const PolicyProduct = (await import('../models/policyProduct.js')).default;
+    // Find products assigned to agent
+    const assignedProducts = await PolicyProduct.find({ assignedAgentId: agentId });
+    const productIds = assignedProducts.map(p => p._id);
+    // Find policies assigned via product or directly via UserPolicy.assignedAgentId
+    const policies = await UserPolicy.find({
+      $or: [
+        { policyProductId: { $in: productIds } },
+        { assignedAgentId: agentId }
+      ]
+    }).populate('policyProductId');
+    // Only return policy name and policy id
+    const result = policies.map(p => ({
+      policyId: p._id,
+      policyName: p.policyProductId?.title || ''
+    }));
+    res.json(result);
   },
 
   // View payments for assigned policies
