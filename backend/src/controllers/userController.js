@@ -9,7 +9,7 @@ const userSchema = Joi.object({
     name: Joi.string().min(3).max(30).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
-    role: Joi.string().valid('Customer', 'Admin', 'Agent').optional()
+    role: Joi.string().valid('Customer', 'Admin', 'Agent').optional(),
 });
 const loginSchema = Joi.object({
     email: Joi.string().email().required(),
@@ -23,7 +23,44 @@ export const registerUser = async (req, res) => {
     try {
         const { error } = userSchema.validate(req.body);
         if (error) {
-            return res.status(400).json({ error: error.details[0].message });
+            let errorMessage = error.details[0].message;
+            let errorCode = 'VALIDATION_ERROR';
+            let suggestion = '';
+            
+            if (errorMessage.includes('name')) {
+                if (errorMessage.includes('required')) {
+                    errorMessage = 'Name is required';
+                    suggestion = 'Please enter your full name';
+                } else if (errorMessage.includes('length')) {
+                    errorMessage = 'Name must be between 3 and 30 characters';
+                    suggestion = 'Please enter a valid name';
+                }
+                errorCode = 'INVALID_NAME';
+            } else if (errorMessage.includes('email')) {
+                if (errorMessage.includes('required')) {
+                    errorMessage = 'Email address is required';
+                    suggestion = 'Please enter your email address';
+                } else {
+                    errorMessage = 'Please enter a valid email address';
+                    suggestion = 'Email should be in format: user@example.com';
+                }
+                errorCode = 'INVALID_EMAIL';
+            } else if (errorMessage.includes('password')) {
+                if (errorMessage.includes('required')) {
+                    errorMessage = 'Password is required';
+                    suggestion = 'Please create a password';
+                } else {
+                    errorMessage = 'Password must be at least 6 characters long';
+                    suggestion = 'Please choose a stronger password';
+                }
+                errorCode = 'INVALID_PASSWORD';
+            }
+            
+            return res.status(400).json({ 
+                error: errorMessage,
+                errorCode,
+                suggestion
+            });
         }
 
         const role = req.body.role || 'Customer';
@@ -39,7 +76,11 @@ export const registerUser = async (req, res) => {
         // Check if user already exists in the respective collection
         const existingUser = await Model.findOne({ email: req.body.email });
         if (existingUser) {
-            return res.status(409).json({ error: `${role} with this email already exists` });
+            return res.status(409).json({ 
+                error: `${role} account with this email already exists`,
+                errorCode: 'EMAIL_ALREADY_EXISTS',
+                suggestion: 'Please use a different email address or try logging in'
+            });
         }
 
         const newUser = new Model({
@@ -72,7 +113,25 @@ export const loginUser = async (req, res) => {
         // Validate input
         const { error } = loginSchema.validate({ email, password });
         if (error) {
-            return res.status(400).json({ error: error.details[0].message });
+            let errorMessage = error.details[0].message;
+            let errorCode = 'VALIDATION_ERROR';
+            let suggestion = '';
+            
+            if (errorMessage.includes('email')) {
+                errorMessage = 'Please enter a valid email address';
+                errorCode = 'INVALID_EMAIL_FORMAT';
+                suggestion = 'Email should be in format: user@example.com';
+            } else if (errorMessage.includes('password')) {
+                errorMessage = 'Password must be at least 6 characters long';
+                errorCode = 'INVALID_PASSWORD_LENGTH';
+                suggestion = 'Please enter a password with at least 6 characters';
+            }
+            
+            return res.status(400).json({ 
+                error: errorMessage,
+                errorCode,
+                suggestion
+            });
         }
 
         let Model;
@@ -87,13 +146,48 @@ export const loginUser = async (req, res) => {
         // Check if user exists in the respective collection
         const user = await Model.findOne({ email });
         if (!user) {
-            return res.status(404).json({ error: `${role || 'Customer'} not found` });
+            // Let's check if user exists with this email in other role collections
+            let existsInOtherRole = null;
+            const roles = ['Customer', 'Agent', 'Admin'];
+            
+            for (const checkRole of roles) {
+                if (checkRole !== role) {
+                    let CheckModel;
+                    if (checkRole === 'Admin') CheckModel = Admin;
+                    else if (checkRole === 'Agent') CheckModel = Agent;
+                    else CheckModel = Customer;
+                    
+                    const existingUser = await CheckModel.findOne({ email });
+                    if (existingUser) {
+                        existsInOtherRole = checkRole;
+                        break;
+                    }
+                }
+            }
+            
+            if (existsInOtherRole) {
+                return res.status(400).json({ 
+                    error: `This email is registered as ${existsInOtherRole}. Please select the correct account type`,
+                    errorCode: 'WRONG_ROLE_SELECTED',
+                    suggestion: `Select "${existsInOtherRole}" from the dropdown and try again`
+                });
+            } else {
+                return res.status(404).json({ 
+                    error: `No ${role || 'Customer'} account found with this email address`,
+                    errorCode: 'USER_NOT_FOUND',
+                    suggestion: `Please check your email or register as a ${role || 'Customer'}`
+                });
+            }
         }
 
         // Check password
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ 
+                error: "Invalid password. Please check your password and try again",
+                errorCode: 'INVALID_CREDENTIALS',
+                suggestion: "Make sure your password is correct"
+            });
         }
 
         // Generate JWT token
