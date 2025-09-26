@@ -40,6 +40,23 @@ export const loginAgent = async (req, res) => {
 };
 
 const agentController = {
+  // Get details for a specific claim by claimId (agent)
+  async getClaimById(req, res) {
+    try {
+      const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
+      if (!claim) {
+        return res.status(404).json({ success: false, message: 'Claim not found' });
+      }
+      // Only allow agent to view claim if they are assigned to the policy
+      const userPolicy = await UserPolicy.findById(claim.userPolicyId);
+      if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      res.json({ success: true, claim });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
   // Approve claim (agent)
   async approveClaim(req, res) {
     const { claimId } = req.body;
@@ -114,7 +131,37 @@ const agentController = {
       status: 'Pending'
     });
     res.json({ success: true, claim });
-  }
+  },
+   // View all claims for policies assigned to the agent
+  async assignedClaims(req, res) {
+    try {
+      // Find all user policies where this agent is assigned
+      const userPolicies = await UserPolicy.find({ assignedAgentId: req.user.userId });
+      const userPolicyIds = userPolicies.map(up => up._id);
+      // Find all claims for these user policies
+      const claims = await Claim.find({ userPolicyId: { $in: userPolicyIds } }).populate('userId userPolicyId');
+      res.json({ success: true, claims });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+  // Get details for a specific claim by claimId (agent)
+  async getClaimById(req, res) {
+    try {
+      const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
+      if (!claim) {
+        return res.status(404).json({ success: false, message: 'Claim not found' });
+      }
+      // Only allow agent to view claim if they are assigned to the policy
+      const userPolicy = await UserPolicy.findById(claim.userPolicyId);
+      if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      res.json({ success: true, claim });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
 };
 
 export default agentController;

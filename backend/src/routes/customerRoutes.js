@@ -12,5 +12,11 @@ router.get('/payments', customerAuth, customerController.paymentHistory);
 router.get('/mypolicies', customerAuth, customerController.myPolicies);
 router.post('/raiseclaim', customerAuth, customerController.raiseClaim);
 router.post('/cancelpolicy', customerAuth, customerController.cancelPolicy);
+// Get a policy by its ID
+router.get('/policy/:id', customerAuth, customerController.getPolicyById);
+// Get details for a specific claim by claimId
+router.get('/claim/:id', customerAuth, customerController.getClaimById);
+
+
 
 export default router;

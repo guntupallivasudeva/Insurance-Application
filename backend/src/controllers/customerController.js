@@ -3,7 +3,6 @@
 import PolicyProduct from '../models/policyProduct.js';
 import UserPolicy from '../models/userPolicy.js';
 import Payment from '../models/payment.js';
-import User from '../models/User.js';
 import Joi from 'joi';
 
 const purchaseSchema = Joi.object({
@@ -23,6 +22,23 @@ const paymentSchema = Joi.object({
 });
 
 const customerController = {
+  // Get details for a specific claim by claimId (customer)
+  async getClaimById(req, res) {
+    try {
+      const Claim = (await import('../models/claim.js')).default;
+      const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
+      if (!claim) {
+        return res.status(404).json({ success: false, message: 'Claim not found' });
+      }
+      // Only allow customer to view claim if they are the owner
+      if (String(claim.userId) !== String(req.user.userId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      res.json({ success: true, claim });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
   // Raise a claim for a policy
   async raiseClaim(req, res) {
     const { userPolicyId, incidentDate, description, amountClaimed } = req.body;
@@ -156,6 +172,19 @@ const customerController = {
         message: 'Error cancelling policy',
         error: error.message
       });
+    }
+  },
+    // Get a policy by its ID (customer)
+  async getPolicyById(req, res) {
+    try {
+      const { id } = req.params;
+      const policy = await PolicyProduct.findById(id);
+      if (!policy) {
+        return res.status(404).json({ success: false, message: 'Policy not found' });
+      }
+      res.json({ success: true, policy });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
     }
   }
 };

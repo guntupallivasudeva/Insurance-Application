@@ -7,6 +7,7 @@ import Agent from '../models/agent.js';
 import PolicyProduct from '../models/policyProduct.js';
 import Joi from 'joi';
 
+
 // Validation schemas
 const createPolicySchema = Joi.object({
     code: Joi.string().trim().min(2).max(20).required(),
@@ -45,6 +46,68 @@ const adminController = {
             }
         }
         res.json({ success: true, claim });
+    },
+        // Get last N audit logs (admin only)
+        async getAuditLogs(req, res) {
+            try {
+                const AuditLog = (await import('../models/auditLog.js')).default;
+                const limit = parseInt(req.query.limit) || 20;
+                const logs = await AuditLog.find().sort({ timestamp: -1 }).limit(limit);
+                res.json({ success: true, logs });
+            } catch (err) {
+                res.status(500).json({ success: false, error: err.message });
+            }
+        },
+        // Get minimal KPIs summary (admin only)
+        async getSummaryKPIs(req, res) {
+            try {
+                const Claim = (await import('../models/claim.js')).default;
+                const usersCount = await User.countDocuments();
+                const policiesSold = await UserPolicy.countDocuments({ status: 'Approved' });
+                const claimsPending = await Claim.countDocuments({ status: 'Pending' });
+                const claimsApproved = await Claim.countDocuments({ status: 'Approved' });
+                const agentsCount = await Agent.countDocuments();
+                const paymentsPending = await Payment.countDocuments({ status: 'Pending' });
+                const paymentsDone = await Payment.countDocuments({ status: 'Done' });
+                const totalPayments = await Payment.aggregate([
+                    { $group: { _id: null, total: { $sum: "$amount" } } }
+                ]);
+                res.json({
+                    success: true,
+                    usersCount,
+                    policiesSold,
+                    claimsPending,
+                    claimsApproved,
+                    agentsCount,
+                    paymentsPending,
+                    paymentsDone,
+                    totalPayments: totalPayments[0]?.total || 0
+                });
+            } catch (err) {
+                res.status(500).json({ success: false, error: err.message });
+            }
+        },
+        // List all agents (admin only)
+        async allAgents(req, res) {
+            try {
+                const agents = await Agent.find();
+                res.json({ success: true, agents });
+            } catch (err) {
+                res.status(500).json({ success: false, error: err.message });
+            }
+        },
+    // Get details for a specific claim by claimId (admin)
+    async getClaimById(req, res) {
+        try {
+            const Claim = (await import('../models/claim.js')).default;
+            const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
+            if (!claim) {
+                return res.status(404).json({ success: false, message: 'Claim not found' });
+            }
+            res.json({ success: true, claim });
+        } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
     },
     // Approve a policy (admin)
     async approvePolicy(req, res) {
@@ -338,7 +401,7 @@ const adminController = {
                 error: error.message
             });
         }
-    }
+    },
 };
 
 export default adminController;
