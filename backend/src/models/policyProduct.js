@@ -10,6 +10,7 @@ const PolicyProductSchema = new mongoose.Schema({
     ref: 'Agent',
     default: null
   },
+  // (Removed multi-agent support; using single assignedAgentId / assignedAgentName)
   code: 
   { 
     type: String, 
@@ -41,6 +42,11 @@ const PolicyProductSchema = new mongoose.Schema({
     type: Number, 
     default: 0 
     }, // minimum coverage amount
+  maxSumInsured:
+  {
+    type: Number,
+    default: null
+  }, // optional maximum coverage amount
     createdAt: 
     { 
       type: Date,

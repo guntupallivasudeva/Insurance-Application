@@ -53,9 +53,9 @@ export class AdminService {
     localStorage.setItem('admin_token', token);
   }
 
-  // Get token from localStorage
+  // Get token from localStorage (fallback to generic user token)
   getToken(): string | null {
-    return localStorage.getItem('admin_token');
+    return localStorage.getItem('admin_token') || localStorage.getItem('token');
   }
 
   // Remove token from localStorage
@@ -93,15 +93,56 @@ export class AdminService {
   // Get authorization headers for admin API calls
   private getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
   }
 
   // Admin API methods using the admin middleware and controller
   getAllPolicies(): Observable<any> {
     return this.http.get(`${this.adminApiUrl}/getpolicies`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getPolicyById(id: string): Observable<any> {
+    return this.http.get(`${this.adminApiUrl}/policy/${id}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  addPolicy(payload: {
+    code: string;
+    title: string;
+    description: string;
+    premium: number;
+    termMonths: number;
+    minSumInsured?: number;
+    maxSumInsured?: number;
+  }): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/addpolicies`, payload, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updatePolicy(id: string, payload: Partial<{
+    code: string;
+    title: string;
+    description: string;
+    premium: number;
+    termMonths: number;
+    minSumInsured: number;
+    maxSumInsured: number;
+  }>): Observable<any> {
+    return this.http.put(`${this.adminApiUrl}/updatepolicies/${id}`, payload, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  deletePolicy(id: string): Observable<any> {
+    return this.http.delete(`${this.adminApiUrl}/deletepolicies/${id}`, {
       headers: this.getAuthHeaders()
     });
   }
@@ -112,7 +153,19 @@ export class AdminService {
     });
   }
 
+  // Optionally filter pending claims client-side until a dedicated endpoint exists
+  getPendingClaims(): Observable<any> {
+    return this.getAllClaims();
+  }
+
   getAllCustomers(): Observable<any> {
+    return this.http.get(`${this.adminApiUrl}/customerdetails`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  // Aggregated customer details (customer + policies + payments)
+  getAllCustomerDetails(): Observable<any> {
     return this.http.get(`${this.adminApiUrl}/customerdetails`, {
       headers: this.getAuthHeaders()
     });
@@ -120,6 +173,30 @@ export class AdminService {
 
   getAllAgents(): Observable<any> {
     return this.http.get(`${this.adminApiUrl}/agents`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  createAgent(payload: { name: string; email: string; password: string; branch?: string; phone?: string; agentCode?: string }): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/createagent`, payload, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateAgent(id: string, payload: Partial<{ name: string; email: string; password: string; branch?: string; phone?: string; agentCode?: string }>): Observable<any> {
+    return this.http.put(`${this.adminApiUrl}/updateagent/${id}`, payload, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  deleteAgent(id: string): Observable<any> {
+    return this.http.delete(`${this.adminApiUrl}/deleteagent/${id}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getAllUserPolicies(): Observable<any> {
+    return this.http.get(`${this.adminApiUrl}/userpolicies`, {
       headers: this.getAuthHeaders()
     });
   }
@@ -133,6 +210,42 @@ export class AdminService {
   // Test admin authentication by calling a protected endpoint
   testAdminAuth(): Observable<any> {
     return this.http.get(`${this.adminApiUrl}/summary`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  approveClaim(claimId: string): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/approveclaim`, { claimId, status: 'Approved' }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  rejectClaim(claimId: string): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/approveclaim`, { claimId, status: 'Rejected' }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateClaim(id: string, payload: Partial<{ incidentDate: string | Date; description: string; amountClaimed: number; decisionNotes: string }>): Observable<any> {
+    return this.http.put(`${this.adminApiUrl}/claim/${id}`, payload, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  approveUserPolicy(userPolicyId: string): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/approvepolicy`, { userPolicyId }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  assignPolicyToAgent(policyProductId: string, agentId: string): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/assignpolicy`, { policyProductId, agentId }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+  
+  unassignPolicyFromAgent(policyProductId: string): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/unassign-policy`, { policyProductId }, {
       headers: this.getAuthHeaders()
     });
   }

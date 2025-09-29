@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AdminLoginRequest } from '../../services/admin.service';
 
@@ -11,7 +11,7 @@ import { AdminService, AdminLoginRequest } from '../../services/admin.service';
   templateUrl: './admin-login.html'
 })
 export class AdminLogin {
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService, private router: Router) {}
   formData = {
     email: '',
     password: ''
@@ -66,27 +66,9 @@ export class AdminLogin {
           this.adminService.setAdminData(response.user);
           
           console.log('Admin logged in successfully:', response.user);
-          
-          // Test admin authentication by calling a protected endpoint
-          this.adminService.testAdminAuth().subscribe({
-            next: (authTestResponse) => {
-              console.log('Admin authentication test successful:', authTestResponse);
-              
-              // Navigate to admin dashboard after successful auth test
-              setTimeout(() => {
-                // TODO: Implement navigation to admin dashboard
-                console.log('Redirect to admin dashboard');
-                console.log('Stored admin data:', this.adminService.getAdminData());
-                console.log('Admin token working with backend middleware');
-              }, 1500);
-            },
-            error: (authError) => {
-              console.error('Admin authentication test failed:', authError);
-              this.errorMessage = 'Authentication successful but admin access denied. Please contact administrator.';
-              // Clear stored data if auth test fails
-              this.adminService.logout();
-            }
-          });
+
+          // Immediately navigate to admin dashboard as requested
+          this.router.navigate(['/admin-dashboard']);
         } else {
           // Handle error response
           this.errorMessage = (response as any).error || 'Login failed. Please try again.';

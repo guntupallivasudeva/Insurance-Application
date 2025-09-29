@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import Agent from '../models/agent.js';
 import PolicyProduct from '../models/policyProduct.js';
 import Joi from 'joi';
+import Counter from '../models/counter.js';
 
 const createPolicySchema = Joi.object({
     code: Joi.string().trim().min(2).max(20).required(),
@@ -13,7 +14,15 @@ const createPolicySchema = Joi.object({
     description: Joi.string().trim().min(0).max(500).required(),
     premium: Joi.number().positive().required(),
     termMonths: Joi.number().integer().min(1).max(600).required(),
-    minSumInsured: Joi.number().min(0).default(0)
+    minSumInsured: Joi.number().min(0).default(0),
+    maxSumInsured: Joi.number().min(0).allow(null)
+}).custom((value, helpers) => {
+    if (value.maxSumInsured != null && value.minSumInsured != null) {
+        if (value.maxSumInsured < value.minSumInsured) {
+            return helpers.error('any.invalid', { message: 'maxSumInsured must be greater than or equal to minSumInsured' });
+        }
+    }
+    return value;
 });
 
 const updatePolicySchema = Joi.object({
@@ -24,6 +33,29 @@ const updatePolicySchema = Joi.object({
     termMonths: Joi.number().integer().min(1).max(600).optional(),
     minSumInsured: Joi.number().min(0).optional(),
     maxSumInsured: Joi.number().min(0).optional()
+}).min(1);
+
+// Agent validation schemas
+const createAgentSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100).required(),
+    email: Joi.string().trim().email().required(),
+    password: Joi.string().min(6).optional().default('agent123'),
+    agentCode: Joi.string().trim().pattern(/^AGT\d{2,}$/i).optional()
+});
+
+const updateAgentSchema = Joi.object({
+    name: Joi.string().trim().min(2).max(100).optional(),
+    email: Joi.string().trim().email().optional(),
+    password: Joi.string().min(6).optional(),
+    agentCode: Joi.string().trim().pattern(/^AGT\d{2,}$/i).optional()
+}).min(1);
+
+// Claim update validation (admin can edit details but not owner, policy, or status here)
+const updateClaimSchema = Joi.object({
+    incidentDate: Joi.date().optional(),
+    description: Joi.string().trim().min(1).max(1000).optional(),
+    amountClaimed: Joi.number().positive().optional(),
+    decisionNotes: Joi.string().trim().allow('', null).optional()
 }).min(1);
 
 const adminController = {
@@ -63,6 +95,29 @@ const adminController = {
                 }
             }
             res.json({ success: true, claim });
+        } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    },
+    async updateClaim(req, res) {
+        try {
+            const { id } = req.params;
+            const { error, value } = updateClaimSchema.validate(req.body);
+            if (error) {
+                return res.status(400).json({ success: false, message: 'Validation error', errors: error.details.map(d => d.message) });
+            }
+            const Claim = (await import('../models/claim.js')).default;
+            const claim = await Claim.findById(id);
+            if (!claim) {
+                return res.status(404).json({ success: false, message: 'Claim not found' });
+            }
+            // Apply allowed updates
+            ['incidentDate', 'description', 'amountClaimed', 'decisionNotes'].forEach((k) => {
+                if (value[k] !== undefined) claim[k] = value[k];
+            });
+            await claim.save();
+            const populated = await Claim.findById(id).populate('userId userPolicyId decidedByAgentId');
+            res.json({ success: true, claim: populated });
         } catch (err) {
             res.status(500).json({ success: false, error: err.message });
         }
@@ -180,20 +235,113 @@ const adminController = {
             res.status(500).json({ success: false, error: err.message });
         }
     },
+    async unassignPolicyAgent(req, res) {
+        try {
+            const { policyProductId } = req.body;
+            if (!policyProductId) {
+                return res.status(400).json({ success: false, message: 'policyProductId is required' });
+            }
+            const policyProduct = await PolicyProduct.findById(policyProductId);
+            if (!policyProduct) return res.status(404).json({ success: false, message: 'Policy product not found' });
+            policyProduct.assignedAgentId = null;
+            policyProduct.assignedAgentName = null;
+            await policyProduct.save();
+            res.json({
+                success: true,
+                message: 'Agent unassigned from policy product',
+                policyProductId: policyProduct._id
+            });
+        } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    },
     async createAgent(req, res) {
         try {
-            const { name, email, password } = req.body;
-            if (!password || password.length < 6) {
-                return res.status(400).json({ success: false, message: 'Password is required and must be at least 6 characters.' });
+            const { error, value } = createAgentSchema.validate(req.body);
+            if (error) {
+                return res.status(400).json({ success: false, message: 'Validation error', errors: error.details.map(d => d.message) });
             }
+            const { name, email, password, agentCode } = value;
             const existingAgent = await Agent.findOne({ email });
             if (existingAgent) {
                 return res.status(409).json({ success: false, message: 'Agent with this email already exists.' });
             }
-            const agent = new Agent({ name, email, password });
+            // If code provided, ensure uniqueness and use it; else auto-generate from counter
+            if (agentCode) {
+                const codeExists = await Agent.findOne({ agentCode });
+                if (codeExists) {
+                    return res.status(409).json({ success: false, message: 'Agent code already exists.' });
+                }
+            }
+
+            let finalCode = agentCode || null;
+            if (!finalCode) {
+                const counter = await Counter.findByIdAndUpdate(
+                    'agentCode',
+                    { $inc: { seq: 1 } },
+                    { upsert: true, new: true }
+                );
+                const seq = counter.seq || 1;
+                finalCode = `AGT${String(seq).padStart(2, '0')}`;
+            }
+
+            const agent = new Agent({ name, email, password, agentCode: finalCode });
             await agent.save();
-            res.json({ success: true, agent: { _id: agent._id, name: agent.name, email: agent.email, role: agent.role } });
+            res.json({ success: true, agent: { _id: agent._id, name: agent.name, email: agent.email, role: agent.role, agentCode: agent.agentCode } });
         } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    },
+    async updateAgent(req, res) {
+        try {
+            const { id } = req.params;
+            if (!id || id.length !== 24) {
+                return res.status(400).json({ success: false, message: 'Invalid agent ID format. Must be 24 characters long.' });
+            }
+            const { error, value } = updateAgentSchema.validate(req.body);
+            if (error) {
+                return res.status(400).json({ success: false, message: 'Validation error', errors: error.details.map(d => d.message) });
+            }
+            const agent = await Agent.findById(id);
+            if (!agent) {
+                return res.status(404).json({ success: false, message: 'Agent not found' });
+            }
+            if (value.email && value.email !== agent.email) {
+                const emailExists = await Agent.findOne({ email: value.email, _id: { $ne: id } });
+                if (emailExists) {
+                    return res.status(409).json({ success: false, message: 'Another agent with this email already exists.' });
+                }
+            }
+            // Assign fields; if password present, setting it then saving triggers pre-save hash
+            ['name', 'email', 'password'].forEach((k) => {
+                if (value[k] !== undefined) agent[k] = value[k];
+            });
+            // Handle editable agentCode
+            if (value.agentCode && value.agentCode !== agent.agentCode) {
+                const duplicate = await Agent.findOne({ agentCode: value.agentCode, _id: { $ne: id } });
+                if (duplicate) {
+                    return res.status(409).json({ success: false, message: 'Agent code already exists.' });
+                }
+                agent.agentCode = value.agentCode;
+            }
+            await agent.save();
+            res.json({ success: true, agent: { _id: agent._id, name: agent.name, email: agent.email, role: agent.role, agentCode: agent.agentCode } });
+        } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    },
+    async deleteAgent(req, res) {
+        try {
+            const { id } = req.params;
+            const deleted = await Agent.findByIdAndDelete(id);
+            if (!deleted) {
+                return res.status(404).json({ success: false, message: 'Agent not found' });
+            }
+            res.json({ success: true, message: 'Agent deleted successfully', data: { deletedAgentId: id, deletedAgentEmail: deleted.email } });
+        } catch (err) {
+            if (err.name === 'CastError') {
+                return res.status(400).json({ success: false, message: 'Invalid agent ID format' });
+            }
             res.status(500).json({ success: false, error: err.message });
         }
     },
@@ -201,7 +349,9 @@ const adminController = {
         try {
             const customers = await User.find({ role: 'Customer' });
             const data = await Promise.all(customers.map(async (customer) => {
-                const policies = await UserPolicy.find({ userId: customer._id });
+                const policies = await UserPolicy.find({ userId: customer._id })
+                  .populate({ path: 'policyProductId' })
+                  .populate({ path: 'assignedAgentId' });
                 const payments = await Payment.find({ userId: customer._id });
                 return { customer, policies, payments };
             }));
@@ -220,7 +370,7 @@ const adminController = {
                     errors: error.details.map(detail => detail.message)
                 });
             }
-            const { code, title, description, premium, termMonths, minSumInsured } = value;
+            const { code, title, description, premium, termMonths, minSumInsured, maxSumInsured } = value;
             const existingPolicy = await PolicyProduct.findOne({ code });
             if (existingPolicy) {
                 return res.status(409).json({
@@ -234,7 +384,8 @@ const adminController = {
                 description,
                 premium,
                 termMonths,
-                minSumInsured: minSumInsured || 0
+                minSumInsured: minSumInsured || 0,
+                maxSumInsured: maxSumInsured ?? null
             });
             const savedPolicy = await newPolicy.save();
             res.status(201).json({

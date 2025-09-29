@@ -98,22 +98,15 @@ export class UserLogin {
             localStorage.setItem('user', JSON.stringify(response.user));
           }
           
-          // Show success message for testing (instead of navigation)
-          this.successMessage = `Welcome back! Successfully logged in as ${response.user?.role || 'User'}.`;
-          this.showLoginSuccess = true;
-          console.log('Login successful:', response);
-          
-          // Reset form
-          this.resetLoginForm();
-          
-          // TODO: Later change this to navigation
-          // if (response.user?.role === 'Admin') {
-          //   this.router.navigate(['/admin-dashboard']);
-          // } else if (response.user?.role === 'Agent') {
-          //   this.router.navigate(['/agent-dashboard']);
-          // } else {
-          //   this.router.navigate(['/customer-dashboard']);
-          // }
+          // Navigate to respective dashboard based on role
+          const role = (response.user?.role || this.formData.role || '').toLowerCase();
+          if (role === 'admin') {
+            this.router.navigate(['/admin-dashboard']);
+          } else if (role === 'agent') {
+            this.router.navigate(['/agent-dashboard']);
+          } else {
+            this.router.navigate(['/customer-dashboard']);
+          }
         },
         error: (error) => {
           this.isLoading = false;

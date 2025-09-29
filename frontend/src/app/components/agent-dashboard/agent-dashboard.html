@@ -1,1 +1,1421 @@
-<p>agent-dashboard works!</p>
+<div class="min-h-screen bg-gray-50 p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">{{ roleTitle }} Dashboard</h1>
+      <p class="text-gray-600 mt-1">Welcome, <span class="font-semibold">{{ userName }}</span></p>
+    </div>
+    <button (click)="logout()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+      Logout
+    </button>
+  </div>
+
+  <!-- Dashboard Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Total Policies</h3>
+          <p class="text-2xl font-bold text-blue-600">{{ dashboardStats.totalPolicies }}</p>
+          <p class="text-sm text-gray-500">{{ dashboardStats.approvedPolicies }} Active</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">All Claims</h3>
+          <p class="text-2xl font-bold text-yellow-600">{{ dashboardStats.totalClaims }}</p>
+          <p class="text-sm text-gray-500">{{ dashboardStats.pendingClaims }} pending</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-green-100 text-green-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Payments</h3>
+          <p class="text-2xl font-bold text-green-600">{{ dashboardStats.totalPayments }}</p>
+          <p class="text-sm text-gray-500">₹{{ dashboardStats.totalPaymentAmount | number:'1.2-2' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Approved Claims</h3>
+          <p class="text-2xl font-bold text-purple-600">{{ dashboardStats.approvedClaims }}</p>
+          <p class="text-sm text-gray-500">{{ dashboardStats.rejectedClaims }} rejected</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Total Customers</h3>
+          <p class="text-2xl font-bold text-indigo-600">{{ dashboardStats.totalCustomers }}</p>
+          <p class="text-sm text-gray-500">{{ dashboardStats.approvedCustomers }} Active</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="mb-6">
+    <div class="border-b border-gray-200">
+      <nav class="flex space-x-8">
+        <button 
+          (click)="setActiveTab('policies')"
+          [class]="activeTab === 'policies' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Assigned Policies
+        </button>
+        <button 
+          (click)="setActiveTab('management')"
+          [class]="activeTab === 'management' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Policy Management
+        </button>
+        <button 
+          (click)="setActiveTab('approved-customers')"
+          [class]="activeTab === 'approved-customers' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Approved Customers
+        </button>
+        <button 
+          (click)="setActiveTab('claims')"
+          [class]="activeTab === 'claims' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Claims Management
+        </button>
+        <button 
+          (click)="setActiveTab('payments')"
+          [class]="activeTab === 'payments' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Payments
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Policies Tab -->
+  <div *ngIf="activeTab === 'policies'" class="bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Assigned Policies</h2>
+      <p class="text-gray-600 mt-1">Manage policies assigned to you</p>
+    </div>
+    
+    <div class="p-6">
+      <div *ngIf="loading.policies" class="text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="mt-2 text-gray-600">Loading policies...</p>
+      </div>
+
+      <div *ngIf="!loading.policies && policies.length === 0" class="text-center py-8">
+        <p class="text-gray-500">No policies assigned yet.</p>
+      </div>
+
+      <div *ngIf="!loading.policies && policies.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Premium</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customers</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let policy of policies">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div>
+                  <div class="text-sm font-medium text-gray-900">{{ policy.code }}</div>
+                  <div class="text-sm text-gray-500">{{ policy.title }}</div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="text-sm text-gray-900">{{ policy.description }}</div>
+                <div class="text-sm text-gray-500">Term: {{ policy.termMonths }} months</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ₹{{ policy.premium | number:'1.2-2' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                  {{ policy.customerCount }} customers
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button 
+                  (click)="viewPolicyCustomers(policy)"
+                  class="text-indigo-600 hover:text-indigo-900 mr-3">
+                  View Customers
+                </button>
+                <button 
+                  (click)="viewPolicy(policy)"
+                  class="text-blue-600 hover:text-blue-900">
+                  View Details
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Policy Management Tab -->
+  <div *ngIf="activeTab === 'management'" class="bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Policy Management</h2>
+      <p class="text-gray-600 mt-1">Review and approve customer policy purchase requests</p>
+    </div>
+    <div class="p-6">
+      <div *ngIf="loading.policyRequests" class="text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="mt-2 text-gray-600">Loading policy requests...</p>
+      </div>
+
+      <div *ngIf="!loading.policyRequests && policyRequests.length === 0" class="text-center py-8">
+        <div class="text-gray-400 text-6xl mb-4">📋</div>
+        <p class="text-gray-500 text-lg">No pending policy requests</p>
+        <p class="text-gray-400 text-sm mt-2">Customer policy purchase requests will appear here</p>
+      </div>
+
+      <div *ngIf="!loading.policyRequests && policyRequests.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Premium</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let request of policyRequests; let i = index" 
+                [class]="i % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span class="text-sm font-medium text-blue-600">{{ request.customerName.charAt(0) }}</span>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ request.customerName }}</div>
+                    <div class="text-sm text-gray-500">{{ request.customerEmail }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ request.policyTitle }}</div>
+                <div class="text-sm text-gray-500">{{ request.policyCode }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-green-600">₹{{ request.premium | number:'1.2-2' }}</div>
+                <div class="text-sm text-gray-500">{{ request.termMonths }} months</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ request.requestDate | date:'short' }}</div>
+                <div class="text-sm text-gray-500">{{ request.requestDate | date:'EEEE' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="getStatusClass(request.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                  {{ request.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button 
+                  *ngIf="request.status === 'Pending'"
+                  (click)="approvePolicyRequest(request)"
+                  [disabled]="loading.approvingPolicy === request.userPolicyId"
+                  class="text-green-600 hover:text-green-900 mr-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="loading.approvingPolicy === request.userPolicyId">Approving...</span>
+                  <span *ngIf="loading.approvingPolicy !== request.userPolicyId">Approve</span>
+                </button>
+                <button 
+                  *ngIf="request.status === 'Pending'"
+                  (click)="rejectPolicyRequest(request)"
+                  [disabled]="loading.rejectingPolicy === request.userPolicyId"
+                  class="text-red-600 hover:text-red-900 mr-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="loading.rejectingPolicy === request.userPolicyId">Rejecting...</span>
+                  <span *ngIf="loading.rejectingPolicy !== request.userPolicyId">Reject</span>
+                </button>
+                <button 
+                  (click)="viewPolicyRequestDetails(request)"
+                  class="text-blue-600 hover:text-blue-900">
+                  View Details
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approved Customers Tab -->
+  <div *ngIf="activeTab === 'approved-customers'" class="bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Approved Customers</h2>
+      <p class="text-gray-600 mt-1">View details of customers with approved policies</p>
+    </div>
+    
+    <div class="p-6">
+      <!-- Loading State -->
+      <div *ngIf="loading.approvedCustomers" class="text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="text-gray-600 mt-2">Loading approved customers...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading.approvedCustomers && approvedCustomers.length === 0" class="text-center py-8">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM9 9a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No approved customers</h3>
+        <p class="mt-1 text-sm text-gray-500">No customers with approved policies found.</p>
+      </div>
+
+      <!-- Approved Customers Table -->
+      <div *ngIf="!loading.approvedCustomers && approvedCustomers.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Premium</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let customer of approvedCustomers; let i = index" 
+                class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span class="text-sm font-medium text-blue-600">{{ customer.customerName.charAt(0) }}</span>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ customer.customerName }}</div>
+                    <div class="text-sm text-gray-500">{{ customer.customerEmail }}</div>
+                    <div *ngIf="customer.customerPhone" class="text-xs text-gray-400">{{ customer.customerPhone }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ customer.policyTitle }}</div>
+                <div class="text-sm text-gray-500">{{ customer.policyCode }}</div>
+                <div class="text-xs text-gray-400">Policy ID: {{ customer.userPolicyId }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">₹{{ customer.premiumPaid | number:'1.2-2' }}</div>
+                <div class="text-xs text-gray-500">Paid</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ customer.startDate | date:'short' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ customer.endDate | date:'short' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  {{ customer.status }}
+                </span>
+                <div class="text-xs text-gray-400 mt-1">{{ customer.verificationType }} Verification</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button 
+                  (click)="viewApprovedCustomerDetails(customer)"
+                  class="text-blue-600 hover:text-blue-900 mr-3">
+                  View Details
+                </button>
+                <button 
+                  (click)="viewCustomerPolicyHistory(customer)"
+                  class="text-green-600 hover:text-green-900 mr-3">
+                  Policy History
+                </button>
+                <button 
+                  (click)="viewCustomerPayments(customer)"
+                  class="text-purple-600 hover:text-purple-900">
+                  Payments
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claims Tab -->
+  <div *ngIf="activeTab === 'claims'" class="bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Claims Management</h2>
+      <p class="text-gray-600 mt-1">Review and process insurance claims</p>
+    </div>
+    
+    <div class="p-6">
+      <div *ngIf="loading.claims" class="text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="mt-2 text-gray-600">Loading claims...</p>
+      </div>
+
+      <div *ngIf="!loading.claims && claims.length === 0" class="text-center py-8">
+        <p class="text-gray-500">No claims to review.</p>
+      </div>
+
+      <div *ngIf="!loading.claims && claims.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Claim ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let claim of claims">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ claim.claimId.substring(0, 8) }}...</div>
+                <div class="text-sm text-gray-500">{{ claim.incidentDate | date:'short' }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div>
+                  <div class="text-sm font-medium text-gray-900">{{ claim.customerName }}</div>
+                  <div class="text-sm text-gray-500">{{ claim.customerEmail }}</div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ₹{{ claim.amountClaimed | number:'1.2-2' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="getStatusClass(claim.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                  {{ claim.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button 
+                  *ngIf="claim.status === 'Pending'"
+                  (click)="approveClaim(claim.claimId)"
+                  class="text-green-600 hover:text-green-900 mr-3">
+                  Approve
+                </button>
+                <button 
+                  *ngIf="claim.status === 'Pending'"
+                  (click)="rejectClaim(claim.claimId)"
+                  class="text-red-600 hover:text-red-900 mr-3">
+                  Reject
+                </button>
+                <button 
+                  (click)="viewClaim(claim)"
+                  class="text-blue-600 hover:text-blue-900">
+                  View Details
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payments Tab -->
+  <div *ngIf="activeTab === 'payments'" class="bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Payment Management</h2>
+      <p class="text-gray-600 mt-1">View customers and their payment details</p>
+    </div>
+    
+    <div class="p-6">
+      <!-- Loading State -->
+      <div *ngIf="loading.payments" class="text-center py-8">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="mt-2 text-gray-600">Loading payment data...</p>
+      </div>
+
+      <!-- No Data State -->
+      <div *ngIf="!loading.payments && paymentCustomers.length === 0" class="text-center py-8">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 003 3z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No payment records</h3>
+        <p class="mt-1 text-sm text-gray-500">No customers with payment records found.</p>
+      </div>
+
+      <!-- Customer Tabs -->
+      <div *ngIf="!loading.payments && paymentCustomers.length > 0">
+        <!-- Customer Tab Navigation -->
+        <div class="border-b border-gray-200 mb-6">
+          <nav class="flex space-x-8 overflow-x-auto">
+            <button 
+              *ngFor="let customer of paymentCustomers; let i = index"
+              (click)="setActivePaymentCustomer(customer)"
+              [class]="activePaymentCustomer?.customerId === customer.customerId ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+              class="py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0">
+              <div class="flex items-center space-x-2">
+                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span class="text-sm font-medium text-blue-600">{{ customer.customerName.charAt(0) }}</span>
+                </div>
+                <div class="text-left">
+                  <div class="font-medium">{{ customer.customerName }}</div>
+                  <div class="text-xs text-gray-500">{{ customer.totalPayments }} payments</div>
+                </div>
+              </div>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Customer Payment Details -->
+        <div *ngIf="activePaymentCustomer" class="space-y-6">
+          <!-- Customer Info Header -->
+          <div class="bg-blue-50 rounded-lg p-4">
+            <div class="flex items-center space-x-4">
+              <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <span class="text-lg font-medium text-blue-600">{{ activePaymentCustomer.customerName.charAt(0) }}</span>
+              </div>
+              <div>
+                <h3 class="text-lg font-medium text-gray-900">{{ activePaymentCustomer.customerName }}</h3>
+                <p class="text-sm text-gray-600">{{ activePaymentCustomer.customerEmail }}</p>
+                <div class="flex space-x-4 mt-1 text-sm text-gray-500">
+                  <span>{{ activePaymentCustomer.totalPayments }} Total Payments</span>
+                  <span>₹{{ activePaymentCustomer.totalAmount | number:'1.2-2' }} Total Amount</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Policy Details Section -->
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h4 class="text-lg font-medium text-gray-900">Policy Information</h4>
+            </div>
+            <div class="p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Policy Title</label>
+                  <p class="mt-1 text-sm text-gray-900">{{ activePaymentCustomer.policyTitle }}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Policy Code</label>
+                  <p class="mt-1 text-sm text-gray-900">{{ activePaymentCustomer.policyCode }}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Policy Number</label>
+                  <p class="mt-1 text-sm text-gray-900">{{ activePaymentCustomer.policyNumber || 'N/A' }}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Premium Amount</label>
+                  <p class="mt-1 text-lg font-semibold text-green-600">₹{{ activePaymentCustomer.policyPremium | number:'1.2-2' }}</p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Policy Status</label>
+                  <span [class]="getStatusClass(activePaymentCustomer.policyStatus)" class="mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                    {{ activePaymentCustomer.policyStatus }}
+                  </span>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Policy Period</label>
+                  <p class="mt-1 text-sm text-gray-900">
+                    {{ activePaymentCustomer.policyStartDate | date:'short' }} - 
+                    {{ activePaymentCustomer.policyEndDate | date:'short' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Summary Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-green-800">Total Paid</p>
+                  <p class="text-2xl font-bold text-green-900">₹{{ activePaymentCustomer.totalAmount | number:'1.2-2' }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-blue-800">Total Payments</p>
+                  <p class="text-2xl font-bold text-blue-900">{{ activePaymentCustomer.totalPayments }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-yellow-800">Last Payment</p>
+                  <p class="text-lg font-bold text-yellow-900">{{ activePaymentCustomer.lastPaymentDate | date:'short' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 003 3z"></path>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium text-purple-800">Payment Method</p>
+                  <p class="text-lg font-bold text-purple-900">{{ activePaymentCustomer.primaryPaymentMethod }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment History Table -->
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h4 class="text-lg font-medium text-gray-900">Payment History</h4>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr *ngFor="let payment of activePaymentCustomer.paymentHistory; let i = index" 
+                      [class]="i % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm font-medium text-gray-900">{{ payment.paymentDate | date:'medium' }}</div>
+                      <div class="text-sm text-gray-500">{{ payment.paymentDate | date:'EEEE' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-lg font-semibold text-green-600">₹{{ payment.amount | number:'1.2-2' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                            [ngClass]="{
+                              'bg-blue-100 text-blue-800': payment.method === 'Online',
+                              'bg-green-100 text-green-800': payment.method === 'Card',
+                              'bg-yellow-100 text-yellow-800': payment.method === 'UPI',
+                              'bg-purple-100 text-purple-800': payment.method === 'Bank Transfer'
+                            }">
+                        {{ payment.method }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="text-sm text-gray-900" *ngIf="payment.reference">{{ payment.reference }}</div>
+                      <div class="text-sm text-gray-400" *ngIf="!payment.reference">No reference</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Completed
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Policy Details Modal -->
+  <div *ngIf="showPolicyModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="closePolicyModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Policy Details</h3>
+      </div>
+      <div class="p-6" *ngIf="selectedPolicy">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Policy Code</label>
+            <p class="text-sm text-gray-900">{{ selectedPolicy.code }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Title</label>
+            <p class="text-sm text-gray-900">{{ selectedPolicy.title }}</p>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <p class="text-sm text-gray-900">{{ selectedPolicy.description }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Premium</label>
+            <p class="text-sm text-gray-900">₹{{ selectedPolicy.premium | number:'1.2-2' }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Term</label>
+            <p class="text-sm text-gray-900">{{ selectedPolicy.termMonths }} months</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Min Coverage</label>
+            <p class="text-sm text-gray-900">₹{{ selectedPolicy.minSumInsured | number:'1.2-2' }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Max Coverage</label>
+            <p class="text-sm text-gray-900">₹{{ selectedPolicy.maxSumInsured | number:'1.2-2' }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Customers</label>
+            <p class="text-sm text-gray-900">{{ selectedPolicy.customerCount }} customers</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Created</label>
+            <p class="text-sm text-gray-900">{{ selectedPolicy.createdAt | date:'short' }}</p>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end space-x-3">
+          <button (click)="closePolicyModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Close
+          </button>
+          <button 
+            (click)="viewPolicyCustomers(selectedPolicy!); closePolicyModal()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+            View Customers
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customers Modal -->
+  <div *ngIf="showCustomersModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="closeCustomersModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-96 overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Customers for {{ selectedPolicy?.title }}</h3>
+        <p class="text-sm text-gray-500 mt-1">{{ selectedPolicy?.code }}</p>
+      </div>
+      <div class="p-6">
+        <div *ngIf="loading.customers" class="text-center py-8">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-gray-600">Loading customers...</p>
+        </div>
+
+        <div *ngIf="!loading.customers && policyCustomers.length === 0" class="text-center py-8">
+          <p class="text-gray-500">No customers found for this policy.</p>
+        </div>
+
+        <div *ngIf="!loading.customers && policyCustomers.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Premium Paid</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy Period</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let customer of policyCustomers" 
+                  class="hover:bg-gray-50 cursor-pointer transition-colors"
+                  (click)="viewCustomerDetails(customer)">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div>
+                    <div class="text-sm font-medium text-gray-900">{{ customer.customerName }}</div>
+                    <div class="text-sm text-gray-500">{{ customer.customerEmail }}</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="getStatusClass(customer.status)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                    {{ customer.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  ₹{{ customer.premiumPaid | number:'1.2-2' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900">{{ customer.startDate | date:'short' }}</div>
+                  <div class="text-sm text-gray-500">to {{ customer.endDate | date:'short' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" (click)="$event.stopPropagation()">
+                  <button 
+                    *ngIf="customer.status === 'Pending'"
+                    (click)="approveCustomerPolicy(customer.userPolicyId)"
+                    class="text-green-600 hover:text-green-900 mr-3">
+                    Approve
+                  </button>
+                  <button 
+                    (click)="viewCustomerPayments(customer)"
+                    class="text-blue-600 hover:text-blue-900">
+                    View Payments
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-6 flex justify-end">
+          <button (click)="closeCustomersModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claim Details Modal -->
+  <div *ngIf="showClaimModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="closeClaimModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-96 overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Claim Details</h3>
+      </div>
+      <div class="p-6" *ngIf="selectedClaim">
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Claim ID</label>
+              <p class="text-sm text-gray-900">{{ selectedClaim.claimId }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Customer</label>
+              <p class="text-sm text-gray-900">{{ selectedClaim.customerName }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Amount Claimed</label>
+              <p class="text-sm text-gray-900">₹{{ selectedClaim.amountClaimed | number:'1.2-2' }}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Incident Date</label>
+              <p class="text-sm text-gray-900">{{ selectedClaim.incidentDate | date:'short' }}</p>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Description</label>
+            <p class="text-sm text-gray-900 mt-1">{{ selectedClaim.description }}</p>
+          </div>
+          <div *ngIf="selectedClaim.decisionNotes">
+            <label class="block text-sm font-medium text-gray-700">Decision Notes</label>
+            <p class="text-sm text-gray-900 mt-1">{{ selectedClaim.decisionNotes }}</p>
+          </div>
+        </div>
+        
+        <!-- Decision Form -->
+        <div *ngIf="selectedClaim.status === 'Pending'" class="mt-6 border-t pt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Decision Notes</label>
+          <textarea 
+            [(ngModel)]="decisionNotes"
+            rows="3" 
+            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            placeholder="Add notes for your decision..."></textarea>
+        </div>
+        
+        <div class="mt-6 flex justify-end space-x-3">
+          <button (click)="closeClaimModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Close
+          </button>
+          <button 
+            *ngIf="selectedClaim.status === 'Pending'"
+            (click)="rejectClaim(selectedClaim.claimId); closeClaimModal()"
+            class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">
+            Reject Claim
+          </button>
+          <button 
+            *ngIf="selectedClaim.status === 'Pending'"
+            (click)="approveClaim(selectedClaim.claimId); closeClaimModal()"
+            class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">
+            Approve Claim
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment History Modal -->
+  <div *ngIf="showPaymentHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="closePaymentHistoryModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-96 overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Payment History</h3>
+        <div *ngIf="customerPaymentHistory?.userPolicy" class="mt-2">
+          <p class="text-sm text-gray-600">
+            <strong>Customer:</strong> {{ customerPaymentHistory?.userPolicy?.customerName || 'N/A' }} ({{ customerPaymentHistory?.userPolicy?.customerEmail || 'N/A' }})
+          </p>
+          <p class="text-sm text-gray-600">
+            <strong>Policy:</strong> {{ customerPaymentHistory?.userPolicy?.policyCode || 'N/A' }} - {{ customerPaymentHistory?.userPolicy?.policyTitle || 'N/A' }}
+          </p>
+          <p class="text-sm text-gray-600">
+            <strong>Status:</strong> 
+            <span *ngIf="customerPaymentHistory?.userPolicy?.status" 
+                  [class]="getStatusClass(customerPaymentHistory?.userPolicy?.status || '')" 
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ml-1">
+              {{ customerPaymentHistory?.userPolicy?.status }}
+            </span>
+            <span *ngIf="!customerPaymentHistory?.userPolicy?.status" 
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ml-1 bg-gray-100 text-gray-800">
+              N/A
+            </span>
+          </p>
+        </div>
+      </div>
+      
+      <div class="p-6">
+        <div *ngIf="loading.customerPayments" class="text-center py-8">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p class="mt-2 text-gray-600">Loading payment history...</p>
+        </div>
+
+        <div *ngIf="!loading.customerPayments && !hasPaymentHistory()" class="text-center py-8">
+          <div class="text-gray-400 mb-4">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+          </div>
+          <p class="text-gray-500 text-lg">No payment records found</p>
+          <p class="text-gray-400 text-sm mt-1">This customer hasn't made any payments yet.</p>
+        </div>
+
+        <!-- Payment Summary -->
+        <div *ngIf="!loading.customerPayments && hasPaymentHistory()" class="mb-6">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600">{{ customerPaymentHistory?.totalPayments || 0 }}</div>
+                <div class="text-sm text-gray-600">Total Payments</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-600">₹{{ (customerPaymentHistory?.totalAmount || 0) | number:'1.2-2' }}</div>
+                <div class="text-sm text-gray-600">Total Amount</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-purple-600">₹{{ (customerPaymentHistory?.userPolicy?.policyPremium || 0) | number:'1.2-2' }}</div>
+                <div class="text-sm text-gray-600">Policy Premium</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment History Table -->
+        <div *ngIf="!loading.customerPayments && hasPaymentHistory()" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let payment of customerPaymentHistory?.payments; let i = index" 
+                  [class]="i % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900">{{ payment.paymentDate | date:'short' }}</div>
+                  <div class="text-sm text-gray-500">{{ payment.paymentDate | date:'EEEE' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-lg font-semibold text-green-600">₹{{ payment.amount | number:'1.2-2' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                    {{ payment.method }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900" *ngIf="payment.reference">{{ payment.reference }}</div>
+                  <div class="text-sm text-gray-400" *ngIf="!payment.reference">No reference</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Completed
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-6 flex justify-end">
+          <button (click)="closePaymentHistoryModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customer Details Modal -->
+<div *ngIf="showCustomerDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" (click)="closeCustomerDetailsModal()">
+  <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-96 overflow-y-auto" (click)="$event.stopPropagation()">
+    <div class="p-6 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-900">Customer Details</h3>
+      <p class="text-sm text-gray-500 mt-1" *ngIf="selectedCustomerDetails">{{ selectedCustomerDetails.customerName }} - {{ selectedCustomerDetails.customerEmail }}</p>
+    </div>
+    <div class="p-6" *ngIf="selectedCustomerDetails">
+      <div class="space-y-6">
+        <!-- Customer Information Section -->
+        <div class="bg-gray-50 rounded-lg p-4" *ngIf="selectedCustomerDetails">
+          <h4 class="text-md font-semibold text-gray-900 mb-3">Personal Information</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-600">Customer ID:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.customerId || 'N/A' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Full Name:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.customerName || 'N/A' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Email Address:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.customerEmail || 'N/A' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Policy Information Section -->
+        <div class="bg-blue-50 rounded-lg p-4" *ngIf="selectedCustomerDetails">
+          <h4 class="text-md font-semibold text-gray-900 mb-3">Policy Information</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-600">Policy Number:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.policyNumber || selectedCustomerDetails.policyCode || 'N/A' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Policy Type:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.policyType || selectedCustomerDetails.policyTitle || 'N/A' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Purchase Date:</label>
+              <p class="text-sm text-gray-900">{{ (selectedCustomerDetails.purchaseDate || selectedCustomerDetails.startDate) | date:'dd/MM/yyyy' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Policy Status:</label>
+              <span [class]="getStatusClass(selectedCustomerDetails.status || '')" class="px-2 py-1 text-xs font-medium rounded-full">
+                {{ selectedCustomerDetails.status || 'N/A' }}
+              </span>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Policy Start Date:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.startDate | date:'dd/MM/yyyy' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Policy End Date:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.endDate | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Information Section -->
+        <div class="bg-green-50 rounded-lg p-4" *ngIf="selectedCustomerDetails">
+          <h4 class="text-md font-semibold text-gray-900 mb-3">Payment Information</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-600">Total Premium:</label>
+              <p class="text-lg font-semibold text-green-600">₹{{ (selectedCustomerDetails.totalPremium || selectedCustomerDetails.policyPremium) | number:'1.2-2' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Amount Paid:</label>
+              <p class="text-lg font-semibold text-blue-600">₹{{ selectedCustomerDetails.premiumPaid | number:'1.2-2' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Remaining Amount:</label>
+              <p class="text-lg font-semibold text-orange-600">₹{{ ((selectedCustomerDetails.totalPremium || selectedCustomerDetails.policyPremium || 0) - (selectedCustomerDetails.premiumPaid || 0)) | number:'1.2-2' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Payment Method:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.paymentMethod || 'N/A' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Installments Completed:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.installmentsDone || 0 }} / {{ selectedCustomerDetails.totalInstallments || 'N/A' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Next Payment Due:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.nextPaymentDate ? (selectedCustomerDetails.nextPaymentDate | date:'dd/MM/yyyy') : 'N/A' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coverage Information -->
+        <div class="bg-purple-50 rounded-lg p-4" *ngIf="selectedCustomerDetails">
+          <h4 class="text-md font-semibold text-gray-900 mb-3">Coverage Details</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-sm font-medium text-gray-600">Coverage Amount:</label>
+              <p class="text-lg font-semibold text-purple-600">
+                ₹{{ selectedCustomerDetails.coverageAmount != null ? (selectedCustomerDetails.coverageAmount | number:'1.2-2') : 'N/A' }}
+              </p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Deductible:</label>
+              <p class="text-sm text-gray-900">
+                {{ selectedCustomerDetails.deductible != null ? ('₹' + (selectedCustomerDetails.deductible | number:'1.2-2')) : 'N/A' }}
+              </p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Policy Term:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.policyTerm || 'N/A' }}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-600">Renewal Date:</label>
+              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.renewalDate ? (selectedCustomerDetails.renewalDate | date:'dd/MM/yyyy') : 'N/A' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="flex flex-wrap gap-3" *ngIf="selectedCustomerDetails">
+          <button 
+            *ngIf="selectedCustomerDetails.status === 'Pending'"
+            (click)="approveCustomerPolicy(selectedCustomerDetails.userPolicyId)"
+            class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">
+            Approve Policy
+          </button>
+        </div>
+      </div>
+      
+      <div class="mt-6 flex justify-end">
+        <button (click)="closeCustomerDetailsModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Policy Request Details Modal -->
+  <div *ngIf="showPolicyRequestDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-900">Policy Request Details</h3>
+          <button (click)="closePolicyRequestDetailsModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      
+        <div *ngIf="selectedPolicyRequest" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="text-sm font-medium text-gray-500">Customer Information</h4>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedPolicyRequest.customerName }}</p>
+              <p class="text-sm text-gray-600">{{ selectedPolicyRequest.customerEmail }}</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-gray-500">Policy Information</h4>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedPolicyRequest.policyTitle }}</p>
+              <p class="text-sm text-gray-600">{{ selectedPolicyRequest.policyCode }}</p>
+            </div>
+          </div>
+        
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <h4 class="text-sm font-medium text-gray-500">Premium</h4>
+              <p class="mt-1 text-sm text-gray-900">₹{{ selectedPolicyRequest.premium | number:'1.2-2' }}</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-gray-500">Term</h4>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedPolicyRequest.termMonths }} months</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-gray-500">Status</h4>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                    [ngClass]="{
+                      'bg-yellow-100 text-yellow-800': selectedPolicyRequest.status === 'Pending',
+                      'bg-green-100 text-green-800': selectedPolicyRequest.status === 'Approved',
+                      'bg-red-100 text-red-800': selectedPolicyRequest.status === 'Rejected'
+                    }">
+                {{ selectedPolicyRequest.status }}
+              </span>
+            </div>
+          </div>
+        
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 class="text-sm font-medium text-gray-500">Request Date</h4>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedPolicyRequest.requestDate | date:'medium' }}</p>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-gray-500">Verification Type</h4>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedPolicyRequest.verificationType }}</p>
+            </div>
+          </div>
+        </div>
+      
+        <div class="mt-6 flex justify-end">
+          <button (click)="closePolicyRequestDetailsModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approved Customer Details Modal -->
+  <div *ngIf="showApprovedCustomerDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative flex flex-col" style="max-height: 75vh; overflow-y: auto;">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-900">Customer Details</h3>
+          <button (click)="closeApprovedCustomerDetailsModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      
+        <div *ngIf="selectedApprovedCustomer" class="space-y-4">
+          <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0 h-12 w-12">
+              <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <span class="text-lg font-medium text-blue-600">{{ selectedApprovedCustomer.customerName.charAt(0) }}</span>
+              </div>
+            </div>
+            <div>
+              <h4 class="text-lg font-medium text-gray-900">{{ selectedApprovedCustomer.customerName }}</h4>
+              <p class="text-sm text-gray-600">{{ selectedApprovedCustomer.customerEmail }}</p>
+              <p *ngIf="selectedApprovedCustomer.customerPhone" class="text-sm text-gray-500">{{ selectedApprovedCustomer.customerPhone }}</p>
+            </div>
+          </div>
+        
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">Policy Information</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-500">Policy Title</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedApprovedCustomer.policyTitle }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">Policy Code</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedApprovedCustomer.policyCode }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">Policy Number</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedApprovedCustomer.policyNumber || 'N/A' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">Status</p>
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  {{ selectedApprovedCustomer.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+        
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">Financial Information</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm text-gray-500">Premium Paid</p>
+                <p class="text-sm font-medium text-gray-900">₹{{ selectedApprovedCustomer.premiumPaid | number:'1.2-2' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">Payment Method</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedApprovedCustomer.paymentMethod || 'Online' }}</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="border-t pt-4">
+            <h4 class="text-sm font-medium text-gray-500 mb-2">Dates</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p class="text-sm text-gray-500">Start Date</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedApprovedCustomer.startDate | date:'short' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">End Date</p>
+                <p class="text-sm font-medium text-gray-900">{{ selectedApprovedCustomer.endDate | date:'short' }}</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">Purchase Date</p>
+                <p class="text-sm font-medium text-gray-900">{{ (selectedApprovedCustomer.purchaseDate || selectedApprovedCustomer.createdAt) | date:'short' }}</p>
+              </div>
+            </div>
+          </div>
+        
+          <div class="border-t pt-4">
+            <div>
+              <p class="text-sm text-gray-500">Verification Type</p>
+              <p class="text-sm font-medium text-gray-900">{{ selectedApprovedCustomer.verificationType }}</p>
+            </div>
+          </div>
+        </div>
+      
+        <div class="mt-6 flex justify-end">
+          <button (click)="closeApprovedCustomerDetailsModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Policy History Modal -->
+  <div *ngIf="showPolicyHistoryModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-900">Policy History</h3>
+          <button (click)="closePolicyHistoryModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      
+        <div *ngIf="selectedApprovedCustomer" class="space-y-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="text-sm font-medium text-blue-800 mb-2">Customer: {{ selectedApprovedCustomer.customerName }}</h4>
+            <div class="text-sm text-blue-700">
+              <p><strong>Current Policy:</strong> {{ selectedApprovedCustomer.policyTitle }}</p>
+              <p><strong>Policy Code:</strong> {{ selectedApprovedCustomer.policyCode }}</p>
+            </div>
+          </div>
+        
+          <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h5 class="text-sm font-medium text-gray-900 mb-2">Current Policy Details</h5>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-500">Status:</span>
+                <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  {{ selectedApprovedCustomer.status }}
+                </span>
+              </div>
+              <div>
+                <span class="text-gray-500">Premium:</span>
+                <span class="ml-2 font-medium">₹{{ selectedApprovedCustomer.premiumPaid | number:'1.2-2' }}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Start Date:</span>
+                <span class="ml-2 font-medium">{{ selectedApprovedCustomer.startDate | date:'short' }}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">End Date:</span>
+                <span class="ml-2 font-medium">{{ selectedApprovedCustomer.endDate | date:'short' }}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Payment Method:</span>
+                <span class="ml-2 font-medium">{{ selectedApprovedCustomer.paymentMethod || 'Online' }}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Verification:</span>
+                <span class="ml-2 font-medium">{{ selectedApprovedCustomer.verificationType }}</span>
+              </div>
+            </div>
+          </div>
+        
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="text-sm text-gray-600">
+              <strong>Note:</strong> This shows current policy details. For complete historical data, 
+              additional implementation would be needed to track policy changes and modifications over time.
+            </p>
+          </div>
+        </div>
+      
+        <div class="mt-6 flex justify-end">
+          <button (click)="closePolicyHistoryModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div *ngIf="showSuccessModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+          <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">{{ modalTitle }}</h3>
+        <div class="mt-2 px-7 py-3">
+          <p class="text-sm text-gray-500">{{ modalMessage }}</p>
+        </div>
+        <div class="items-center px-4 py-3">
+          <button (click)="closeSuccessModal()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Modal -->
+  <div *ngIf="showErrorModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+          <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">{{ modalTitle }}</h3>
+        <div class="mt-2 px-7 py-3">
+          <p class="text-sm text-gray-500">{{ modalMessage }}</p>
+        </div>
+        <div class="items-center px-4 py-3">
+          <button (click)="closeErrorModal()" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -4,6 +4,9 @@ import Joi from 'joi';
 import UserPolicy from '../models/userPolicy.js';
 import Payment from '../models/payment.js';
 import Claim from '../models/claim.js';
+import PolicyProduct from '../models/policyProduct.js';
+import AuditLog from '../models/auditLog.js';
+import User from '../models/User.js';
 
 const agentLoginSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -40,128 +43,696 @@ export const loginAgent = async (req, res) => {
 };
 
 const agentController = {
-  // Get details for a specific claim by claimId (agent)
-  async getClaimById(req, res) {
+  // View unique policy products assigned to agent
+  async assignedPolicies(req, res) {
     try {
-      const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
-      if (!claim) {
-        return res.status(404).json({ success: false, message: 'Claim not found' });
-      }
-      // Only allow agent to view claim if they are assigned to the policy
-      const userPolicy = await UserPolicy.findById(claim.userPolicyId);
-      if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
-      }
-      res.json({ success: true, claim });
+      // Only return policies where assignedAgentId matches the agent
+      const agentId = req.query.agentId || req.user.userId;
+      // Debug log
+      console.log('AgentDashboard: assignedPolicies for agentId:', agentId);
+      // Ensure agentId is ObjectId for query
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+      
+      // Get unique policy products assigned to this agent
+      const userPolicies = await UserPolicy.find({ assignedAgentId: agentObjectId })
+        .populate('policyProductId')
+        .distinct('policyProductId');
+      
+      const policyProductIds = userPolicies.filter(id => id); // Remove null values
+      
+      // Get policy product details with customer count
+      const PolicyProduct = (await import('../models/policyProduct.js')).default;
+      const policyProducts = await PolicyProduct.find({ _id: { $in: policyProductIds } });
+      
+      const result = await Promise.all(policyProducts.map(async (policy) => {
+        const customerCount = await UserPolicy.countDocuments({ 
+          policyProductId: policy._id,
+          assignedAgentId: agentObjectId 
+        });
+        
+        return {
+          policyProductId: policy._id,
+          code: policy.code,
+          title: policy.title,
+          description: policy.description,
+          premium: policy.premium,
+          termMonths: policy.termMonths,
+          minSumInsured: policy.minSumInsured,
+          maxSumInsured: policy.maxSumInsured,
+          customerCount: customerCount,
+          createdAt: policy.createdAt
+        };
+      }));
+      
+      res.json({ success: true, policies: result });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }
   },
-  // Approve claim (agent)
-  async approveClaim(req, res) {
-    const { claimId } = req.body;
-    const claim = await Claim.findById(claimId);
-    if (!claim) return res.status(404).json({ success: false, message: 'Claim not found' });
-    claim.status = 'Approved';
-    claim.decidedByAgentId = req.user.userId;
-    await claim.save();
-    // Update user policy status to 'Claimed'
-    const userPolicy = await UserPolicy.findById(claim.userPolicyId);
-    if (userPolicy) {
-      userPolicy.status = 'Claimed';
-      await userPolicy.save();
+
+  // Get all customers for a specific policy product
+  async getPolicyCustomers(req, res) {
+    try {
+      const { policyProductId } = req.params;
+      const agentId = req.user.userId;
+      
+      // Debug log
+      console.log('AgentDashboard: getPolicyCustomers for policyProductId:', policyProductId, 'agentId:', agentId);
+      
+      // Ensure agentId is ObjectId for query
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+      const policyObjectId = mongoose.default.Types.ObjectId.isValid(policyProductId) ? new mongoose.default.Types.ObjectId(policyProductId) : policyProductId;
+      
+      // Get all user policies for this policy product assigned to this agent
+      const userPolicies = await UserPolicy.find({ 
+        policyProductId: policyObjectId,
+        assignedAgentId: agentObjectId 
+      })
+      .populate('userId', 'name email')
+      .populate('policyProductId', 'code title premium description termMonths minSumInsured maxSumInsured');
+      
+      const customers = await Promise.all(userPolicies.map(async (up) => {
+        // Get payment information for this user policy
+        const payments = await Payment.find({ userPolicyId: up._id });
+        const totalPayments = payments.length;
+        const totalAmountPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+        
+        // Calculate installments (assuming monthly payments)
+        const installmentsDone = totalPayments;
+        const totalInstallments = up.policyProductId.termMonths || 12;
+        
+        // Calculate next payment due date (assuming monthly installments)
+        const nextPaymentDate = new Date(up.startDate);
+        nextPaymentDate.setMonth(nextPaymentDate.getMonth() + installmentsDone + 1);
+        
+        return {
+          userPolicyId: up._id,
+          customerId: up.userId._id,
+          customerName: up.userId.name,
+          customerEmail: up.userId.email,
+          customerPhone: null, // User model doesn't have phone field
+          status: up.status,
+          startDate: up.startDate,
+          endDate: up.endDate,
+          premiumPaid: up.premiumPaid || 0,
+          verificationType: up.verificationType,
+          createdAt: up.createdAt,
+          purchaseDate: up.createdAt,
+          policyCode: up.policyProductId.code,
+          policyTitle: up.policyProductId.title,
+          policyNumber: `POL-${up._id.toString().slice(-8).toUpperCase()}`,
+          policyType: up.policyProductId.title,
+          policyPremium: up.policyProductId.premium || 0,
+          totalPremium: up.policyProductId.premium || 0,
+          paymentMethod: payments.length > 0 ? payments[0].method : 'Not Set',
+          installmentsDone: installmentsDone,
+          totalInstallments: totalInstallments,
+          nextPaymentDate: installmentsDone < totalInstallments ? nextPaymentDate : null,
+          coverageAmount: up.policyProductId.maxSumInsured || up.policyProductId.minSumInsured || 0,
+          deductible: (up.policyProductId.minSumInsured || 0) * 0.1, // 10% of min sum insured as deductible
+          policyTerm: `${up.policyProductId.termMonths || 12} months`,
+          renewalDate: up.endDate
+        };
+      }));
+      
+      res.json({ success: true, customers: customers });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
     }
-    res.json({ success: true, claim });
   },
 
-  // View policies assigned to agent
-  async assignedPolicies(req, res) {
-    // Allow retrieval by agentId from query or authenticated agent
-    const agentId = req.query.agentId || req.user.userId;
-    const PolicyProduct = (await import('../models/policyProduct.js')).default;
-    // Find products assigned to agent
-    const assignedProducts = await PolicyProduct.find({ assignedAgentId: agentId });
-    const productIds = assignedProducts.map(p => p._id);
-    // Find policies assigned via product or directly via UserPolicy.assignedAgentId
-    const policies = await UserPolicy.find({
-      $or: [
-        { policyProductId: { $in: productIds } },
-        { assignedAgentId: agentId }
-      ]
-    }).populate('policyProductId');
-    // Only return policy name and policy id
-    const result = policies.map(p => ({
-      policyId: p._id,
-      policyName: p.policyProductId?.title || ''
-    }));
-    res.json(result);
+  // Get payment history for a specific customer's policy
+  async getCustomerPayments(req, res) {
+    try {
+      const { userPolicyId } = req.params;
+      const agentId = req.user.userId;
+      
+      // Debug log
+      console.log('AgentDashboard: getCustomerPayments for userPolicyId:', userPolicyId, 'agentId:', agentId);
+      
+      // Ensure agentId is ObjectId for query
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+      const userPolicyObjectId = mongoose.default.Types.ObjectId.isValid(userPolicyId) ? new mongoose.default.Types.ObjectId(userPolicyId) : userPolicyId;
+      
+      // First verify that this user policy is assigned to this agent
+      const userPolicy = await UserPolicy.findOne({ 
+        _id: userPolicyObjectId,
+        assignedAgentId: agentObjectId 
+      })
+      .populate('userId', 'name email')
+      .populate('policyProductId', 'code title premium');
+      
+      if (!userPolicy) {
+        return res.status(403).json({ success: false, message: 'Access denied - policy not assigned to this agent' });
+      }
+      
+      // Get all payments for this user policy
+      const payments = await Payment.find({ userPolicyId: userPolicyObjectId })
+        .populate('userId', 'name email')
+        .sort({ createdAt: -1 }); // Most recent first
+      
+      const paymentHistory = payments.map(payment => ({
+        paymentId: payment._id,
+        amount: payment.amount,
+        method: payment.method,
+        reference: payment.reference,
+        paymentDate: payment.createdAt,
+        customerName: payment.userId.name,
+        customerEmail: payment.userId.email
+      }));
+      
+      const response = {
+        success: true,
+        userPolicy: {
+          userPolicyId: userPolicy._id,
+          customerName: userPolicy.userId.name,
+          customerEmail: userPolicy.userId.email,
+          policyCode: userPolicy.policyProductId.code,
+          policyTitle: userPolicy.policyProductId.title,
+          policyPremium: userPolicy.policyProductId.premium,
+          status: userPolicy.status,
+          startDate: userPolicy.startDate,
+          endDate: userPolicy.endDate,
+          premiumPaid: userPolicy.premiumPaid
+        },
+        payments: paymentHistory,
+        totalPayments: paymentHistory.length,
+        totalAmount: paymentHistory.reduce((sum, p) => sum + p.amount, 0)
+      };
+      
+      res.json(response);
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
   // View payments for assigned policies
   async assignedPayments(req, res) {
-    const policies = await UserPolicy.find({ agentId: req.user.userId });
-    const payments = await Payment.find({ userPolicyId: { $in: policies.map(p => p._id) } });
-    res.json({ success: true, payments });
+    try {
+      const policies = await UserPolicy.find({ assignedAgentId: req.user.userId });
+      const payments = await Payment.find({ userPolicyId: { $in: policies.map(p => p._id) } })
+        .populate('userId', 'name email')
+        .populate('userPolicyId');
+      
+      const result = payments.map(p => ({
+        paymentId: p._id,
+        amount: p.amount,
+        method: p.method,
+        reference: p.reference,
+        customerName: p.userId.name,
+        customerEmail: p.userId.email,
+        policyId: p.userPolicyId._id,
+        createdAt: p.createdAt
+      }));
+      
+      res.json({ success: true, payments: result });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
   // Approve a policy
   async approvePolicy(req, res) {
-    const { userPolicyId } = req.body;
-    const userPolicy = await UserPolicy.findById(userPolicyId);
-    if (!userPolicy) return res.status(404).json({ success: false, message: 'User policy not found' });
-    userPolicy.status = 'Approved';
-    userPolicy.verificationType = 'Agent';
-    await userPolicy.save();
-    res.json({
-      success: true,
-      userPolicyId: userPolicy._id,
-      status: userPolicy.status,
-      verificationType: userPolicy.verificationType
-    });
+    try {
+      const { userPolicyId } = req.body;
+      const userPolicy = await UserPolicy.findById(userPolicyId);
+      if (!userPolicy) {
+        return res.status(404).json({ success: false, message: 'User policy not found' });
+      }
+      
+      // Check if agent is assigned to this policy
+      if (String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      
+      userPolicy.status = 'Approved';
+      userPolicy.verificationType = 'Agent';
+      await userPolicy.save();
+      
+      res.json({
+        success: true,
+        userPolicyId: userPolicy._id,
+        status: userPolicy.status,
+        verificationType: userPolicy.verificationType
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
-  // Add claim for a policy
-  async addClaim(req, res) {
-    const { userPolicyId, description, amount } = req.body;
-    const claim = await Claim.create({
-      userPolicyId,
-      agentId: req.user.userId,
-      description,
-      amount,
-      status: 'Pending'
-    });
-    res.json({ success: true, claim });
-  },
-   // View all claims for policies assigned to the agent
+  // View all claims for policies assigned to the agent
   async assignedClaims(req, res) {
     try {
       // Find all user policies where this agent is assigned
       const userPolicies = await UserPolicy.find({ assignedAgentId: req.user.userId });
       const userPolicyIds = userPolicies.map(up => up._id);
+      
       // Find all claims for these user policies
-      const claims = await Claim.find({ userPolicyId: { $in: userPolicyIds } }).populate('userId userPolicyId');
-      res.json({ success: true, claims });
+      const claims = await Claim.find({ userPolicyId: { $in: userPolicyIds } })
+        .populate('userId', 'name email')
+        .populate('userPolicyId')
+        .populate('decidedByAgentId', 'name');
+      
+      const result = claims.map(c => ({
+        claimId: c._id,
+        incidentDate: c.incidentDate,
+        description: c.description,
+        amountClaimed: c.amountClaimed,
+        status: c.status,
+        decisionNotes: c.decisionNotes,
+        customerName: c.userId.name,
+        customerEmail: c.userId.email,
+        policyId: c.userPolicyId._id,
+        decidedBy: c.decidedByAgentId?.name,
+        createdAt: c.createdAt
+      }));
+      
+      res.json({ success: true, claims: result });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }
   },
+
   // Get details for a specific claim by claimId (agent)
   async getClaimById(req, res) {
     try {
-      const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
+      const claim = await Claim.findById(req.params.id)
+        .populate('userId', 'name email')
+        .populate('userPolicyId')
+        .populate('decidedByAgentId', 'name');
+      
       if (!claim) {
         return res.status(404).json({ success: false, message: 'Claim not found' });
       }
+      
       // Only allow agent to view claim if they are assigned to the policy
       const userPolicy = await UserPolicy.findById(claim.userPolicyId);
       if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
         return res.status(403).json({ success: false, message: 'Access denied' });
       }
+      
       res.json({ success: true, claim });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }
   },
+
+  // Approve claim (agent)
+  async approveClaim(req, res) {
+    try {
+      const { claimId, decisionNotes } = req.body;
+      const claim = await Claim.findById(claimId);
+      
+      if (!claim) {
+        return res.status(404).json({ success: false, message: 'Claim not found' });
+      }
+      
+      // Check if agent is assigned to this policy
+      const userPolicy = await UserPolicy.findById(claim.userPolicyId);
+      if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      
+      claim.status = 'Approved';
+      claim.decidedByAgentId = req.user.userId;
+      claim.decisionNotes = decisionNotes || '';
+      await claim.save();
+      
+      // Update user policy status to 'Claimed'
+      userPolicy.status = 'Claimed';
+      await userPolicy.save();
+      
+      res.json({ success: true, claim });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // Reject claim (agent)
+  async rejectClaim(req, res) {
+    try {
+      const { claimId, decisionNotes } = req.body;
+      const claim = await Claim.findById(claimId);
+      
+      if (!claim) {
+        return res.status(404).json({ success: false, message: 'Claim not found' });
+      }
+      
+      // Check if agent is assigned to this policy
+      const userPolicy = await UserPolicy.findById(claim.userPolicyId);
+      if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      
+      claim.status = 'Rejected';
+      claim.decidedByAgentId = req.user.userId;
+      claim.decisionNotes = decisionNotes || '';
+      await claim.save();
+      
+      res.json({ success: true, claim });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // Get dashboard statistics
+  async getDashboardStats(req, res) {
+    try {
+      const agentId = req.user.userId;
+      
+      // Get assigned policies
+      const policies = await UserPolicy.find({ assignedAgentId: agentId });
+      const policyIds = policies.map(p => p._id);
+      
+      // Get unique customers from assigned policies
+      const uniqueCustomerIds = [...new Set(policies.map(p => p.userId.toString()))];
+      const approvedCustomers = policies.filter(p => p.status === 'Approved');
+      const uniqueApprovedCustomerIds = [...new Set(approvedCustomers.map(p => p.userId.toString()))];
+      
+      // Get claims for assigned policies
+      const claims = await Claim.find({ userPolicyId: { $in: policyIds } });
+      
+      // Get payments for assigned policies
+      const payments = await Payment.find({ userPolicyId: { $in: policyIds } });
+      
+      const stats = {
+        totalPolicies: policies.length,
+        approvedPolicies: policies.filter(p => p.status === 'Approved').length,
+        pendingPolicies: policies.filter(p => p.status === 'Pending').length,
+        totalClaims: claims.length,
+        pendingClaims: claims.filter(c => c.status === 'Pending').length,
+        approvedClaims: claims.filter(c => c.status === 'Approved').length,
+        rejectedClaims: claims.filter(c => c.status === 'Rejected').length,
+        totalPayments: payments.length,
+        totalPaymentAmount: payments.reduce((sum, p) => sum + p.amount, 0),
+        totalCustomers: uniqueCustomerIds.length,
+        approvedCustomers: uniqueApprovedCustomerIds.length
+      };
+      
+      res.json({ success: true, stats });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // Get policy purchase requests assigned to this agent
+  async getPolicyRequests(req, res) {
+    try {
+      const agentId = req.user.userId;
+      
+      // Debug log
+      console.log('AgentDashboard: getPolicyRequests for agentId:', agentId);
+      
+      // Ensure agentId is ObjectId for query
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+      
+      // Get all user policies assigned to this agent with 'Pending' status
+      const policyRequests = await UserPolicy.find({ 
+        assignedAgentId: agentObjectId,
+        status: 'Pending'
+      })
+      .populate('userId', 'name email')
+      .populate('policyProductId', 'code title premium termMonths')
+      .sort({ createdAt: -1 }); // Most recent first
+      
+      const requests = policyRequests.map(up => ({
+        userPolicyId: up._id,
+        customerId: up.userId._id,
+        customerName: up.userId.name,
+        customerEmail: up.userId.email,
+        policyId: up.policyProductId._id,
+        policyCode: up.policyProductId.code,
+        policyTitle: up.policyProductId.title,
+        premium: up.policyProductId.premium,
+        termMonths: up.policyProductId.termMonths,
+        status: up.status,
+        requestDate: up.createdAt,
+        verificationType: up.verificationType
+      }));
+      
+      res.json({ success: true, requests: requests });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
+
+  // Approve a policy purchase request
+  async approvePolicyRequest(req, res) {
+    try {
+      const { userPolicyId } = req.params;
+      const agentId = req.user.userId;
+      
+      // Debug log
+      console.log('AgentDashboard: approvePolicyRequest for userPolicyId:', userPolicyId, 'agentId:', agentId);
+      
+      // Validate userPolicyId format
+      if (!userPolicyId || userPolicyId.length !== 24) {
+        console.log('Invalid userPolicyId format:', userPolicyId);
+        return res.status(400).json({ success: false, message: 'Invalid policy ID format' });
+      }
+      
+      // Ensure proper ObjectId conversion
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+      const policyObjectId = mongoose.default.Types.ObjectId.isValid(userPolicyId) ? new mongoose.default.Types.ObjectId(userPolicyId) : userPolicyId;
+      
+      console.log('Searching for policy with ID:', policyObjectId, 'assigned to agent:', agentObjectId);
+      
+      // Find the policy request and verify it's assigned to this agent
+      const userPolicy = await UserPolicy.findOne({ 
+        _id: policyObjectId,
+        assignedAgentId: agentObjectId,
+        status: 'Pending'
+      }).populate('userId', 'name email')
+        .populate('policyProductId', 'title code premium termMonths')
+        .populate('assignedAgentId', 'name email agentCode');
+      
+      if (!userPolicy) {
+        console.log('Policy request not found or already processed');
+        return res.status(404).json({ success: false, message: 'Policy request not found or already processed' });
+      }
+      
+      console.log('Found policy:', userPolicy.status, 'for customer:', userPolicy.userId?.name);
+      
+      // Update the policy status to Approved
+      userPolicy.status = 'Approved';
+      userPolicy.startDate = new Date();
+      
+      // Calculate end date based on term months from policy product
+      if (userPolicy.policyProductId) {
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + (userPolicy.policyProductId.termMonths || 12));
+        userPolicy.endDate = endDate;
+      }
+      
+      await userPolicy.save();
+      
+      // Create audit log for admin notification
+      await AuditLog.create({
+        action: 'POLICY_APPROVED',
+        userId: userPolicy.userId._id,
+        details: `Policy ${userPolicy.policyProductId?.title || 'Unknown'} (${userPolicy.policyProductId?.code || 'N/A'}) approved by agent ${userPolicy.assignedAgentId?.name || 'Unknown'} for customer ${userPolicy.userId?.name || 'Unknown'}`
+      });
+      
+      console.log('Policy approved successfully:', userPolicyId);
+      res.json({ success: true, message: 'Policy request approved successfully' });
+      
+    } catch (err) {
+      console.error('Error in approvePolicyRequest:', err.message);
+      console.error('Full error:', err);
+      res.status(500).json({ success: false, error: 'Failed to approve policy: ' + err.message });
+    }
+  },
+
+  // Reject a policy purchase request
+  async rejectPolicyRequest(req, res) {
+    try {
+      const { userPolicyId } = req.params;
+      const agentId = req.user.userId;
+      
+      // Debug log
+      console.log('AgentDashboard: rejectPolicyRequest for userPolicyId:', userPolicyId, 'agentId:', agentId);
+      
+      // Validate userPolicyId format
+      if (!userPolicyId || userPolicyId.length !== 24) {
+        console.log('Invalid userPolicyId format:', userPolicyId);
+        return res.status(400).json({ success: false, message: 'Invalid policy ID format' });
+      }
+      
+      // Ensure proper ObjectId conversion
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+      const policyObjectId = mongoose.default.Types.ObjectId.isValid(userPolicyId) ? new mongoose.default.Types.ObjectId(userPolicyId) : userPolicyId;
+      
+      console.log('Searching for policy with ID:', policyObjectId, 'assigned to agent:', agentObjectId);
+      
+      // Find the policy request and verify it's assigned to this agent
+      const userPolicy = await UserPolicy.findOne({ 
+        _id: policyObjectId,
+        assignedAgentId: agentObjectId,
+        status: 'Pending'
+      }).populate('userId', 'name email')
+        .populate('policyProductId', 'title code premium termMonths')
+        .populate('assignedAgentId', 'name email agentCode');
+      
+      if (!userPolicy) {
+        console.log('Policy request not found or already processed');
+        return res.status(404).json({ success: false, message: 'Policy request not found or already processed' });
+      }
+      
+      console.log('Found policy:', userPolicy.status, 'for customer:', userPolicy.userId?.name);
+      
+      // Update the policy status to Rejected
+      userPolicy.status = 'Rejected';
+      
+      await userPolicy.save();
+      
+      // Create audit log for admin notification
+      await AuditLog.create({
+        action: 'POLICY_REJECTED',
+        userId: userPolicy.userId._id,
+        details: `Policy ${userPolicy.policyProductId?.title || 'Unknown'} (${userPolicy.policyProductId?.code || 'N/A'}) rejected by agent ${userPolicy.assignedAgentId?.name || 'Unknown'} for customer ${userPolicy.userId?.name || 'Unknown'}`
+      });
+      
+      console.log('Policy rejected successfully:', userPolicyId);
+      res.json({ success: true, message: 'Policy request rejected successfully' });
+      
+    } catch (err) {
+      console.error('Error in rejectPolicyRequest:', err.message);
+      console.error('Full error:', err);
+      res.status(500).json({ success: false, error: 'Failed to reject policy: ' + err.message });
+    }
+  },
+
+  // Get approved customers for this agent
+  async getApprovedCustomers(req, res) {
+    try {
+      const agentId = req.user.userId;
+      
+      console.log('AgentDashboard: getApprovedCustomers for agentId:', agentId);
+      
+      // Ensure proper ObjectId conversion
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+      
+      // Find all approved user policies assigned to this agent
+      const approvedPolicies = await UserPolicy.find({ 
+        assignedAgentId: agentObjectId,
+        status: 'Approved'
+      })
+      .populate('userId', 'name email phone')
+      .populate('policyProductId', 'title code premium termMonths')
+      .populate('assignedAgentId', 'name email agentCode')
+      .sort({ startDate: -1 });
+      
+      // Transform the data to match the frontend Customer interface
+      const customers = approvedPolicies.map(policy => ({
+        userPolicyId: policy._id.toString(),
+        customerId: policy.userId._id.toString(),
+        customerName: policy.userId.name,
+        customerEmail: policy.userId.email,
+        customerPhone: policy.userId.phone || '',
+        status: policy.status,
+        startDate: policy.startDate,
+        endDate: policy.endDate,
+        premiumPaid: policy.premiumPaid,
+        verificationType: policy.verificationType,
+        createdAt: policy.createdAt,
+        policyCode: policy.policyProductId.code,
+        policyTitle: policy.policyProductId.title,
+        policyPremium: policy.policyProductId.premium,
+        policyNumber: `POL-${policy._id.toString().slice(-8).toUpperCase()}`,
+        policyType: policy.policyProductId.title,
+        purchaseDate: policy.createdAt,
+        totalPremium: policy.premiumPaid,
+        paymentMethod: 'Online', // Default value
+        installmentsDone: 1 // Default value
+      }));
+      
+      console.log(`Found ${customers.length} approved customers`);
+      res.json({ success: true, customers });
+      
+    } catch (err) {
+      console.error('Error in getApprovedCustomers:', err.message);
+      console.error('Full error:', err);
+      res.status(500).json({ success: false, error: 'Failed to get approved customers: ' + err.message });
+    }
+  },
+
+  async getPaymentCustomers(req, res) {
+    try {
+      const agentId = req.user.userId;
+      console.log('Getting payment customers for agent:', agentId);
+
+      const mongoose = await import('mongoose');
+      const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
+
+      // Find all user policies assigned to this agent with payments
+      const userPolicies = await UserPolicy.find({ 
+        assignedAgentId: agentObjectId 
+      })
+      .populate('userId', 'name email')
+      .populate('policyProductId', 'code title premium termMonths minSumInsured maxSumInsured')
+      .sort({ createdAt: -1 });
+
+      console.log(`Found ${userPolicies.length} user policies for agent`);
+
+      // Get payments for these policies
+      const paymentCustomers = [];
+      
+      for (const userPolicy of userPolicies) {
+        const payments = await Payment.find({ 
+          userPolicyId: userPolicy._id 
+        }).sort({ createdAt: -1 });
+
+        if (payments.length > 0) {
+          const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
+          const lastPayment = payments[0];
+          const paymentMethods = [...new Set(payments.map(p => p.method))];
+
+          paymentCustomers.push({
+            customerId: userPolicy.userId._id,
+            customerName: userPolicy.userId.name,
+            customerEmail: userPolicy.userId.email,
+            policyTitle: userPolicy.policyProductId.title,
+            policyCode: userPolicy.policyProductId.code,
+            policyNumber: userPolicy._id.toString().slice(-8).toUpperCase(),
+            policyPremium: userPolicy.policyProductId.premium,
+            policyStatus: userPolicy.status,
+            policyStartDate: userPolicy.startDate,
+            policyEndDate: userPolicy.endDate,
+            totalPayments: payments.length,
+            totalAmount: totalAmount,
+            lastPaymentDate: lastPayment.createdAt,
+            primaryPaymentMethod: paymentMethods[0] || 'Online',
+            paymentHistory: payments.map(payment => ({
+              paymentId: payment._id,
+              amount: payment.amount,
+              method: payment.method,
+              paymentDate: payment.createdAt,
+              reference: payment.reference,
+              status: 'Completed'
+            }))
+          });
+        }
+      }
+
+      console.log(`Found ${paymentCustomers.length} customers with payments`);
+      res.status(200).json({ success: true, customers: paymentCustomers });
+
+    } catch (error) {
+      console.error('Error getting payment customers:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Error retrieving payment customers', 
+        error: error.message 
+      });
+    }
+  }
 };
 
 export default agentController;

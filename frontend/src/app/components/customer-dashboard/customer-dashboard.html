@@ -1,1 +1,554 @@
-<p>customer-dashboard works!</p>
+<div class="p-6">
+	<div class="flex items-center justify-between mb-6">
+		<div>
+			<h1 class="text-2xl font-bold">{{ roleTitle }} Dashboard</h1>
+			<p class="text-gray-700 mt-1">Welcome, <span class="font-semibold">{{ userName }}</span></p>
+		</div>
+		<button (click)="logout()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">Logout</button>
+	</div>
+
+	<div *ngIf="isLoading" class="text-gray-600">Loading your data...</div>
+	<div *ngIf="!isLoading && errorMessage" class="text-red-600 mb-4">{{ errorMessage }}</div>
+
+	<!-- My Policies -->
+	<section class="mb-8">
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xl font-semibold">My Policies</h2>
+			<div class="text-sm text-gray-600">Total: {{ myPolicies.length || 0 }}</div>
+		</div>
+		<div class="overflow-x-auto bg-white shadow rounded">
+			<table class="min-w-full text-sm">
+				<thead class="bg-gray-50">
+					<tr>
+						<th class="px-4 py-2 text-left">Code</th>
+						<th class="px-4 py-2 text-left">Title</th>
+						<th class="px-4 py-2 text-left">Premium</th>
+						<th class="px-4 py-2 text-left">Term</th>
+						<th class="px-4 py-2 text-left">Paid</th>
+						<th class="px-4 py-2 text-left">Next Due</th>
+						<th class="px-4 py-2 text-left">Start</th>
+						<th class="px-4 py-2 text-left">End</th>
+						<th class="px-4 py-2 text-left">Status</th>
+						<th class="px-4 py-2 text-left">Assigned Agents</th>
+						<th class="px-4 py-2 text-left">Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let p of myPolicies" class="border-t">
+						<td class="px-4 py-2">{{ p._product?.code || p.policy?.code || '-' }}</td>
+						<td class="px-4 py-2">{{ p._product?.title || p.policy?.title || '-' }}</td>
+						<td class="px-4 py-2">{{ (p._product?.premium || p.policy?.premium) | number:'1.0-2' }}</td>
+						<td class="px-4 py-2">{{ p._product?.termMonths || p.policy?.termMonths }} mo</td>
+						<td class="px-4 py-2">{{ countPaymentsForPolicy(p.userPolicyId || p._id) }}/{{ p._product?.termMonths || p.policy?.termMonths }}</td>
+						<td class="px-4 py-2" [ngClass]="{ 'text-red-600 font-semibold': isOverdue(p), 'text-amber-600 font-semibold': isDueToday(p) }">{{ formatDueDate(p) }}</td>
+						<td class="px-4 py-2">{{ p.startDate | date: 'mediumDate' }}</td>
+						<td class="px-4 py-2">{{ p.endDate | date: 'mediumDate' }}</td>
+						<td class="px-4 py-2">
+							<span class="px-2 py-1 rounded text-white"
+								[ngClass]="{
+									'bg-yellow-600': p.status === 'Pending',
+									'bg-green-600': p.status === 'Approved',
+									'bg-red-600': p.status === 'Cancelled'
+								}">{{ p.status }}</span>
+						</td>
+						<td class="px-4 py-2">
+							<div class="flex flex-wrap gap-1">
+								<ng-container *ngIf="p._product?.assignedAgentName || p._product?.assignedAgentId">
+									<span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">
+										{{ p._product?.assignedAgentName || p._product?.assignedAgentId?.name || p._product?.assignedAgentId?.email || p._product?.assignedAgentId?.agentCode || 'Agent' }}
+									</span>
+								</ng-container>
+								<span *ngIf="!p._product?.assignedAgentName && !p._product?.assignedAgentId" class="text-xs text-gray-500">Unassigned</span>
+							</div>
+						</td>
+						<td class="px-4 py-2 space-x-2">
+							<button class="px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700" (click)="payMonthly(p)" [disabled]="(p.status !== 'Approved') || paying[p.userPolicyId || p._id] || (countPaymentsForPolicy(p.userPolicyId || p._id) >= (p._product?.termMonths || p.policy?.termMonths || 0))">
+								<span *ngIf="!paying[p.userPolicyId || p._id]">Pay</span>
+								<span *ngIf="paying[p.userPolicyId || p._id]">Paying...</span>
+							</button>
+							<button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700" (click)="openPolicyDetails(p)">View Details</button>
+							<button class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700" (click)="cancelPolicy(p)" [disabled]="p.status !== 'Approved'">Cancel</button>
+						</td>
+					</tr>
+					<tr *ngIf="!myPolicies || myPolicies.length === 0">
+						<td colspan="9" class="px-4 py-6 text-center text-gray-500">No policies yet.</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+	<!-- Raise Claim (Global Section) -->
+	<section class="mb-8">
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xl font-semibold">Raise a Claim</h2>
+			<button class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" (click)="openClaimCenter()">Raise Claim</button>
+		</div>
+		<div class="bg-white border rounded p-4 text-sm text-gray-700" *ngIf="approvedClaimablePolicies().length === 0">
+			No approved policies available for claiming right now.
+		</div>
+		<div *ngIf="claims && claims.length" class="mt-4">
+			<div class="flex items-center justify-between mb-1">
+				<h3 class="font-semibold text-lg text-gray-800">Your Recent Claims</h3>
+				<span class="text-xs text-gray-500">Total: {{ claims.length }}</span>
+			</div>
+			<div class="overflow-x-auto bg-white border rounded">
+				<table class="min-w-full text-sm">
+					<thead class="bg-gray-50">
+						<tr>
+							<th class="pl-4 pr-1 py-2 text-left">Policy</th>
+							<th class="pl-1 pr-4 py-2 text-left">Amount</th>
+							<th class="px-4 py-2 text-left">Status</th>
+							<th class="px-4 py-2 text-left">Incident</th>
+							<th class="px-4 py-2 text-left">Raised</th>
+						</tr>
+					</thead>
+					<tbody>
+							<tr *ngFor="let c of recentClaims(10)" class="border-t">
+							<td class="pl-4 pr-1 py-2">{{ (c.userPolicyId?.policyProductId?.code || c.userPolicyId?.policy?.code || c.userPolicyId?.policyProductId?.title || c.userPolicyId?._id || '—') }}</td>
+							<td class="pl-1 pr-4 py-2">{{ c.amountClaimed | number:'1.0-2' }}</td>
+							<td class="px-4 py-2">
+								<span class="px-2 py-0.5 rounded text-white" [ngClass]="{
+									'bg-yellow-600': (c.status||'').toLowerCase()==='pending',
+									'bg-green-600': (c.status||'').toLowerCase()==='approved',
+									'bg-red-600': (c.status||'').toLowerCase()==='rejected'
+								}">{{ c.status }}</span>
+							</td>
+							<td class="px-4 py-2">{{ c.incidentDate | date:'mediumDate' }}</td>
+							<td class="px-4 py-2">{{ c.createdAt | date:'short' }}</td>
+						</tr>
+						<tr *ngIf="!claims || claims.length === 0">
+							<td colspan="5" class="px-4 py-4 text-center text-gray-500">No claims yet.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+
+	<!-- Claimed Policies -->
+	<section class="mb-8" *ngIf="claimedPolicies && claimedPolicies.length">
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xl font-semibold">Claimed Policies</h2>
+			<div class="text-sm text-gray-600">Total: {{ claimedPolicies.length }}</div>
+		</div>
+		<div class="overflow-x-auto bg-white shadow rounded">
+			<table class="min-w-full text-sm">
+				<thead class="bg-gray-50">
+					<tr>
+						<th class="px-4 py-2 text-left">Code</th>
+						<th class="px-4 py-2 text-left">Title</th>
+						<th class="px-4 py-2 text-left">Premium</th>
+						<th class="px-4 py-2 text-left">Term</th>
+						<th class="px-4 py-2 text-left">Paid</th>
+						<th class="px-4 py-2 text-left">Start</th>
+						<th class="px-4 py-2 text-left">End</th>
+						<th class="px-4 py-2 text-left">Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let p of claimedPolicies" class="border-t">
+						<td class="px-4 py-2">{{ p._product?.code || p.policy?.code || '-' }}</td>
+						<td class="px-4 py-2">{{ p._product?.title || p.policy?.title || '-' }}</td>
+						<td class="px-4 py-2">{{ (p._product?.premium || p.policy?.premium) | number:'1.0-2' }}</td>
+						<td class="px-4 py-2">{{ p._product?.termMonths || p.policy?.termMonths }} mo</td>
+						<td class="px-4 py-2">{{ countPaymentsForPolicy(p.userPolicyId || p._id) }}/{{ p._product?.termMonths || p.policy?.termMonths }}</td>
+						<td class="px-4 py-2">{{ p.startDate | date: 'mediumDate' }}</td>
+						<td class="px-4 py-2">{{ p.endDate | date: 'mediumDate' }}</td>
+						<td class="px-4 py-2"><span class="px-2 py-1 rounded text-white bg-purple-600">Claimed</span></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+	<!-- All Policies (Consolidated) -->
+	<section class="mb-8" *ngIf="allPoliciesCombined && allPoliciesCombined.length">
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xl font-semibold">All Policies (Overview)</h2>
+			<div class="text-sm text-gray-600">Total: {{ allPoliciesCombined.length }}</div>
+		</div>
+		<div class="overflow-x-auto bg-white shadow rounded">
+			<table class="min-w-full text-sm">
+				   <thead class="bg-gray-50">
+					   <tr>
+						   <th class="px-4 py-2 text-left">Code</th>
+						   <th class="px-4 py-2 text-left">Title</th>
+						   <th class="px-4 py-2 text-left">Premium</th>
+						   <th class="px-4 py-2 text-left">Term</th>
+						   <th class="px-4 py-2 text-left">Paid</th>
+						   <th class="px-4 py-2 text-left">Start</th>
+						   <th class="px-4 py-2 text-left">End</th>
+						   <th class="px-4 py-2 text-left">Agent Name</th>
+						   <th class="px-4 py-2 text-left">Status</th>
+					   </tr>
+				   </thead>
+					  <tbody>
+						  <tr *ngFor="let p of allPoliciesCombined" class="border-t">
+							  <td class="px-4 py-2">{{ p._product?.code || p.policy?.code || '-' }}</td>
+							  <td class="px-4 py-2">{{ p._product?.title || p.policy?.title || '-' }}</td>
+							  <td class="px-4 py-2">{{ (p._product?.premium || p.policy?.premium) | number:'1.0-2' }}</td>
+							  <td class="px-4 py-2">{{ p._product?.termMonths || p.policy?.termMonths }} mo</td>
+							  <td class="px-4 py-2">{{ countPaymentsForPolicy(p.userPolicyId || p._id) }}/{{ p._product?.termMonths || p.policy?.termMonths }}</td>
+							  <td class="px-4 py-2">{{ p.startDate | date:'mediumDate' }}</td>
+							  <td class="px-4 py-2">{{ p.endDate | date:'mediumDate' }}</td>
+							  <td class="px-4 py-2">
+								  <span *ngIf="p.agentDetails">{{ p.agentDetails.name }}</span>
+								  <span *ngIf="!p.agentDetails" class="text-gray-400">Unassigned</span>
+							  </td>
+							  <td class="px-4 py-2">
+								  <span class="px-2 py-1 rounded text-white"
+									  [ngClass]="{
+										  'bg-green-600': (p.status||'').toLowerCase()==='approved',
+										  'bg-yellow-600': (p.status||'').toLowerCase()==='pending',
+										  'bg-red-600': (p.status||'').toLowerCase()==='cancelled',
+										  'bg-purple-600': (p.status||'').toLowerCase()==='claimed',
+										  'bg-gray-500': ['rejected','declined'].includes((p.status||'').toLowerCase())
+									  }">{{ p.status }}</span>
+							  </td>
+						  </tr>
+				   </tbody>
+			</table>
+		</div>
+	</section>
+
+	<!-- Payments -->
+	<section class="mb-8">
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xl font-semibold">Payments</h2>
+			<div class="text-sm text-gray-600">Total: {{ payments.length || 0 }}</div>
+		</div>
+		<div class="overflow-x-auto bg-white shadow rounded">
+			<table class="min-w-full text-sm">
+				<thead class="bg-gray-50">
+					<tr>
+						<th class="px-4 py-2 text-left">Policy</th>
+						<th class="px-4 py-2 text-left">Installment</th>
+						<th class="px-4 py-2 text-left">Due Month</th>
+						<th class="px-4 py-2 text-left">Amount</th>
+						<th class="px-4 py-2 text-left">Method</th>
+						<th class="px-4 py-2 text-left">Date</th>
+						<th class="px-4 py-2 text-left">Time</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let pay of payments" class="border-t">
+						<td class="px-4 py-2">{{ policyLabelForPayment(pay) }}</td>
+						<td class="px-4 py-2">{{ paymentInstallmentLabel(pay) }}</td>
+						<td class="px-4 py-2">{{ paymentDueMonth(pay) }}</td>
+						<td class="px-4 py-2">{{ pay.amount | number:'1.0-2' }}</td>
+						<td class="px-4 py-2">{{ pay.method }}</td>
+						<td class="px-4 py-2">{{ pay.createdAt | date: 'mediumDate' }}</td>
+						<td class="px-4 py-2">{{ pay.createdAt | date: 'shortTime' }}</td>
+					</tr>
+					<tr *ngIf="!payments || payments.length === 0">
+						<td colspan="7" class="px-4 py-6 text-center text-gray-500">No payments yet.</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+	<!-- Catalog to purchase -->
+	<section>
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xl font-semibold">Available Policies</h2>
+			<div class="text-sm text-gray-600">Total: {{ catalog.length || 0 }}</div>
+		</div>
+		<div class="grid md:grid-cols-3 gap-4">
+			<div *ngFor="let pol of catalog" class="border rounded p-4 bg-white shadow">
+				<div class="font-semibold text-indigo-700 mb-1">{{ pol.code }}</div>
+				<div class="text-lg font-medium mb-2">{{ pol.title }}</div>
+				<div class="text-gray-600 mb-2">{{ pol.description }}</div>
+				<div class="text-sm text-gray-700 mb-1">Premium: <span class="font-semibold">{{ pol.premium | number:'1.0-2' }}</span></div>
+				<div class="text-sm text-gray-700 mb-3">Term: <span class="font-semibold">{{ pol.termMonths }}</span> months</div>
+				   <div class="flex gap-8 mb-3 bg-gray-200 rounded p-2">
+					   <ng-container *ngIf="pol.agentDetails">
+						   <span class="px-2 py-0.5 text-gray-800 rounded text-xs">
+							   {{ pol.agentDetails.agentCode }}
+						   </span>
+						   <span class="px-2 py-0.5 text-gray-800 rounded text-xs">
+							   {{ pol.agentDetails.name }}
+						   </span>
+						   <span class="px-2 py-0.5 text-gray-800 rounded text-xs">
+							   {{ pol.agentDetails.email }}
+						   </span>
+					   </ng-container>
+					   <span *ngIf="!pol.agentDetails" class="text-xs text-gray-500">Unassigned</span>
+				   </div>
+				<button class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" (click)="openPurchase(pol)">Purchase</button>
+			</div>
+		</div>
+		<div *ngIf="!catalog || catalog.length === 0" class="text-gray-500">No policies available.</div>
+	</section>
+
+	<!-- Purchase Modal -->
+	<div *ngIf="showPurchaseModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="showPurchaseModal=false">
+		<div class="bg-white rounded shadow-lg w-full max-w-md p-4" (click)="$event.stopPropagation()">
+			<div class="flex items-center justify-between mb-3">
+				<h3 class="text-lg font-semibold">Purchase Policy</h3>
+				<button class="text-gray-500 hover:text-black" (click)="showPurchaseModal=false">✕</button>
+			</div>
+			<div class="space-y-3">
+				<label class="block">
+					<span class="text-sm text-gray-700">Start Date</span>
+					<input type="date" [(ngModel)]="purchaseForm.startDate" class="mt-1 w-full border rounded px-3 py-2"/>
+				</label>
+				<div class="grid grid-cols-2 gap-3">
+					<label class="block">
+						<span class="text-sm text-gray-700">Nominee Name</span>
+						<input type="text" [(ngModel)]="purchaseForm.nomineeName" class="mt-1 w-full border rounded px-3 py-2" placeholder="Optional"/>
+					</label>
+					<label class="block">
+						<span class="text-sm text-gray-700">Nominee Relation</span>
+						<select [(ngModel)]="purchaseForm.nomineeRelation" class="mt-1 w-full border rounded px-3 py-2">
+							<option value="">Select</option>
+							<option *ngFor="let rel of ['Spouse','Parent','Child','Sibling','Relative','Friend','Other']" [value]="rel">{{ rel }}</option>
+						</select>
+					</label>
+				</div>
+				<div *ngIf="purchaseError" class="text-red-600 text-sm">{{ purchaseError }}</div>
+				<div class="flex justify-end gap-2">
+					<button class="px-3 py-2 border rounded" (click)="showPurchaseModal=false">Cancel</button>
+					<button class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" (click)="submitPurchase()">Confirm</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Raise Claim Modal -->
+	<div *ngIf="showClaimModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="showClaimModal=false">
+		<div class="bg-white rounded shadow-lg w-full max-w-md p-4" (click)="$event.stopPropagation()">
+			<div class="flex items-center justify-between mb-3">
+				<h3 class="text-lg font-semibold">Raise Claim</h3>
+				<button class="text-gray-500 hover:text-black" (click)="showClaimModal=false">✕</button>
+			</div>
+			<div class="space-y-3">
+				<label class="block">
+					<span class="text-sm text-gray-700">Policy</span>
+					<select [(ngModel)]="claimForm.userPolicyId" class="mt-1 w-full border rounded px-3 py-2">
+						<option value="">Select Policy</option>
+						<option *ngFor="let pol of approvedClaimablePolicies()" [value]="pol.userPolicyId || pol._id">
+							{{ pol._product?.code || pol.policy?.code }} — {{ pol._product?.title || pol.policy?.title }}
+						</option>
+					</select>
+				</label>
+				<label class="block">
+					<span class="text-sm text-gray-700">Incident Date</span>
+					<input type="date" [(ngModel)]="claimForm.incidentDate" class="mt-1 w-full border rounded px-3 py-2"/>
+				</label>
+				<label class="block">
+					<span class="text-sm text-gray-700">Description</span>
+					<textarea [(ngModel)]="claimForm.description" rows="3" class="mt-1 w-full border rounded px-3 py-2" placeholder="Describe the incident"></textarea>
+				</label>
+				<label class="block">
+					<span class="text-sm text-gray-700">Amount Claimed</span>
+					<input type="number" [(ngModel)]="claimForm.amountClaimed" class="mt-1 w-full border rounded px-3 py-2" placeholder="0.00"/>
+				</label>
+				<div *ngIf="claimError" class="text-red-600 text-sm">{{ claimError }}</div>
+				<div class="flex justify-end gap-2">
+					<button class="px-3 py-2 border rounded" (click)="showClaimModal=false">Cancel</button>
+					<button class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" (click)="submitClaim()">Submit</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Pay Modal -->
+	<div *ngIf="showPayModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="showPayModal=false">
+		<div class="bg-white rounded shadow-lg w-full max-w-md p-4" (click)="$event.stopPropagation()">
+			<div class="flex items-center justify-between mb-3">
+				<h3 class="text-lg font-semibold">Pay Installment</h3>
+				<button class="text-gray-500 hover:text-black" (click)="showPayModal=false">✕</button>
+			</div>
+			<div class="space-y-3 text-sm">
+				<div class="grid grid-cols-2 gap-3">
+					<div>
+						<div class="text-gray-500">Policy Code</div>
+						<div class="font-semibold">{{ payContext.code }}</div>
+					</div>
+					<div>
+						<div class="text-gray-500">Title</div>
+						<div class="font-semibold truncate" title="{{ payContext.title }}">{{ payContext.title }}</div>
+					</div>
+				</div>
+				<div class="grid grid-cols-3 gap-3">
+					<div>
+						<div class="text-gray-500">Premium</div>
+						<div class="font-semibold">{{ payContext.premium | number:'1.0-2' }}</div>
+					</div>
+					<div>
+						<div class="text-gray-500">Term (mo)</div>
+						<div class="font-semibold">{{ payContext.termMonths }}</div>
+					</div>
+					<div>
+						<div class="text-gray-500">Paid</div>
+						<div class="font-semibold">{{ payContext.paidCount }}/{{ payContext.termMonths }}</div>
+					</div>
+				</div>
+				<label class="block">
+					<span class="text-gray-700">Method</span>
+					<select [(ngModel)]="payForm.method" class="mt-1 w-full border rounded px-3 py-2">
+						<option value="Card">Card</option>
+						<option value="Netbanking">Netbanking</option>
+						<option value="Offline">Offline</option>
+						<option value="UPI">UPI</option>
+						<option value="Simulated">Simulated</option>
+					</select>
+				</label>
+				<div *ngIf="payError" class="text-red-600 text-xs">{{ payError }}</div>
+				<div class="flex justify-end gap-2 pt-2">
+					<button class="px-3 py-2 border rounded" (click)="showPayModal=false">Cancel</button>
+					<button class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" (click)="submitPayment()">Pay {{ payContext.premium | number:'1.0-2' }}</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Policy Details Modal -->
+	<div *ngIf="showDetailsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closePolicyDetails()">
+	<div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl p-2 text-sm overflow-y-auto" style="max-height: 80vh; min-height: 300px;" (click)="$event.stopPropagation()">
+			<div class="flex items-center justify-between mb-4">
+				<h3 class="text-lg font-semibold">Policy Details</h3>
+				<button class="text-gray-500 hover:text-black" (click)="closePolicyDetails()">✕</button>
+			</div>
+			<div *ngIf="detailsContext.policy as dp" class="space-y-4">
+				   <!-- Professional Policy Details Layout -->
+				   <div class="border rounded p-4 bg-gray-50 mb-4">
+					   <div class="grid md:grid-cols-4 gap-6">
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Policy Code</div>
+							   <div class="text-lg font-bold text-indigo-700">{{ dp._product?.code || dp.policy?.code }}</div>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Title</div>
+							   <div class="text-lg font-semibold">{{ dp._product?.title || dp.policy?.title }}</div>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Premium</div>
+							   <div class="font-semibold">₹{{ (dp._product?.premium || dp.policy?.premium) | number:'1.0-2' }}</div>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Term (months)</div>
+							   <div class="font-semibold">{{ dp._product?.termMonths || dp.policy?.termMonths }}</div>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Status</div>
+							   <span class="px-2 py-1 rounded text-white font-semibold"
+								   [ngClass]="{
+									   'bg-yellow-600': dp.status === 'Pending',
+									   'bg-green-600': dp.status === 'Approved',
+									   'bg-red-600': dp.status === 'Cancelled',
+									   'bg-purple-600': dp.status === 'Claimed'
+								   }">{{ dp.status }}</span>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Paid Installments</div>
+							   <div class="font-semibold">{{ countPaymentsForPolicy(dp.userPolicyId || dp._id) }}/{{ dp._product?.termMonths || dp.policy?.termMonths }}</div>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Start Date</div>
+							   <div class="font-semibold">{{ dp.startDate | date:'mediumDate' }}</div>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">End Date</div>
+							   <div class="font-semibold">{{ dp.endDate | date:'mediumDate' }}</div>
+						   </div>
+						   <div>
+							   <div class="text-xs text-gray-500 mb-1">Next Due</div>
+							   <div class="font-semibold" [ngClass]="{ 'text-red-600': isOverdue(dp), 'text-amber-600': isDueToday(dp) }">{{ formatDueDate(dp) }}</div>
+						   </div>
+					   </div>
+				   </div>
+
+				<!-- Nominee -->
+				<div *ngIf="dp.nominee" class="border rounded p-3 bg-gray-50">
+					<div class="text-gray-500 mb-1">Nominee</div>
+					<div class="font-medium">{{ dp.nominee?.name }} <span class="text-gray-400">({{ dp.nominee?.relation }})</span></div>
+				</div>
+
+				   <!-- Agent Details as 3 columns -->
+				   <div *ngIf="dp.agentDetails" class="border rounded p-3 bg-indigo-50">
+					   <div class="text-gray-500 mb-2">Agent Details</div>
+					   <div class="grid grid-cols-3 gap-4">
+						   <div>
+							   <div class="text-gray-500">Agent Code</div>
+							   <div class="font-medium">{{ dp.agentDetails.agentCode || '-' }}</div>
+						   </div>
+						   <div>
+							   <div class="text-gray-500">Name</div>
+							   <div class="font-medium">{{ dp.agentDetails.name || '-' }}</div>
+						   </div>
+						   <div>
+							   <div class="text-gray-500">Email</div>
+							   <div class="font-medium">{{ dp.agentDetails.email || '-' }}</div>
+						   </div>
+					   </div>
+				   </div>
+				   <!-- Payments Table -->
+				<div>
+					<div class="flex items-center justify-between mb-2">
+						<h4 class="font-semibold">Payments</h4>
+						<span class="text-xs text-gray-500">{{ detailsContext.payments.length }} total</span>
+					</div>
+					<div class="overflow-x-auto border rounded">
+						<table class="min-w-full text-xs">
+							<thead class="bg-gray-100">
+								<tr>
+									<th class="px-3 py-1 text-left">Installment</th>
+									<th class="px-3 py-1 text-left">Due Month</th>
+									<th class="px-3 py-1 text-left">Amount</th>
+									<th class="px-3 py-1 text-left">Method</th>
+									<th class="px-3 py-1 text-left">Date</th>
+									<th class="px-3 py-1 text-left">Time</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr *ngFor="let pay of detailsContext.payments" class="border-t">
+									<td class="px-3 py-1">{{ pay.installment }}</td>
+									<td class="px-3 py-1">{{ pay.dueMonth }}</td>
+									<td class="px-3 py-1">{{ pay.amount | number:'1.0-2' }}</td>
+									<td class="px-3 py-1">{{ pay.method }}</td>
+									<td class="px-3 py-1">{{ pay.createdAt | date:'mediumDate' }}</td>
+									<td class="px-3 py-1">{{ pay.createdAt | date:'shortTime' }}</td>
+								</tr>
+								<tr *ngIf="!detailsContext.payments.length">
+									<td colspan="6" class="px-3 py-3 text-center text-gray-500">No payments yet.</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="flex justify-end mt-5">
+				<button class="px-4 py-2 border rounded hover:bg-gray-50" (click)="closePolicyDetails()">Close</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Cancel Policy Modal -->
+	<div *ngIf="showCancelModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="closeCancelModal()">
+		<div class="bg-white rounded shadow-lg w-full max-w-md p-5" (click)="$event.stopPropagation()">
+			<div class="flex items-center justify-between mb-3">
+				<h3 class="text-lg font-semibold text-red-600">Cancel Policy</h3>
+				<button class="text-gray-500 hover:text-black" (click)="closeCancelModal()">✕</button>
+			</div>
+			<div class="space-y-4 text-sm">
+				<p>Are you sure you want to cancel this policy?</p>
+				<div *ngIf="cancelContext" class="border rounded p-3 bg-gray-50">
+					<div class="font-semibold mb-1">{{ cancelContext._product?.code || cancelContext.policy?.code }} — {{ cancelContext._product?.title || cancelContext.policy?.title }}</div>
+					<div class="text-xs text-gray-600">Started: {{ cancelContext.startDate | date:'mediumDate' }} | Premium: {{ (cancelContext._product?.premium || cancelContext.policy?.premium) | number:'1.0-2' }}</div>
+				</div>
+				<div *ngIf="cancelError" class="text-red-600 text-xs">{{ cancelError }}</div>
+				<div class="flex justify-end gap-2 pt-2">
+					<button class="px-3 py-2 border rounded" (click)="closeCancelModal()" [disabled]="cancelling">No</button>
+					<button class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-60" (click)="performCancel()" [disabled]="cancelling">
+						<span *ngIf="!cancelling">Yes, Cancel</span>
+						<span *ngIf="cancelling">Cancelling...</span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>

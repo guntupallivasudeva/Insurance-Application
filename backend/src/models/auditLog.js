@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const auditLogSchema = new mongoose.Schema({
     action: { type: String, required: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
     details: { type: String },
     timestamp: { type: Date, default: Date.now }
 });

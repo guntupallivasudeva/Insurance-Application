@@ -5,19 +5,20 @@ import UserPolicy from '../models/userPolicy.js';
 import Payment from '../models/payment.js';
 import Joi from 'joi';
 
+const nomineeRelations = ['Spouse','Parent','Child','Sibling','Relative','Friend','Other'];
 const purchaseSchema = Joi.object({
   policyProductId: Joi.string().required(),
   startDate: Joi.date().required(),
   nominee: Joi.object({
     name: Joi.string().required(),
-    relation: Joi.string().required()
+    relation: Joi.string().valid(...nomineeRelations).required()
   }).optional()
 });
 
+// Payment request: backend derives amount from policy premium; client only supplies method
 const paymentSchema = Joi.object({
   userPolicyId: Joi.string().required(),
-  amount: Joi.number().positive().required(),
-  method: Joi.string().valid('Card', 'Netbanking', 'Offline', 'Simulated').default('Simulated'),
+  method: Joi.string().valid('Card', 'Netbanking', 'Offline', 'UPI', 'Simulated').required(),
   reference: Joi.string().optional()
 });
 
@@ -26,7 +27,10 @@ const customerController = {
   async getClaimById(req, res) {
     try {
       const Claim = (await import('../models/claim.js')).default;
-      const claim = await Claim.findById(req.params.id).populate('userId userPolicyId decidedByAgentId');
+      const claim = await Claim.findById(req.params.id)
+        .populate({ path: 'userPolicyId', populate: { path: 'policyProductId', populate: { path: 'assignedAgentId', model: 'Agent' } } })
+        .populate({ path: 'userPolicyId', populate: { path: 'assignedAgentId', model: 'Agent' } })
+        .populate('userId decidedByAgentId');
       if (!claim) {
         return res.status(404).json({ success: false, message: 'Claim not found' });
       }
@@ -42,7 +46,9 @@ const customerController = {
   // Raise a claim for a policy
   async raiseClaim(req, res) {
     const { userPolicyId, incidentDate, description, amountClaimed } = req.body;
-    const userPolicy = await UserPolicy.findById(userPolicyId);
+    const userPolicy = await UserPolicy.findById(userPolicyId)
+      .populate({ path: 'policyProductId', populate: { path: 'assignedAgentId', model: 'Agent' } })
+      .populate({ path: 'assignedAgentId', model: 'Agent' });
     if (!userPolicy) return res.status(404).json({ success: false, message: 'User policy not found' });
     const Claim = (await import('../models/claim.js')).default;
     const claim = await Claim.create({
@@ -53,11 +59,12 @@ const customerController = {
       amountClaimed,
       status: 'Pending'
     });
-    res.json({ success: true, claim });
+    res.json({ success: true, claim, userPolicy });
   },
   // View all policies
   async viewPolicies(req, res) {
-    const policies = await PolicyProduct.find();
+    const policies = await PolicyProduct.find()
+      .populate({ path: 'assignedAgentId', model: 'Agent' });
     res.json({ success: true, policies });
   },
 
@@ -85,32 +92,101 @@ const customerController = {
 
   // Make payment for a policy
   async makePayment(req, res) {
-    const { error, value } = paymentSchema.validate(req.body);
-    if (error) return res.status(400).json({ success: false, error: error.details });
-    const { userPolicyId, amount, method, reference } = value;
-    const userPolicy = await UserPolicy.findById(userPolicyId);
-    if (!userPolicy) return res.status(404).json({ success: false, message: 'User policy not found' });
-    const payment = await Payment.create({
-      userId: req.user.userId,
-      userPolicyId,
-      amount,
-      method,
-      reference: reference || `PAY_${Date.now()}`
-    });
-    userPolicy.premiumPaid = (userPolicy.premiumPaid || 0) + amount;
-    await userPolicy.save();
-    res.json({ success: true, payment });
+    try {
+      // Validate and strip unknown fields (e.g., client-supplied amount will be ignored)
+      const { error, value } = paymentSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
+      if (error) return res.status(400).json({ success: false, error: error.details });
+
+      const { userPolicyId, method, reference } = value;
+      const userId = req.user.userId;
+
+      // Ensure policy exists and belongs to the user
+      const userPolicy = await UserPolicy.findById(userPolicyId).populate('policyProductId');
+      if (!userPolicy) {
+        return res.status(404).json({ success: false, message: 'User policy not found' });
+      }
+      if (String(userPolicy.userId) !== String(userId)) {
+        return res.status(403).json({ success: false, message: 'You do not have permission to pay for this policy' });
+      }
+
+      // Only allow payments for approved policies
+      if (userPolicy.status !== 'Approved') {
+        return res.status(400).json({ success: false, message: 'Payments are allowed only for approved policies' });
+      }
+
+      // Derive amount and term from the product
+      const product = userPolicy.policyProductId; // populated PolicyProduct
+      if (!product) {
+        return res.status(500).json({ success: false, message: 'Linked policy product not found' });
+      }
+      const installmentAmount = Number(product.premium || 0);
+      const termMonths = Number(product.termMonths || 0);
+      if (!installmentAmount || !termMonths) {
+        return res.status(400).json({ success: false, message: 'Policy product has invalid premium or term' });
+      }
+
+      // Prevent paying more installments than term
+      const paidCount = await Payment.countDocuments({ userPolicyId: userPolicy._id });
+      if (paidCount >= termMonths) {
+        return res.status(400).json({ success: false, message: 'All installments for this policy have already been paid' });
+      }
+
+      // Create payment with server-calculated amount
+      const payment = await Payment.create({
+        userId,
+        userPolicyId: userPolicy._id,
+        amount: installmentAmount,
+        method,
+        reference: reference || `PAY_${Date.now()}`
+      });
+
+      // Update aggregate premium paid on the user policy
+      userPolicy.premiumPaid = Number(userPolicy.premiumPaid || 0) + installmentAmount;
+      await userPolicy.save();
+
+      res.json({
+        success: true,
+        message: 'Payment successful',
+        payment,
+        meta: {
+          paidCount: paidCount + 1,
+          termMonths,
+          remaining: Math.max(0, termMonths - (paidCount + 1)),
+          installmentAmount
+        }
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Failed to process payment', error: err.message });
+    }
   },
 
   // View payment history
   async paymentHistory(req, res) {
-    const payments = await Payment.find({ userId: req.user.userId }).populate('userPolicyId');
+    const payments = await Payment.find({ userId: req.user.userId })
+      .populate({ path: 'userPolicyId', populate: { path: 'policyProductId', populate: { path: 'assignedAgentId', model: 'Agent' } } })
+      .populate({ path: 'userPolicyId', populate: { path: 'assignedAgentId', model: 'Agent' } });
     res.json({ success: true, payments });
+  },
+
+  // View claims raised by this customer
+  async myClaims(req, res) {
+    try {
+      const Claim = (await import('../models/claim.js')).default;
+      const claims = await Claim.find({ userId: req.user.userId })
+        .sort({ createdAt: -1 })
+        .populate({ path: 'userPolicyId', populate: { path: 'policyProductId', populate: { path: 'assignedAgentId', model: 'Agent' } } })
+        .populate({ path: 'userPolicyId', populate: { path: 'assignedAgentId', model: 'Agent' } });
+      res.json({ success: true, claims });
+    } catch (err) {
+      res.status(500).json({ success: false, message: 'Failed to load claims', error: err.message });
+    }
   },
 
   // View purchased policies
   async myPolicies(req, res) {
-    const policies = await UserPolicy.find({ userId: req.user.userId }).populate('policyProductId');
+    const policies = await UserPolicy.find({ userId: req.user.userId })
+      .populate({ path: 'policyProductId', populate: { path: 'assignedAgentId', model: 'Agent' } })
+      .populate({ path: 'assignedAgentId', model: 'Agent' });
     const result = policies.map(p => ({
       userPolicyId: p._id,
       status: p.status,
@@ -118,7 +194,8 @@ const customerController = {
       policy: p.policyProductId,
       startDate: p.startDate,
       endDate: p.endDate,
-      nominee: p.nominee
+      nominee: p.nominee,
+      assignedAgentId: p.assignedAgentId // populated Agent object if present
     }));
     res.json({ success: true, policies: result });
   },
@@ -178,7 +255,7 @@ const customerController = {
   async getPolicyById(req, res) {
     try {
       const { id } = req.params;
-      const policy = await PolicyProduct.findById(id);
+  const policy = await PolicyProduct.findById(id);
       if (!policy) {
         return res.status(404).json({ success: false, message: 'Policy not found' });
       }

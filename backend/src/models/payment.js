@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 const PaymentSchema = new mongoose.Schema({
 	userId: {
 		type: mongoose.Schema.Types.ObjectId,
-		ref: 'User',
+		ref: 'Customer',
 		required: true
 	},
 	userPolicyId: {
@@ -18,7 +18,7 @@ const PaymentSchema = new mongoose.Schema({
 	},
 	method: {
 		type: String,
-		enum: ['Card', 'Netbanking', 'Offline', 'Simulated'],
+		enum: ['Card', 'Netbanking', 'Offline', 'UPI', 'Simulated'],
 		default: 'Simulated'
 	},
 	reference: {

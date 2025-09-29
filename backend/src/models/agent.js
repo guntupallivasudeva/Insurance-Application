@@ -6,8 +6,7 @@ const AgentSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, minlength: 6 },
   role: { type: String, enum: ['Agent'], default: 'Agent' },
-  branch: { type: String },
-  phone: { type: String }
+  agentCode: { type: String, unique: true, sparse: true, index: true }
 });
 
 AgentSchema.pre('save', async function (next) {

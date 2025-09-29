@@ -17,10 +17,15 @@ router.delete('/deletepolicies/:id', adminAuth, adminController.deletePolicy);
 router.get('/userpolicies', adminAuth, adminController.allUserPolicies);
 router.get('/payments', adminAuth, adminController.allPayments);
 router.post('/createagent', adminAuth, adminController.createAgent);
+router.put('/updateagent/:id', adminAuth, adminController.updateAgent);
+router.delete('/deleteagent/:id', adminAuth, adminController.deleteAgent);
+
 router.post('/assignpolicy', adminAuth, adminController.assignPolicyToAgent);
+router.post('/unassign-policy', adminAuth, adminController.unassignPolicyAgent);
 router.get('/customerdetails', adminAuth, adminController.allCustomerData);
 router.post('/approvepolicy', adminAuth, adminController.approvePolicy);
 router.post('/approveclaim', adminAuth, adminController.approveClaim);
+router.put('/claim/:id', adminAuth, adminController.updateClaim);
 
 // View all claims for all customers
 router.get('/allclaims', adminAuth, adminController.allClaims);

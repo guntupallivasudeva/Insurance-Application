@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 
+const allowedNomineeRelations = ['Spouse','Parent','Child','Sibling','Relative','Friend','Other'];
 const NomineeSchema = new mongoose.Schema({
-  name: String,
-  relation: String
+  name: { type: String },
+  relation: { type: String, enum: allowedNomineeRelations }
 });
 
 const UserPolicySchema = new mongoose.Schema({
@@ -14,7 +15,7 @@ const UserPolicySchema = new mongoose.Schema({
   userId: 
   { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
+    ref: 'Customer', 
     required: true 
 },
   policyProductId: 

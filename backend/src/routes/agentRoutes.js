@@ -7,15 +7,32 @@ const agentAuth = [authenticateToken, authorizeRoles('Agent')];
 
 // Agent login route
 router.post('/login', loginAgent);
-router.get('/assignedpolicies', agentAuth, agentController.assignedPolicies);
-router.get('/assignedpayments', agentAuth, agentController.assignedPayments);
-router.post('/approvepolicy', agentAuth, agentController.approvePolicy);
-router.post('/addclaim', agentAuth, agentController.addClaim);
-router.post('/approveclaim', agentAuth, agentController.approveClaim);
-// View all claims for policies assigned to the agent
-router.get('/assignedclaims', agentAuth, agentController.assignedClaims);
-// Get details for a specific claim by claimId
-router.get('/claim/:id', agentAuth, agentController.getClaimById);
 
+// Policy management routes
+router.get('/assignedpolicies', agentAuth, agentController.assignedPolicies);
+router.get('/policy-customers/:policyProductId', agentAuth, agentController.getPolicyCustomers);
+router.get('/customer-payments/:userPolicyId', agentAuth, agentController.getCustomerPayments);
+router.post('/approvepolicy', agentAuth, agentController.approvePolicy);
+
+// Policy request management routes
+router.get('/policy-requests', agentAuth, agentController.getPolicyRequests);
+router.post('/approve-policy-request/:userPolicyId', agentAuth, agentController.approvePolicyRequest);
+router.post('/reject-policy-request/:userPolicyId', agentAuth, agentController.rejectPolicyRequest);
+
+// Approved customers route
+router.get('/approved-customers', agentAuth, agentController.getApprovedCustomers);
+
+// Claims management routes
+router.get('/assignedclaims', agentAuth, agentController.assignedClaims);
+router.get('/claims/:id', agentAuth, agentController.getClaimById);
+router.post('/approveclaim', agentAuth, agentController.approveClaim);
+router.post('/rejectclaim', agentAuth, agentController.rejectClaim);
+
+// Payment management routes
+router.get('/assignedpayments', agentAuth, agentController.assignedPayments);
+router.get('/payment-customers', agentAuth, agentController.getPaymentCustomers);
+
+// Dashboard stats
+router.get('/dashboard', agentAuth, agentController.getDashboardStats);
 
 export default router;
