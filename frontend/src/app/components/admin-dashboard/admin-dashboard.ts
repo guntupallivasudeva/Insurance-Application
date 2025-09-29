@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { AdminService } from '../../services/admin.service';
 import { VerificationService } from '../../services/verification.service';
+import { PaymentService } from '../../services/payment.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -22,6 +23,9 @@ export class AdminDashboard implements OnInit {
   isLoadingPending = false;
   pendingError = '';
   pendingClaims: Array<any> = [];
+  
+  // Active tab for navigation
+  activeTab = 'pending-policies';
   // Approved claims
   approvedClaimsLoading = false;
   approvedClaimsError = '';
@@ -140,12 +144,18 @@ export class AdminDashboard implements OnInit {
       const paidAt = this.computePaidDate(pay);
       const dueAt = this.computeDueDate(pay);
       const isDone = raw === 'done' || raw === 'paid' || !!paidAt;
-      if (paidAt) {
-        if (dueAt && paidAt.getTime() > dueAt.getTime()) return 'Delayed';
+      
+      // If payment is made, it should always show as "Paid" regardless of timing
+      if (paidAt || isDone) {
         return 'Paid';
       }
-      if (isDone) return 'Paid';
-      if (dueAt && dueAt.getTime() < Date.now()) return 'Delayed';
+      
+      // If payment is not made and past due date, show as "Delayed"
+      if (dueAt && dueAt.getTime() < Date.now()) {
+        return 'Delayed';
+      }
+      
+      // Default to "Pending" for future payments
       return 'Pending';
     } catch {
       return 'Pending';
@@ -235,24 +245,59 @@ export class AdminDashboard implements OnInit {
     if (typeof term === 'number' && term > 0 && idx >= term) return null;
     return this.addMonths(start, idx);
   }
-  kpis: { userPolicies: number; policies: number; claims: number; customers: number; agents: number } = {
+  kpis: { userPolicies: number; policies: number; claims: number; customers: number; agents: number; totalPayments: number; totalRevenue: number } = {
     userPolicies: 0,
     policies: 0,
     claims: 0,
     customers: 0,
-    agents: 0
+    agents: 0,
+    totalPayments: 0,
+    totalRevenue: 0
   };
 
   constructor(
     private auth: AuthService,
     private router: Router,
     private adminService: AdminService,
-    public verificationService: VerificationService
+    public verificationService: VerificationService,
+    public paymentService: PaymentService
   ) {
     const role = (this.auth.getRole() || 'Admin').toString();
     this.roleTitle = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
     const user = this.auth.getUser();
     this.userName = user?.name || user?.email || 'User';
+  }
+
+  setActiveTab(tab: string) {
+    this.activeTab = tab;
+  }
+
+  private calculatePaymentStats(): { totalPayments: number; totalRevenue: number } {
+    let totalPayments = 0;
+    let totalRevenue = 0;
+    if (Array.isArray(this.customerDetails)) {
+      this.customerDetails.forEach((customer: any) => {
+        if (Array.isArray(customer.payments)) {
+          totalPayments += customer.payments.length;
+          customer.payments.forEach((payment: any) => {
+            if (payment?.amount && typeof payment.amount === 'number') {
+              totalRevenue += payment.amount;
+            }
+          });
+        }
+      });
+    }
+    return { totalPayments, totalRevenue };
+  }
+
+  // Helper method to calculate total paid amount for a customer
+  getCustomerTotalPaid(customer: any): number {
+    if (!customer?.payments || !Array.isArray(customer.payments)) {
+      return 0;
+    }
+    return customer.payments.reduce((total: any, payment: any) => {
+      return total + (payment?.amount || 0);
+    }, 0);
   }
 
   ngOnInit() {
@@ -301,8 +346,14 @@ export class AdminDashboard implements OnInit {
           policies: policyProductsList.length,
           claims: claimsList.length,
           customers: customersList.length,
-          agents: agentsList.length
+          agents: agentsList.length,
+          totalPayments: 0,
+          totalRevenue: 0
         };
+        // Calculate payment stats if customer details are available
+        const { totalPayments, totalRevenue } = this.calculatePaymentStats();
+        this.kpis.totalPayments = totalPayments;
+        this.kpis.totalRevenue = totalRevenue;
         this.isLoading = false;
       },
       error: () => {
@@ -318,11 +369,11 @@ export class AdminDashboard implements OnInit {
             this.adminService.getAllPolicies().subscribe({
               next: (polRes: any) => {
                 const policyProductsList = Array.isArray(polRes?.data) ? polRes.data : (Array.isArray(polRes) ? polRes : []);
-                this.kpis = { userPolicies, policies: policyProductsList.length, claims, customers, agents };
+                this.kpis = { userPolicies, policies: policyProductsList.length, claims, customers, agents, totalPayments: 0, totalRevenue: 0 };
                 this.isLoading = false;
               },
               error: () => {
-                this.kpis = { userPolicies, policies: 0, claims, customers, agents };
+                this.kpis = { userPolicies, policies: 0, claims, customers, agents, totalPayments: 0, totalRevenue: 0 };
                 this.isLoading = false;
               }
             });
@@ -702,7 +753,9 @@ export class AdminDashboard implements OnInit {
           policies: policyProductsList.length,
           claims: claimsList.length,
           customers: customersList.length,
-          agents: agentsList.length
+          agents: agentsList.length,
+          totalPayments: 0,
+          totalRevenue: 0
         };
         this.isLoading = false;
       },
@@ -1322,6 +1375,10 @@ export class AdminDashboard implements OnInit {
         this.customerDetails = Array.isArray(res?.data) ? res.data : [];
         // prefill product details from populated objects or cache; fetch as-needed in background
         this.prefillCustomerPolicies();
+        // Update payment stats after loading customer details
+        const { totalPayments, totalRevenue } = this.calculatePaymentStats();
+        this.kpis.totalPayments = totalPayments;
+        this.kpis.totalRevenue = totalRevenue;
         this.customerDetailsLoading = false;
       },
       error: (err) => {

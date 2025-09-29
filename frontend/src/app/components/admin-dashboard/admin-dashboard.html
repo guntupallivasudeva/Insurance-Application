@@ -1,61 +1,165 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-rose-50 to-indigo-50">
-  <div class="mx-auto max-w-7xl px-6 py-8">
-    <!-- Top bar -->
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-      <div>
-        <h1 class="text-3xl font-semibold tracking-tight text-slate-800">{{ roleTitle }} Dashboard</h1>
-        <p class="mt-1 text-slate-600">Welcome back, <span class="font-medium text-slate-800">{{ userName }}</span></p>
-      </div>
-      <div class="flex items-center gap-3">
-        <button (click)="loadSummary()" class="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700 disabled:opacity-60 disabled:hover:bg-indigo-600 transition-colors" [disabled]="isLoading">
-          <svg *ngIf="!isLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
+<div class="min-h-screen bg-gray-50 p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">{{ roleTitle }} Dashboard</h1>
+      <p class="text-gray-600 mt-1">Welcome, <span class="font-semibold">{{ userName }}</span></p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button (click)="loadSummary()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60" [disabled]="isLoading">
+        <span>{{ isLoading ? 'Refreshing...' : 'Refresh' }}</span>
+      </button>
+      <button (click)="logout()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Dashboard Stats -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
           </svg>
-          <svg *ngIf="isLoading" class="animate-spin -ml-1 mr-1 h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-          </svg>
-          <span>{{ isLoading ? 'Refreshing...' : 'Refresh' }}</span>
-        </button>
-        <button (click)="logout()" class="inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-2 text-white shadow-sm ring-1 ring-rose-500/50 hover:bg-rose-700 transition-colors" aria-label="Logout">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9l3 3m0 0l-3 3m3-3H3" />
-          </svg>
-          Logout
-        </button>
-        <div class="hidden sm:block h-6 w-px bg-slate-300"></div>
-        <div class="flex items-center gap-3">
-          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-700 text-sm font-semibold">
-            {{ (userName) }}
-          </div>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Total Customers</h3>
+          <p class="text-2xl font-bold text-indigo-600">{{ kpis.customers }}</p>
+          <p class="text-sm text-gray-500">Registered Users</p>
         </div>
       </div>
     </div>
 
-    
-
-    <!-- KPI Statistics -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-      <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm">
-        <div class="text-xs uppercase tracking-wide text-slate-500">Customers</div>
-        <div class="mt-1 text-2xl font-semibold text-slate-800">{{ kpis.customers }}</div>
-      </div>
-      <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm">
-        <div class="text-xs uppercase tracking-wide text-slate-500">Policies</div>
-        <div class="mt-1 text-2xl font-semibold text-slate-800">{{ kpis.policies }}</div>
-      </div>
-      <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm">
-        <div class="text-xs uppercase tracking-wide text-slate-500">User Policies</div>
-        <div class="mt-1 text-2xl font-semibold text-slate-800">{{ kpis.userPolicies }}</div>
-      </div>
-      <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200 shadow-sm">
-        <div class="text-xs uppercase tracking-wide text-slate-500">Claims</div>
-        <div class="mt-1 text-2xl font-semibold text-slate-800">{{ kpis.claims }}</div>
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Available Policies</h3>
+          <p class="text-2xl font-bold text-blue-600">{{ kpis.policies }}</p>
+          <p class="text-sm text-gray-500">Policy Products</p>
+        </div>
       </div>
     </div>
 
-    <!-- Policy Details Modal -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">User Policies</h3>
+          <p class="text-2xl font-bold text-purple-600">{{ kpis.userPolicies }}</p>
+          <p class="text-sm text-gray-500">Active Policies</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Total Claims</h3>
+          <p class="text-2xl font-bold text-yellow-600">{{ kpis.claims }}</p>
+          <p class="text-sm text-gray-500">Filed Claims</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-green-100 text-green-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Total Payments</h3>
+          <p class="text-2xl font-bold text-green-600">{{ kpis.totalPayments }}</p>
+          <p class="text-sm text-gray-500">Payments Made</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-emerald-100 text-emerald-600">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-lg font-semibold text-gray-900">Total Revenue</h3>
+          <p class="text-2xl font-bold text-emerald-600">₹{{ kpis.totalRevenue | number:'1.2-2' }}</p>
+          <p class="text-sm text-gray-500">Revenue Generated</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="mb-1">
+    <div class="border-b border-gray-200">
+      <nav class="flex space-x-8">
+        <button 
+          (click)="setActiveTab('pending-policies')"
+          [class]="activeTab === 'pending-policies' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Pending Policies
+        </button>
+        <button 
+          (click)="setActiveTab('approved-policies')"
+          [class]="activeTab === 'approved-policies' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Approved Policies
+        </button>
+        <button 
+          (click)="setActiveTab('agents')"
+          [class]="activeTab === 'agents' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Agents Management
+        </button>
+        <button 
+          (click)="setActiveTab('policies')"
+          [class]="activeTab === 'policies' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Policy Products
+        </button>
+        <button 
+          (click)="setActiveTab('user-policies')"
+          [class]="activeTab === 'user-policies' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          User Policies
+        </button>
+        <button 
+          (click)="setActiveTab('customers')"
+          [class]="activeTab === 'customers' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Customers
+        </button>
+        <button 
+          (click)="setActiveTab('claims')"
+          [class]="activeTab === 'claims' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+          class="py-2 px-1 border-b-2 font-medium text-sm">
+          Claims Management
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Policy Details Modal -->
     <div *ngIf="showPolicyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closePolicyModal()">
       <div class="w-full max-w-3xl scale-100 rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
         <div class="mb-4 flex items-center justify-between">
@@ -81,11 +185,17 @@
       </div>
     </div>
 
-    <!-- Pending User Policies -->
-    <div class="mt-8">
-      <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-slate-800">Pending Policies</h2>
-        <button (click)="loadPendingPolicies()" class="inline-flex items-center gap-2 rounded-full bg-amber-600 px-4 py-2 text-white shadow-sm ring-1 ring-amber-500/50 hover:bg-amber-700 disabled:opacity-60 transition-colors" [disabled]="isLoadingPolicies">
+  <!-- Pending User Policies Tab -->
+  <div *ngIf="activeTab === 'pending-policies'" class="mt-8 bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Pending Policies</h2>
+      <p class="text-gray-600 mt-1">Review and approve pending policy applications</p>
+    </div>
+    
+    <div class="p-6">
+  <div class="mb-2 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-800">Policy Applications</h3>
+        <button (click)="loadPendingPolicies()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60" [disabled]="isLoadingPolicies">
           <span>{{ isLoadingPolicies ? 'Refreshing...' : 'Refresh' }}</span>
         </button>
       </div>
@@ -95,64 +205,75 @@
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User Policy ID</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Product</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Start</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">End</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Policy ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy Code</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" *ngIf="pendingPolicies?.length; else noPendingPolicies">
             <tr *ngFor="let p of pendingPolicies" class="hover:bg-slate-50/60">
-              <td class="px-4 py-3 text-sm text-slate-900">{{ p._id }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ p.policyProductId?.code || policyByRef(p.policyProductId)?.code || '—' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ p.userId?.name || p.userId?.email || p.userId || '—' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ p.policyProductId?.title || p.policyProductId?.code || p.policyProductId || '—' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ p.startDate | date: 'mediumDate' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ p.endDate | date: 'mediumDate' }}</td>
-              <td class="px-4 py-3 text-sm">
-                <span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">{{ p.status }}</span>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ p._id }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.policyProductId?.code || policyByRef(p.policyProductId)?.code || '—' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.userId?.name || p.userId?.email || p.userId || '—' }}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">{{ p.policyProductId?.title || p.policyProductId?.code || p.policyProductId || '—' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.startDate | date: 'mediumDate' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.endDate | date: 'mediumDate' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">{{ p.status }}</span>
               </td>
-              <td class="px-4 py-3 text-sm">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex flex-wrap gap-2">
                   <button (click)="approvePolicy(p._id)" class="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm hover:bg-emerald-700 transition">Approve</button>
                   <button (click)="rejectPolicy(p._id)" class="inline-flex items-center rounded-full bg-rose-600 px-3 py-1.5 text-white shadow-sm hover:bg-rose-700 transition">Reject</button>
-                  <button (click)="viewPolicyDetails(p)" class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
+                  <button (click)="viewPolicyDetails(p)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">View</button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
         <ng-template #noPendingPolicies>
-          <div class="p-5 text-sm text-slate-600">No pending policies.</div>
+          <tbody>
+            <tr>
+              <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">No pending policies.</td>
+            </tr>
+          </tbody>
         </ng-template>
       </div>
     </div>
+  </div>
 
-    <!-- Approved Policies under User Policies -->
-    <div class="mt-8">
+  <!-- Approved Policies Tab -->
+  <div *ngIf="activeTab === 'approved-policies'" class="mt-8 bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Approved Policies</h2>
+      <p class="text-gray-600 mt-1">View recently approved policy applications</p>
+    </div>
+    
+    <div class="p-6">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-slate-800">Recently Approved Policies</h2>
-        <button (click)="loadApprovedPolicies()" class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-white shadow-sm ring-1 ring-emerald-500/50 hover:bg-emerald-700 disabled:opacity-60 transition-colors" [disabled]="approvedPoliciesLoading">
+        <h3 class="text-lg font-semibold text-gray-800">Recently Approved Policies</h3>
+        <button (click)="loadApprovedPolicies()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60" [disabled]="approvedPoliciesLoading">
           <span>{{ approvedPoliciesLoading ? 'Refreshing...' : 'Refresh' }}</span>
         </button>
       </div>
-      <div *ngIf="approvedPoliciesError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ approvedPoliciesError }}</div>
+      <div *ngIf="approvedPoliciesError" class="mb-3 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">{{ approvedPoliciesError }}</div>
       <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User Policy ID</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Product</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Start</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">End</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Approved By</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Policy ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy Code</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approved By</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" *ngIf="approvedPolicies?.length; else noApprovedPolicies">
@@ -180,11 +301,18 @@
         </ng-template>
       </div>
     </div>
+  </div>
 
-    <!-- Agents List -->
-    <div class="mt-10">
+  <!-- Agents Management Tab -->
+  <div *ngIf="activeTab === 'agents'" class="mt-8 bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Agents Management</h2>
+      <p class="text-gray-600 mt-1">Manage insurance agents and their assignments</p>
+    </div>
+    
+    <div class="p-6">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-slate-800">Agents</h2>
+        <h3 class="text-lg font-semibold text-gray-800">Agents</h3>
         <div class="flex items-center gap-2">
           <button (click)="loadAgents()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="agentsLoading">
             <svg *ngIf="!agentsLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
@@ -292,14 +420,19 @@
           </div>
         </div>
       </div>
-
-
     </div>
+  </div>
 
-    <!-- Policies Management -->
-    <div class="mt-10">
+  <!-- Policy Products Tab -->
+  <div *ngIf="activeTab === 'policies'" class="mt-8 bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Policy Products</h2>
+      <p class="text-gray-600 mt-1">Manage insurance policy products and assignments</p>
+    </div>
+    
+    <div class="p-6">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-slate-800">Policies</h2>
+        <h3 class="text-lg font-semibold text-gray-800">Policies</h3>
         <div class="flex items-center gap-2">
           <button (click)="loadPolicies()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="policiesLoading">
             <svg *ngIf="!policiesLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
@@ -528,11 +661,19 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- User Policies (All Users) Overview -->
-      <div class="mt-10">
-        <div class="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <h2 class="text-xl font-semibold text-slate-800">User Policies (All Customers)</h2>
+  <!-- User Policies Tab -->
+  <div *ngIf="activeTab === 'user-policies'" class="mt-8 bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">User Policies</h2>
+      <p class="text-gray-600 mt-1">Overview of all customer policies and their details</p>
+    </div>
+    
+    <div class="p-6">
+      <div class="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3 class="text-lg font-semibold text-gray-800">User Policies (All Customers)</h3>
           <div class="flex items-center gap-2 w-full md:w-auto">
             <input type="text" [(ngModel)]="userPoliciesSearch" [ngModelOptions]="{standalone:true}" placeholder="Search by name or email" class="w-full md:w-64 rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <button (click)="loadCustomerDetails()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="customerDetailsLoading">
@@ -584,11 +725,21 @@
           <div class="p-5 text-sm text-slate-600 rounded-xl ring-1 ring-slate-200 bg-white">No user policies found.</div>
         </ng-template>
       </div>
+    </div>
+  
 
-      <!-- Customer Details -->
-      <div class="mt-10">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-slate-800">Customer Details</h2>
+  <!-- Customers Tab -->
+  <div *ngIf="activeTab === 'customers'" class="mt-8 bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Customers</h2>
+      <p class="text-gray-600 mt-1">View and manage customer information and policies</p>
+    </div>
+    
+  <div class="p-6">
+    <div class="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Customer Management</h3>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <input type="text" placeholder="Search customers by name or email..." class="w-full md:w-64 rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           <button (click)="loadCustomerDetails()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="customerDetailsLoading">
             <svg *ngIf="!customerDetailsLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
@@ -600,38 +751,85 @@
             <span>{{ customerDetailsLoading ? 'Refreshing...' : 'Refresh' }}</span>
           </button>
         </div>
-
-        <div *ngIf="customerDetailsError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ customerDetailsError }}</div>
-        <div *ngIf="customerDetailsLoading" class="p-5 text-sm text-slate-600">Loading...</div>
-
-        <div *ngIf="!customerDetailsLoading && customerDetails?.length; else noCustomers">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div *ngFor="let c of customerDetails; let i = index" class="cursor-pointer rounded-2xl bg-white p-5 shadow-md ring-1 ring-slate-200 transition hover:shadow-lg" (click)="openCustomerModal(c)">
-              <div class="flex items-center justify-between">
-                <div>
-                  <div class="text-xs uppercase tracking-wide text-slate-500">Customer</div>
-                  <div class="text-[11px] font-mono text-slate-500">ID: {{ c?.customer?._id }}</div>
-                  <div class="text-base font-semibold text-slate-800">{{ c?.customer?.name }}</div>
-                  <div class="text-sm text-slate-600 break-all">{{ c?.customer?.email }}</div>
-                </div>
-                <div class="flex items-center gap-2 text-xs">
-                  <span class="rounded-full bg-indigo-50 px-2 py-1 text-indigo-700 ring-1 ring-indigo-200">Policies: {{ c?.policies?.length || 0 }}</span>
-                  <span class="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700 ring-1 ring-emerald-200">Payments: {{ c?.payments?.length || 0 }}</span>
-                </div>
-              </div>
-              
-            </div>
-          </div>
-        </div>
-        <ng-template #noCustomers>
-          <div class="p-5 text-sm text-slate-600">No customer details found.</div>
-        </ng-template>
       </div>
-    </div>
-    </div>
+      
+      <div *ngIf="customerDetailsError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ customerDetailsError }}</div>
+      <div *ngIf="customerDetailsLoading && !customerDetails?.length" class="p-4 text-sm text-slate-600">Loading customers...</div>
 
-    <!-- Customer Details Modal -->
-    <div *ngIf="showCustomerModal" class="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm overflow-auto py-10" (click)="closeCustomerModal()">
+      <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm" *ngIf="customerDetails?.length; else noCustomersBlock">
+        <table class="min-w-full divide-y divide-slate-200">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Customer Info</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Contact</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Count</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Payment Count</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Total Revenue</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 bg-white">
+            <tr *ngFor="let c of customerDetails" class="hover:bg-slate-50/60">
+              <td class="px-4 py-3">
+                <div class="flex items-center">
+                  <div class="h-10 w-10 flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+                      {{ (c?.customer?.name || 'U').charAt(0).toUpperCase() }}
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-slate-900">{{ c?.customer?.name || 'Unknown' }}</div>
+                    <div class="text-xs text-slate-500 font-mono">ID: {{ c?.customer?._id }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-sm text-slate-700">
+                <div class="break-all">{{ c?.customer?.email || 'No email' }}</div>
+              </td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ c?.policies?.length || 0 }} policies
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
+                  </svg>
+                  {{ c?.payments?.length || 0 }} payments
+                </span>
+              </td>
+              <td class="px-4 py-3 text-sm font-semibold text-slate-900">
+                <div class="flex items-center">
+                  <span class="text-emerald-600">₹{{ getCustomerTotalPaid(c) | number:'1.2-2' }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-sm">
+                <div class="flex flex-wrap gap-2">
+                  <button (click)="openCustomerModal(c)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">
+                    <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    View Details
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noCustomersBlock>
+        <div class="p-5 text-sm text-slate-600 rounded-xl ring-1 ring-slate-200 bg-white">No customers found. Customer data will appear here once available.</div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Customer Details Modal -->
+  <div *ngIf="showCustomerModal" class="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm overflow-auto py-10" (click)="closeCustomerModal()">
   <div class="w-full max-w-4xl rounded-xl bg-white p-5 shadow-xl ring-1 ring-slate-200 md:max-h-[85vh] overflow-auto" (click)="$event.stopPropagation()">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-slate-800">Customer Details</h3>
@@ -831,11 +1029,7 @@
                     <td class="px-3 py-2 text-sm text-slate-700">{{ computeNextDueDate(pay) | date: 'MMM yyyy' }}</td>
                     <td class="px-3 py-2 text-sm">
                       <span class="rounded-full px-2 py-1 text-xs font-medium"
-                        [ngClass]="{
-                          'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': computePaymentStatus(pay) === 'Paid',
-                          'bg-amber-50 text-amber-700 ring-1 ring-amber-200': computePaymentStatus(pay) === 'Delayed' || computePaymentStatus(pay) === 'Pending',
-                          'bg-rose-50 text-rose-700 ring-1 ring-rose-200': computePaymentStatus(pay) === 'Failed'
-                        }">{{ computePaymentStatus(pay) }}</span>
+                        [ngClass]="paymentService.getPaymentStatusClasses(paymentService.computePaymentStatus(pay))">{{ paymentService.computePaymentStatus(pay) }}</span>
                     </td>
                     <td class="px-3 py-2 text-sm text-slate-700">{{ pay?.method || 'Simulated' }}</td>
                   </tr>
@@ -895,13 +1089,20 @@
         </div>
       </div>
     </div>
-
-  <!-- Claim Requests Management -->
-  <div class="mx-auto max-w-7xl px-6 pb-12 bg-gradient-to-br from-slate-50 via-rose-50 to-indigo-50">
-      <div class="mt-10">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-slate-800">Claim Requests</h2>
-          <button (click)="loadPendingClaims()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="isLoadingPending">
+  
+  <!-- Claims Management Tab -->
+  <div *ngIf="activeTab === 'claims'" class="mt-8 bg-white rounded-lg shadow-md">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Claims Management</h2>
+      <p class="text-gray-600 mt-1">Process and manage insurance claims from customers</p>
+    </div>
+    
+    <div class="p-6">
+      <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Claims Processing</h3>
+        <div class="flex items-center gap-2 w-full md:w-auto">
+          <input type="text" placeholder="Search claims by customer or policy..." class="w-full md:w-64 rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <button (click)="loadPendingClaims()" class="inline-flex items-center gap-2 rounded-full bg-amber-600 px-4 py-2 text-white shadow-sm ring-1 ring-amber-500/50 hover:bg-amber-700 disabled:opacity-60 transition-colors" [disabled]="isLoadingPending">
             <svg *ngIf="!isLoadingPending" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
             </svg>
@@ -912,135 +1113,162 @@
             <span>{{ isLoadingPending ? 'Refreshing...' : 'Refresh' }}</span>
           </button>
         </div>
+      </div>
 
-        <div *ngIf="pendingError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ pendingError }}</div>
+      <!-- Pending Claims Section -->
+      <div class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-200 p-6">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+              ⏳
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-slate-800">Pending Claims</h3>
+              <p class="text-sm text-slate-600">Claims awaiting review and approval</p>
+            </div>
+          </div>
+          <div class="text-sm text-slate-600">{{ pendingClaims.length || 0 }} pending</div>
+        </div>
+        
+        <div *ngIf="pendingError" class="mx-6 mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ pendingError }}</div>
+        <div *ngIf="isLoadingPending && !pendingClaims?.length" class="p-6 text-sm text-slate-600">Loading claims...</div>
 
-        <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
-          <table class="min-w-full divide-y divide-slate-200">
+        <div class="overflow-hidden" *ngIf="pendingClaims?.length; else noPendingClaimsBlock">
+          <table class="w-full">
             <thead class="bg-slate-50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Claim ID</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code & Name</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Incident</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Amount</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
+              <tr class="divide-x divide-slate-200">
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Claim</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Customer</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Policy</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Amount</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 bg-white" *ngIf="pendingClaims?.length; else noClaims">
-              <tr *ngFor="let c of pendingClaims" class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 text-sm text-slate-900">{{ c._id }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700">
-                  <div class="flex items-center space-x-2">
-                    <span class="font-medium text-slate-900">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</span>
-                    <span class="text-slate-500">-</span>
-                    <span class="text-slate-600">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</span>
+            <tbody class="divide-y divide-slate-200 bg-white">
+              <tr *ngFor="let c of pendingClaims" class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-600 text-xs font-medium">
+                      ⏳
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-slate-800">{{ c._id }}</div>
+                      <div class="text-xs text-slate-500">{{ c.incidentDate | date:'mediumDate' }}</div>
+                    </div>
                   </div>
                 </td>
-                <td class="px-4 py-3 text-sm text-slate-700">{{ c.incidentDate | date: 'mediumDate' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700">₹{{ c.amountClaimed }}</td>
-                <td class="px-4 py-3 text-sm">
-                  <span class="rounded-full bg-amber-100 px-2 py-1 text-amber-800">{{ c.status }}</span>
+                <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
+                <td class="px-6 py-4">
+                  <div class="text-sm font-medium text-slate-800">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
+                  <div class="text-xs text-slate-500">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
                 </td>
-                <td class="px-4 py-3 text-sm">
+                <td class="px-6 py-4 text-sm font-medium text-amber-600">₹{{ c.amountClaimed | number:'1.2-2' }}</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-600/20">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td class="px-6 py-4">
                   <div class="flex flex-wrap gap-2">
-                    <button (click)="approve(c._id)" class="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm hover:bg-emerald-700 transition">Approve</button>
-                    <button (click)="reject(c._id)" class="inline-flex items-center rounded-full bg-rose-600 px-3 py-1.5 text-white shadow-sm hover:bg-rose-700 transition">Reject</button>
-                    <button (click)="openEditClaim(c)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">Edit</button>
-                    <button (click)="openClaimView(c)" class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
+                    <button (click)="approve(c._id)" class="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-emerald-500/50 hover:bg-emerald-700 transition">
+                      ✓ Approve
+                    </button>
+                    <button (click)="reject(c._id)" class="inline-flex items-center gap-1 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-rose-500/50 hover:bg-rose-700 transition">
+                      ✕ Reject
+                    </button>
+                    <button (click)="openClaimView(c)" class="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700 transition">
+                      👁️ View
+                    </button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
-          <ng-template #noClaims>
-            <div class="p-5 text-sm text-slate-600">No pending claims.</div>
-          </ng-template>
         </div>
+        <ng-template #noPendingClaimsBlock>
+          <div class="p-8 text-center text-sm text-slate-600">No pending claims found. Claims awaiting approval will appear here.</div>
+        </ng-template>
       </div>
-
-      <!-- Edit Claim Modal -->
-      <div *ngIf="editingClaim" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeEditClaim()">
-        <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-800">Edit Claim</h3>
-            <button (click)="closeEditClaim()" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800">✕</button>
-          </div>
-          <div class="grid grid-cols-1 gap-4">
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Incident Date</label>
-              <input type="date" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.incidentDate" [ngModelOptions]="{standalone:true}" />
-            </div>
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
-              <textarea rows="3" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.description" [ngModelOptions]="{standalone:true}"></textarea>
-            </div>
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Amount Claimed</label>
-              <input type="number" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.amountClaimed" [ngModelOptions]="{standalone:true}" />
-            </div>
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Decision Notes</label>
-              <textarea rows="2" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.decisionNotes" [ngModelOptions]="{standalone:true}"></textarea>
-            </div>
-            <div *ngIf="actionError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ actionError }}</div>
-          </div>
-          <div class="mt-6 flex justify-end gap-2">
-            <button (click)="closeEditClaim()" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200">Cancel</button>
-            <button (click)="saveClaimEdit()" class="rounded-full bg-indigo-600 px-4 py-2 text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700">Save</button>
-          </div>
+      
+      <!-- Additional Claims Sections -->
+      <div class="mt-8">
+        <div class="mb-4">
+          <h4 class="text-lg font-semibold text-slate-800">Processed Claims</h4>
+          <p class="text-sm text-slate-600">View approved and rejected claims</p>
         </div>
-      </div>
-
-      <!-- Approved & Rejected Claims -->
-  <div class="mx-auto max-w-7xl px-6 pb-12 bg-gradient-to-br from-slate-50 via-rose-50 to-indigo-50">
-        <div class="mt-6">
-          <div class="mb-3 flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-slate-800">Approved & Rejected Claims</h2>
+        <!-- Processed Claims -->
+        <div class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+          <div class="flex items-center justify-between border-b border-slate-200 p-6">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                ⚖️
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-slate-800">Processed Claims</h3>
+                <p class="text-sm text-slate-600">Approved and rejected claims overview</p>
+              </div>
+            </div>
             <button (click)="loadAllClaims()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="processedClaimsLoading">
+              <span *ngIf="processedClaimsLoading" class="animate-spin">⟳</span>
+              <span *ngIf="!processedClaimsLoading">🔄</span>
               <span>{{ processedClaimsLoading ? 'Refreshing...' : 'Refresh' }}</span>
             </button>
           </div>
-          <div *ngIf="processedClaimsError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ processedClaimsError }}</div>
-          <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
-            <table class="min-w-full divide-y divide-slate-200">
+          <div *ngIf="processedClaimsError" class="mx-6 mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ processedClaimsError }}</div>
+          <div class="overflow-hidden">
+            <table class="w-full">
               <thead class="bg-slate-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Claim ID</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code & Name</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Incident</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Amount</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Approved By</th>
+                <tr class="divide-x divide-slate-200">
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Claim</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Customer</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Policy</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Amount</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Approved By</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100 bg-white" *ngIf="processedClaims?.length; else noProcessed">
-                <tr *ngFor="let c of processedClaims" class="hover:bg-slate-50/60">
-                  <td class="px-4 py-3 text-sm text-slate-900">{{ c._id }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">
-                    <div class="flex items-center space-x-2">
-                      <span class="font-medium text-slate-900">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</span>
-                      <span class="text-slate-500">-</span>
-                      <span class="text-slate-600">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</span>
+              <tbody class="divide-y divide-slate-200 bg-white" *ngIf="processedClaims?.length; else noProcessed">
+                <tr *ngFor="let c of processedClaims" class="hover:bg-slate-50 transition-colors">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium"
+                           [ngClass]="{
+                             'bg-emerald-100 text-emerald-600': (c.status || '').toLowerCase() === 'approved',
+                             'bg-rose-100 text-rose-600': (c.status || '').toLowerCase() === 'rejected'
+                           }">
+                        <span *ngIf="(c.status || '').toLowerCase() === 'approved'">✓</span>
+                        <span *ngIf="(c.status || '').toLowerCase() === 'rejected'">✕</span>
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium text-slate-800">{{ c._id }}</div>
+                        <div class="text-xs text-slate-500">{{ c.incidentDate | date:'mediumDate' }}</div>
+                      </div>
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-sm text-slate-700">{{ c.incidentDate | date: 'mediumDate' }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">₹{{ c.amountClaimed }}</td>
-                  <td class="px-4 py-3 text-sm">
+                  <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
+                  <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-slate-800">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
+                    <div class="text-xs text-slate-500">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
+                  </td>
+                  <td class="px-6 py-4 text-sm font-medium"
+                      [ngClass]="{
+                        'text-emerald-600': (c.status || '').toLowerCase() === 'approved',
+                        'text-rose-600': (c.status || '').toLowerCase() === 'rejected'
+                      }">
+                    ₹{{ c.amountClaimed | number:'1.2-2' }}
+                  </td>
+                  <td class="px-6 py-4">
                     <span [ngClass]="{
-                      'bg-emerald-100 text-emerald-800': (c.status || '').toLowerCase() === 'approved',
-                      'bg-rose-100 text-rose-800': (c.status || '').toLowerCase() === 'rejected'
-                    }" class="rounded-full px-2 py-1">
+                      'bg-emerald-100 text-emerald-800 ring-emerald-600/20': (c.status || '').toLowerCase() === 'approved',
+                      'bg-rose-100 text-rose-800 ring-rose-600/20': (c.status || '').toLowerCase() === 'rejected'
+                    }" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1">
                       {{ c.status }}
                     </span>
                   </td>
-                  <td class="px-4 py-3 text-sm">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      [ngClass]="verificationService.getVerificationTypeClasses(c.verificationType)">
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1"
+                          [ngClass]="verificationService.getVerificationTypeClasses(c.verificationType)">
                       {{ verificationService.getVerificationTypeDisplay(c.verificationType) }}
                     </span>
                   </td>
@@ -1048,75 +1276,89 @@
               </tbody>
             </table>
             <ng-template #noProcessed>
-              <div class="p-5 text-sm text-slate-600">No approved or rejected claims.</div>
+              <div class="p-8 text-center text-sm text-slate-600">No processed claims found.</div>
             </ng-template>
           </div>
         </div>
       </div>
 
-      <!-- All Raised Claims -->
-  <div class="mx-auto max-w-7xl px-6 pb-16 bg-gradient-to-br from-slate-50 via-rose-50 to-indigo-50">
-        <div class="mt-6">
-          <div class="mb-3 flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-slate-800">All Raised Claims</h2>
+      <!-- All Claims History -->
+      <div class="mt-8">
+        <div class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+          <div class="flex items-center justify-between border-b border-slate-200 p-6">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                📋
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-slate-800">All Claims History</h3>
+                <p class="text-sm text-slate-600">Complete claims record</p>
+              </div>
+            </div>
             <button (click)="loadAllClaims()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="allClaimsLoading">
               <span>{{ allClaimsLoading ? 'Refreshing...' : 'Refresh' }}</span>
             </button>
           </div>
-          <div *ngIf="allClaimsError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ allClaimsError }}</div>
-          <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
-            <table class="min-w-full divide-y divide-slate-200">
+          <div *ngIf="allClaimsError" class="mx-6 mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ allClaimsError }}</div>
+          <div class="overflow-hidden">
+            <table class="w-full">
               <thead class="bg-slate-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Claim ID</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code & Name</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Incident</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Amount</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Approved By</th>
+                <tr class="divide-x divide-slate-200">
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Claim</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Customer</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Policy</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Amount</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Actions</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-slate-100 bg-white" *ngIf="allClaims?.length; else noAllClaims">
-                <tr *ngFor="let c of allClaims" class="hover:bg-slate-50/60">
-                  <td class="px-4 py-3 text-sm text-slate-900">{{ c._id }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">
-                    <div class="flex items-center space-x-2">
-                      <span class="font-medium text-slate-900">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</span>
-                      <span class="text-slate-500">-</span>
-                      <span class="text-slate-600">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</span>
+              <tbody class="divide-y divide-slate-200 bg-white" *ngIf="allClaims?.length; else noAllClaims">
+                <tr *ngFor="let c of allClaims" class="hover:bg-slate-50 transition-colors">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
+                        📋
+                      </div>
+                      <div>
+                        <div class="text-sm font-medium text-slate-800">{{ c._id }}</div>
+                        <div class="text-xs text-slate-500">{{ c.incidentDate | date:'mediumDate' }}</div>
+                      </div>
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-sm text-slate-700">{{ c.incidentDate | date: 'mediumDate' }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">₹{{ c.amountClaimed }}</td>
-                  <td class="px-4 py-3 text-sm">
-                    <span [ngClass]="{
-                      'bg-amber-100 text-amber-800': (c.status || '').toLowerCase() === 'pending',
-                      'bg-emerald-100 text-emerald-800': (c.status || '').toLowerCase() === 'approved',
-                      'bg-rose-100 text-rose-800': (c.status || '').toLowerCase() === 'rejected'
-                    }" class="rounded-full px-2 py-1">{{ c.status }}</span>
-                    <button (click)="openClaimView(c)" class="ml-2 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
+                  <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
+                  <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-slate-800">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
+                    <div class="text-xs text-slate-500">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
                   </td>
-                  <td class="px-4 py-3 text-sm">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                      [ngClass]="verificationService.getVerificationTypeClasses(c.verificationType)">
-                      {{ verificationService.getVerificationTypeDisplay(c.verificationType) }}
+                  <td class="px-6 py-4 text-sm font-medium text-slate-800">₹{{ c.amountClaimed | number:'1.2-2' }}</td>
+                  <td class="px-6 py-4">
+                    <span [ngClass]="{
+                      'bg-amber-100 text-amber-800 ring-amber-600/20': (c.status || '').toLowerCase() === 'pending',
+                      'bg-emerald-100 text-emerald-800 ring-emerald-600/20': (c.status || '').toLowerCase() === 'approved',
+                      'bg-rose-100 text-rose-800 ring-rose-600/20': (c.status || '').toLowerCase() === 'rejected'
+                    }" class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1">
+                      {{ c.status }}
                     </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <button (click)="openClaimView(c)" class="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700 transition">
+                      👁️ View
+                    </button>
                   </td>
                 </tr>
               </tbody>
             </table>
             <ng-template #noAllClaims>
-              <div class="p-5 text-sm text-slate-600">No claims found.</div>
+              <div class="p-8 text-center text-sm text-slate-600">No claims found.</div>
             </ng-template>
           </div>
         </div>
       </div>
     </div>
-  
+  </div>
+    
 
-    <!-- Agent View Modal -->
+  <!-- Agent View Modal -->
     <div *ngIf="showAgentViewModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeAgentViewModal()">
       <div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
         <div class="mb-4 flex items-center justify-between">
@@ -1257,5 +1499,4 @@
       </div>
     </div>
   </div>
-
-
+</div>
