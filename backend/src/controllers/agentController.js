@@ -359,6 +359,7 @@ const agentController = {
       claim.status = 'Approved';
       claim.decidedByAgentId = req.user.userId;
       claim.decisionNotes = decisionNotes || '';
+      claim.verificationType = 'Agent';
       await claim.save();
       
       // Update user policy status to 'Claimed'
@@ -390,6 +391,7 @@ const agentController = {
       claim.status = 'Rejected';
       claim.decidedByAgentId = req.user.userId;
       claim.decisionNotes = decisionNotes || '';
+      claim.verificationType = 'Agent';
       await claim.save();
       
       res.json({ success: true, claim });
@@ -520,6 +522,7 @@ const agentController = {
       
       // Update the policy status to Approved
       userPolicy.status = 'Approved';
+      userPolicy.verificationType = 'Agent';
       userPolicy.startDate = new Date();
       
       // Calculate end date based on term months from policy product
@@ -588,6 +591,7 @@ const agentController = {
       
       // Update the policy status to Rejected
       userPolicy.status = 'Rejected';
+      userPolicy.verificationType = 'Agent';
       
       await userPolicy.save();
       

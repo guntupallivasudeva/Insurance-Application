@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { AdminService } from '../../services/admin.service';
+import { VerificationService } from '../../services/verification.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -51,7 +52,7 @@ export class AdminDashboard implements OnInit {
   deleteLoading = false;
   // Policy modal state
   managePolicyModal = false;
-  policyForm: any = { _id: '', code: '', title: '', description: '', premium: null, termMonths: null, minSumInsured: null, maxSumInsured: null };
+  policyForm: any = { _id: '', code: '', title: '', description: '', premium: null, termMonths: null, minSumInsured: null, maxSumInsured: null, assignedAgentId: '' };
   policyFormMode: 'create' | 'edit' = 'create';
   policyFormError = '';
   // Track original code to avoid accidental overwrite when user clears field during edit
@@ -111,6 +112,13 @@ export class AdminDashboard implements OnInit {
   selectedPolicyProductView: any = null;
   showClaimViewModal = false;
   selectedClaimView: any = null;
+
+  // Confirmation and success modals for approve/reject actions
+  showConfirmModal = false;
+  showSuccessModal = false;
+  confirmModalData: any = null;
+  successModalData: any = null;
+  pendingAction: any = null;
 
   // Computation helpers for counts referenced in template (avoid complex lambdas inline)
   policyCountByStatus(list: any[], status: string): number {
@@ -238,7 +246,8 @@ export class AdminDashboard implements OnInit {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private adminService: AdminService
+    private adminService: AdminService,
+    public verificationService: VerificationService
   ) {
     const role = (this.auth.getRole() || 'Admin').toString();
     this.roleTitle = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
@@ -392,15 +401,18 @@ export class AdminDashboard implements OnInit {
   }
 
   openCreatePolicy() {
-    this.policyForm = { _id: '', code: 'POL', title: '', description: '', premium: null, termMonths: null, minSumInsured: null, maxSumInsured: null };
+    const nextCode = this.generateNextPolicyCode();
+    const nextDigits = this.extractDigitsFromCode(nextCode);
+    this.policyForm = { _id: '', code: nextCode, title: '', description: '', premium: null, termMonths: null, minSumInsured: null, maxSumInsured: null, assignedAgentId: '' };
     this.policyFormMode = 'create';
     this.policyFormError = '';
     this.managePolicyModal = true;
     this.originalPolicyCode = '';
-    this.policyCodeDigits = '';
+    this.policyCodeDigits = nextDigits;
   }
 
   openEditPolicy(p: any) {
+    console.log('Edit Policy - Original policy data:', p);
     this.policyForm = {
       _id: p?._id || '',
       code: p?.code || '',
@@ -409,8 +421,10 @@ export class AdminDashboard implements OnInit {
       premium: p?.premium ?? null,
       termMonths: p?.termMonths ?? null,
       minSumInsured: p?.minSumInsured ?? null,
-      maxSumInsured: p?.maxSumInsured ?? null
+      maxSumInsured: p?.maxSumInsured ?? null,
+      assignedAgentId: p?.assignedAgentId || ''
     };
+    console.log('Edit Policy - Form populated with:', this.policyForm);
     this.policyFormMode = 'edit';
     this.policyFormError = '';
     this.managePolicyModal = true;
@@ -422,13 +436,15 @@ export class AdminDashboard implements OnInit {
     this.managePolicyModal = false;
   }
 
+
+
   savePolicy() {
     this.policiesCrudError = '';
     this.policyFormError = '';
     const payload: any = {};
     // Handle code carefully: avoid overwriting with placeholder when editing & blanked
     if (this.policyFormMode === 'create') {
-      payload.code = this.composeFullCodeFromDigits(this.policyCodeDigits);
+      payload.code = this.policyForm.code?.trim() || this.composeFullCodeFromDigits(this.policyCodeDigits);
     } else if (this.policyFormMode === 'edit') {
       const rawDigits = (this.policyCodeDigits || '').trim();
       if (rawDigits) {
@@ -447,10 +463,35 @@ export class AdminDashboard implements OnInit {
 
     if (this.policyFormMode === 'create') {
       this.adminService.addPolicy(payload).subscribe({
-        next: () => {
-          this.managePolicyModal = false;
-          this.loadPolicies();
-          this.loadSummary();
+        next: (response) => {
+          // If agent is selected, assign the policy to the agent
+          if (this.policyForm.assignedAgentId) {
+            const policyId = response?.policy?._id;
+            if (policyId) {
+              this.adminService.assignPolicyToAgent(policyId, this.policyForm.assignedAgentId).subscribe({
+                next: () => {
+                  this.managePolicyModal = false;
+                  this.loadPolicies();
+                  this.loadSummary();
+                },
+                error: (err) => {
+                  console.error('Failed to assign agent:', err);
+                  // Policy created but agent assignment failed
+                  this.managePolicyModal = false;
+                  this.loadPolicies();
+                  this.loadSummary();
+                }
+              });
+            } else {
+              this.managePolicyModal = false;
+              this.loadPolicies();
+              this.loadSummary();
+            }
+          } else {
+            this.managePolicyModal = false;
+            this.loadPolicies();
+            this.loadSummary();
+          }
         },
         error: (err) => {
           const msg = err?.error?.message || err?.error?.errors?.join?.(', ') || err?.message || 'Unknown error';
@@ -469,9 +510,29 @@ export class AdminDashboard implements OnInit {
       // If code field was emptied, do NOT include code -> preserves original unique code
       this.adminService.updatePolicy(id, updatePayload).subscribe({
         next: () => {
-          this.managePolicyModal = false;
-          this.loadPolicies();
-          this.loadSummary();
+          // Handle agent assignment for edit mode
+          if (this.policyForm.assignedAgentId) {
+            this.adminService.assignPolicyToAgent(id, this.policyForm.assignedAgentId).subscribe({
+              next: () => {
+                this.managePolicyModal = false;
+                this.loadPolicies();
+                this.loadSummary();
+              },
+              error: (err) => {
+                console.error('Failed to assign agent during edit:', err);
+                // Policy updated but agent assignment failed
+                this.managePolicyModal = false;
+                this.loadPolicies();
+                this.loadSummary();
+              }
+            });
+          } else {
+            // Check if we need to unassign agent (if assignedAgentId is empty but policy had an agent)
+            // For now, just close modal - you can add unassign logic here if needed
+            this.managePolicyModal = false;
+            this.loadPolicies();
+            this.loadSummary();
+          }
         },
         error: (err) => {
           const msg = err?.error?.message || err?.error?.errors?.join?.(', ') || err?.message || 'Unknown error';
@@ -521,6 +582,23 @@ export class AdminDashboard implements OnInit {
     return 'POL' + d;
   }
 
+  // Generate the next policy code automatically
+  private generateNextPolicyCode(): string {
+    let maxNumber = 0;
+    // Find the highest existing policy number
+    for (const policy of this.policies || []) {
+      const num = this.extractCodeNumber(policy.code || '');
+      if (num !== Number.MAX_SAFE_INTEGER && num > maxNumber) {
+        maxNumber = num;
+      }
+    }
+    // Generate next number (start from 1 if no policies exist)
+    const nextNumber = maxNumber + 1;
+    // Format with leading zeros (minimum 2 digits)
+    const formatted = nextNumber.toString().padStart(2, '0');
+    return `POL${formatted}`;
+  }
+
   // When user types code digits, keep internal full code preview updated (for edit mode display)
   onCodeDigitsChange() {
     if (this.policyFormMode === 'edit') {
@@ -528,6 +606,19 @@ export class AdminDashboard implements OnInit {
       // Do not immediately mutate originalPolicyCode; just update preview (policyForm.code) so user sees change
       this.policyForm.code = full;
     }
+  }
+
+  // Called when user types in digits-only Policy Code field; updates full code with 'POL' prefix
+  onPolicyCodeDigitsInput() {
+    let d = (this.policyCodeDigits || '').replace(/[^0-9]/g, '');
+    if (d.length > 6) d = d.slice(0, 6);
+    this.policyCodeDigits = d;
+    if (!d) {
+      this.policyForm.code = '';
+      return;
+    }
+    const padded = d.length === 1 ? '0' + d : d;
+    this.policyForm.code = 'POL' + padded;
   }
 
   // ---- Agent Code helpers (editable with auto-fill on create) ----
@@ -730,7 +821,20 @@ export class AdminDashboard implements OnInit {
   }
 
   approve(claimId: string) {
+    const claim = this.pendingClaims.find(c => c._id === claimId);
+    this.showConfirmationModal(
+      'Approve Claim',
+      `Are you sure you want to approve this claim?`,
+      `Claim ID: ${claimId}`,
+      claim ? `Amount: ₹${claim.amountClaimed}` : '',
+      'approve-claim',
+      claimId
+    );
+  }
+
+  confirmApproveClaim(claimId: string) {
     this.actionError = '';
+    this.showConfirmModal = false;
     // optimistic update: remove from list immediately
     const original = [...this.pendingClaims];
     this.pendingClaims = this.pendingClaims.filter(c => c._id !== claimId);
@@ -738,8 +842,8 @@ export class AdminDashboard implements OnInit {
       next: () => {
         // refresh KPIs since counts may change
         this.loadSummary();
-        this.successMessage = 'Claim approved successfully.';
         this.loadApprovedClaims();
+        this.showSuccessMessage('Success!', 'Claim has been approved successfully.');
       },
       error: () => {
         this.actionError = 'Failed to approve claim.';
@@ -749,13 +853,26 @@ export class AdminDashboard implements OnInit {
   }
 
   reject(claimId: string) {
+    const claim = this.pendingClaims.find(c => c._id === claimId);
+    this.showConfirmationModal(
+      'Reject Claim',
+      `Are you sure you want to reject this claim?`,
+      `Claim ID: ${claimId}`,
+      claim ? `Amount: ₹${claim.amountClaimed}` : '',
+      'reject-claim',
+      claimId
+    );
+  }
+
+  confirmRejectClaim(claimId: string) {
     this.actionError = '';
+    this.showConfirmModal = false;
     const original = [...this.pendingClaims];
     this.pendingClaims = this.pendingClaims.filter(c => c._id !== claimId);
     this.adminService.rejectClaim(claimId).subscribe({
       next: () => {
         this.loadSummary();
-        this.successMessage = 'Claim rejected.';
+        this.showSuccessMessage('Success!', 'Claim has been rejected.');
       },
       error: () => {
         this.actionError = 'Failed to reject claim.';
@@ -819,18 +936,61 @@ export class AdminDashboard implements OnInit {
   }
 
   approvePolicy(userPolicyId: string) {
+    const policy = this.pendingPolicies.find(p => p._id === userPolicyId);
+    this.showConfirmationModal(
+      'Approve Policy',
+      `Are you sure you want to approve this policy?`,
+      `Policy ID: ${userPolicyId}`,
+      policy ? `User: ${policy.userId?.name || policy.userId?.email || 'N/A'}` : '',
+      'approve-policy',
+      userPolicyId
+    );
+  }
+
+  confirmApprovePolicy(userPolicyId: string) {
     this.actionError = '';
+    this.showConfirmModal = false;
     const original = [...this.pendingPolicies];
     this.pendingPolicies = this.pendingPolicies.filter(p => p._id !== userPolicyId);
     this.adminService.approveUserPolicy(userPolicyId).subscribe({
       next: () => {
         this.loadSummary();
-        this.successMessage = 'Policy approved successfully.';
         this.loadApprovedPolicies();
         this.loadUserPolicies();
+        this.showSuccessMessage('Success!', 'Policy has been approved successfully.');
       },
       error: () => {
         this.actionError = 'Failed to approve policy.';
+        this.pendingPolicies = original;
+      }
+    });
+  }
+
+  rejectPolicy(userPolicyId: string) {
+    const policy = this.pendingPolicies.find(p => p._id === userPolicyId);
+    this.showConfirmationModal(
+      'Reject Policy',
+      `Are you sure you want to reject this policy?`,
+      `Policy ID: ${userPolicyId}`,
+      policy ? `User: ${policy.userId?.name || policy.userId?.email || 'N/A'}` : '',
+      'reject-policy',
+      userPolicyId
+    );
+  }
+
+  confirmRejectPolicy(userPolicyId: string) {
+    this.actionError = '';
+    this.showConfirmModal = false;
+    const original = [...this.pendingPolicies];
+    this.pendingPolicies = this.pendingPolicies.filter(p => p._id !== userPolicyId);
+    this.adminService.rejectUserPolicy(userPolicyId).subscribe({
+      next: () => {
+        this.loadSummary();
+        this.loadUserPolicies();
+        this.showSuccessMessage('Success!', 'Policy has been rejected.');
+      },
+      error: () => {
+        this.actionError = 'Failed to reject policy.';
         this.pendingPolicies = original;
       }
     });
@@ -957,8 +1117,12 @@ export class AdminDashboard implements OnInit {
     this.adminService.getAllAgents().subscribe({
       next: (res: any) => {
         this.agents = Array.isArray(res?.agents) ? res.agents : (Array.isArray(res?.data) ? res.data : []);
-        // simple sort by name
-        this.agents.sort((a: any, b: any) => (a?.name || '').localeCompare(b?.name || ''));
+        // sort by agent code
+        this.agents.sort((a: any, b: any) => {
+          const codeA = a?.agentCode || '';
+          const codeB = b?.agentCode || '';
+          return codeA.localeCompare(codeB);
+        });
         this.agentsLoading = false;
       },
       error: (err) => {
@@ -1407,5 +1571,47 @@ export class AdminDashboard implements OnInit {
   closeClaimViewModal() {
     this.showClaimViewModal = false;
     this.selectedClaimView = null;
+  }
+
+  // Modal helper methods
+  showConfirmationModal(title: string, message: string, detail1: string, detail2: string, action: string, id: string) {
+    this.confirmModalData = { title, message, detail1, detail2 };
+    this.pendingAction = { action, id };
+    this.showConfirmModal = true;
+  }
+
+  showSuccessMessage(title: string, message: string) {
+    this.successModalData = { title, message };
+    this.showSuccessModal = true;
+  }
+
+  confirmAction() {
+    if (this.pendingAction) {
+      switch (this.pendingAction.action) {
+        case 'approve-claim':
+          this.confirmApproveClaim(this.pendingAction.id);
+          break;
+        case 'reject-claim':
+          this.confirmRejectClaim(this.pendingAction.id);
+          break;
+        case 'approve-policy':
+          this.confirmApprovePolicy(this.pendingAction.id);
+          break;
+        case 'reject-policy':
+          this.confirmRejectPolicy(this.pendingAction.id);
+          break;
+      }
+    }
+  }
+
+  cancelAction() {
+    this.showConfirmModal = false;
+    this.confirmModalData = null;
+    this.pendingAction = null;
+  }
+
+  closeSuccessModal() {
+    this.showSuccessModal = false;
+    this.successModalData = null;
   }
 }

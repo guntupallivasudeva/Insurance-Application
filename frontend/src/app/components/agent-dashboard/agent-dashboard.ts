@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AgentService, DashboardStats, Policy, Claim, Payment, Customer, CustomerPaymentHistory, PolicyRequest, PaymentCustomer } from '../../services/agent.service';
+import { VerificationService } from '../../services/verification.service';
 import { HttpClientModule } from '@angular/common/http';
 
 @Component({
@@ -69,12 +70,15 @@ export class AgentDashboard implements OnInit {
   showPolicyHistoryModal = false;
   showSuccessModal = false;
   showErrorModal = false;
+  showApproveConfirmModal = false;
+  showRejectConfirmModal = false;
   selectedPolicy: Policy | null = null;
   selectedClaim: Claim | null = null;
   selectedCustomer: Customer | null = null;
   selectedCustomerDetails: Customer | null = null;
   selectedPolicyRequest: PolicyRequest | null = null;
   selectedApprovedCustomer: Customer | null = null;
+  pendingActionRequest: PolicyRequest | null = null;
   decisionNotes = '';
   modalTitle = '';
   modalMessage = '';
@@ -83,7 +87,8 @@ export class AgentDashboard implements OnInit {
   constructor(
     private auth: AuthService, 
     private router: Router,
-    private agentService: AgentService
+    private agentService: AgentService,
+    public verificationService: VerificationService
   ) {
     const role = (this.auth.getRole() || 'Agent').toString();
     this.roleTitle = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
@@ -425,64 +430,92 @@ export class AgentDashboard implements OnInit {
   }
 
   approvePolicyRequest(request: PolicyRequest) {
-    // Confirm with the user before approving
-    if (!confirm('Are you sure you want to approve this policy request?')) {
-      return;
-    }
+    // Store the request and show confirmation modal
+    this.pendingActionRequest = request;
+    this.showApproveConfirmModal = true;
+  }
+
+  confirmApprove() {
+    if (!this.pendingActionRequest) return;
     
     // Set loading state
-    this.loading.approvingPolicy = request.userPolicyId;
+    this.loading.approvingPolicy = this.pendingActionRequest.userPolicyId;
+    this.showApproveConfirmModal = false;
     
-    this.agentService.approvePolicyRequest(request.userPolicyId).subscribe({
+    this.agentService.approvePolicyRequest(this.pendingActionRequest.userPolicyId).subscribe({
       next: (response) => {
         // Clear loading state
         this.loading.approvingPolicy = null;
         
-        if (response.success) {
+        if (response.success && this.pendingActionRequest) {
           // Update the request status locally to Approved (matches backend enum)
-          request.status = 'Approved';
+          this.pendingActionRequest.status = 'Approved';
+          this.pendingActionRequest.verificationType = 'Agent';
           console.log('Policy request approved successfully');
           // Show success modal
           this.showSuccessMessage('Success!', 'Policy request approved successfully!');
+          // Reload policy requests to get updated data
+          this.loadPolicyRequests();
         }
+        this.pendingActionRequest = null;
       },
       error: (error) => {
         // Clear loading state
         this.loading.approvingPolicy = null;
         console.error('Error approving policy request:', error);
         this.showErrorMessage('Error!', 'Error approving policy request. Please try again.');
+        this.pendingActionRequest = null;
       }
     });
   }
 
+  cancelApprove() {
+    this.showApproveConfirmModal = false;
+    this.pendingActionRequest = null;
+  }
+
   rejectPolicyRequest(request: PolicyRequest) {
-    // Confirm with the user before rejecting
-    if (!confirm('Are you sure you want to reject this policy request?')) {
-      return;
-    }
+    // Store the request and show confirmation modal
+    this.pendingActionRequest = request;
+    this.showRejectConfirmModal = true;
+  }
+
+  confirmReject() {
+    if (!this.pendingActionRequest) return;
     
     // Set loading state
-    this.loading.rejectingPolicy = request.userPolicyId;
+    this.loading.rejectingPolicy = this.pendingActionRequest.userPolicyId;
+    this.showRejectConfirmModal = false;
     
-    this.agentService.rejectPolicyRequest(request.userPolicyId).subscribe({
+    this.agentService.rejectPolicyRequest(this.pendingActionRequest.userPolicyId).subscribe({
       next: (response) => {
         // Clear loading state
         this.loading.rejectingPolicy = null;
         
-        if (response.success) {
+        if (response.success && this.pendingActionRequest) {
           // Update the request status locally
-          request.status = 'Rejected';
+          this.pendingActionRequest.status = 'Rejected';
+          this.pendingActionRequest.verificationType = 'Agent';
           console.log('Policy request rejected successfully');
-            this.showSuccessMessage('Success!', 'Policy request rejected successfully!');
+          this.showSuccessMessage('Success!', 'Policy request rejected successfully!');
+          // Reload policy requests to get updated data
+          this.loadPolicyRequests();
         }
+        this.pendingActionRequest = null;
       },
       error: (error) => {
         // Clear loading state
         this.loading.rejectingPolicy = null;
         console.error('Error rejecting policy request:', error);
-          this.showErrorMessage('Error!', 'Error rejecting policy request. Please try again.');
+        this.showErrorMessage('Error!', 'Error rejecting policy request. Please try again.');
+        this.pendingActionRequest = null;
       }
     });
+  }
+
+  cancelReject() {
+    this.showRejectConfirmModal = false;
+    this.pendingActionRequest = null;
   }
 
   viewPolicyRequestDetails(request: PolicyRequest) {

@@ -119,6 +119,7 @@
               <td class="px-4 py-3 text-sm">
                 <div class="flex flex-wrap gap-2">
                   <button (click)="approvePolicy(p._id)" class="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm hover:bg-emerald-700 transition">Approve</button>
+                  <button (click)="rejectPolicy(p._id)" class="inline-flex items-center rounded-full bg-rose-600 px-3 py-1.5 text-white shadow-sm hover:bg-rose-700 transition">Reject</button>
                   <button (click)="viewPolicyDetails(p)" class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
                 </div>
               </td>
@@ -151,6 +152,7 @@
               <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Start</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">End</th>
               <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Approved By</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" *ngIf="approvedPolicies?.length; else noApprovedPolicies">
@@ -163,6 +165,12 @@
               <td class="px-4 py-3 text-sm text-slate-700">{{ p.endDate | date: 'mediumDate' }}</td>
               <td class="px-4 py-3 text-sm">
                 <span class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800">{{ p.status }}</span>
+              </td>
+              <td class="px-4 py-3 text-sm">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  [ngClass]="verificationService.getVerificationTypeClasses(p.verificationType)">
+                  {{ verificationService.getVerificationTypeDisplay(p.verificationType) }}
+                </span>
               </td>
             </tr>
           </tbody>
@@ -350,20 +358,20 @@
 
       <!-- Manage Policy Modal -->
       <div *ngIf="managePolicyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeManagePolicyModal()">
-        <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
-          <div class="mb-4 flex items-center justify-between">
+        <div class="w-full max-w-xl rounded-2xl bg-white p-4 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
+          <div class="mb-3 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-slate-800">{{ policyFormMode === 'create' ? 'Add Policy' : 'Edit Policy' }}</h3>
             <button (click)="closeManagePolicyModal()" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800">✕</button>
           </div>
           <div *ngIf="policyFormError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ policyFormError }}</div>
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div *ngIf="policyFormMode === 'create'; else editCodeBlock">
-              <label class="mb-1 block text-sm font-medium text-slate-700">Code Number</label>
-              <div class="flex items-center gap-2">
-                <span class="rounded-lg bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 select-none">POL</span>
-                <input type="text" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyCodeDigits" [ngModelOptions]="{standalone:true}" placeholder="01" (input)="onCodeDigitsChange()" />
+              <label class="mb-1 block text-sm font-medium text-slate-700">Policy Code</label>
+              <div class="flex items-center rounded-xl border border-slate-300 overflow-hidden">
+                <span class="px-3 text-slate-600 select-none">POL</span>
+                <input type="text" class="w-full p-2.5 outline-none" [(ngModel)]="policyCodeDigits" (input)="onPolicyCodeDigitsInput()" [ngModelOptions]="{standalone:true}" placeholder="01" inputmode="numeric" pattern="[0-9]{2,}" title="Enter at least two digits (e.g., 01)" />
               </div>
-              <p class="mt-1 text-[11px] text-slate-500">Enter numeric part only (can include leading zeros). Full code will be generated after creation.</p>
+              <p class="mt-1 text-[11px] text-slate-500">Type the number only (e.g., 01). We'll save it as POL01. Auto-generated but editable.</p>
             </div>
             <ng-template #editCodeBlock>
               <label class="mb-1 block text-sm font-medium text-slate-700">Code Number</label>
@@ -379,7 +387,7 @@
             </div>
             <div class="md:col-span-2">
               <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
-              <textarea rows="3" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.description" [ngModelOptions]="{standalone:true}" placeholder="Short description"></textarea>
+              <textarea rows="2" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.description" [ngModelOptions]="{standalone:true}" placeholder="Short description"></textarea>
             </div>
             <div>
               <label class="mb-1 block text-sm font-medium text-slate-700">Premium</label>
@@ -397,8 +405,16 @@
               <label class="mb-1 block text-sm font-medium text-slate-700">Max Sum Insured</label>
               <input type="number" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.maxSumInsured" [ngModelOptions]="{standalone:true}" placeholder="1000000" />
             </div>
+            <div class="md:col-span-2">
+              <label class="mb-1 block text-sm font-medium text-slate-700">Assign Agent (Optional)</label>
+              <select class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.assignedAgentId" [ngModelOptions]="{standalone:true}">
+                <option value="">-- No Agent Assigned --</option>
+                <option *ngFor="let agent of agents" [value]="agent._id">{{ agent.name }} - ({{ agent.agentCode }})</option>
+              </select>
+              <p class="mt-1 text-[11px] text-slate-500">You can assign an agent to this policy now or later</p>
+            </div>
           </div>
-          <div class="mt-6 flex justify-end gap-2">
+          <div class="mt-4 flex justify-end gap-2">
             <button (click)="closeManagePolicyModal()" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200">Cancel</button>
             <button (click)="savePolicy()" class="rounded-full bg-indigo-600 px-4 py-2 text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700">Save</button>
           </div>
@@ -542,6 +558,7 @@
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Total</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Approved</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Pending</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Cancelled</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Claimed</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
               </tr>
@@ -554,6 +571,7 @@
                 <td class="px-4 py-3 text-sm text-slate-700">{{ c?.policies?.length || 0 }}</td>
                 <td class="px-4 py-3 text-sm text-emerald-700">{{ policyCountByStatus(c?.policies, 'approved') }}</td>
                 <td class="px-4 py-3 text-sm text-amber-700">{{ policyCountByStatus(c?.policies, 'pending') }}</td>
+                <td class="px-4 py-3 text-sm text-red-700">{{ policyCountByStatus(c?.policies, 'cancelled') }}</td>
                 <td class="px-4 py-3 text-sm text-rose-700">{{ policyCountClaimed(c?.policies) }}</td>
                 <td class="px-4 py-3 text-sm">
                   <button (click)="openUserPoliciesModal(c)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">View</button>
@@ -667,10 +685,8 @@
                       <span class="rounded-full px-2 py-1 text-xs font-medium"
                         [ngClass]="{
                           'bg-amber-50 text-amber-700 ring-1 ring-amber-200': (p?.status || '').toLowerCase() === 'pending',
-                          'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': (p?.status || '').toLowerCase() === 'approved',
                           'bg-rose-50 text-rose-700 ring-1 ring-rose-200': ['claimed','cancelled'].includes((p?.status || '').toLowerCase()),
-                          'bg-slate-100 text-slate-700 ring-1 ring-slate-300': (p?.status || '').toLowerCase() === 'expired'
-                        }">{{ p?.status || '—' }}</span>
+                          'bg-slate-100 text-slate-700 ring-1 ring-slate-300': (p?.status || '').toLowerCase() === 'expired'}">{{ p?.status || '—' }}</span>
                     </td>
                     <td class="px-3 py-2 text-sm text-slate-700">
                       <ng-container *ngIf="p?.assignedAgentId; else agentFromProductModal">
@@ -905,7 +921,7 @@
               <tr>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Claim ID</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code & Name</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Incident</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Amount</th>
                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
@@ -916,7 +932,13 @@
               <tr *ngFor="let c of pendingClaims" class="hover:bg-slate-50/60">
                 <td class="px-4 py-3 text-sm text-slate-900">{{ c._id }}</td>
                 <td class="px-4 py-3 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700">{{ c.userPolicyId?._id || c.userPolicyId }}</td>
+                <td class="px-4 py-3 text-sm text-slate-700">
+                  <div class="flex items-center space-x-2">
+                    <span class="font-medium text-slate-900">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</span>
+                    <span class="text-slate-500">-</span>
+                    <span class="text-slate-600">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</span>
+                  </div>
+                </td>
                 <td class="px-4 py-3 text-sm text-slate-700">{{ c.incidentDate | date: 'mediumDate' }}</td>
                 <td class="px-4 py-3 text-sm text-slate-700">₹{{ c.amountClaimed }}</td>
                 <td class="px-4 py-3 text-sm">
@@ -988,17 +1010,24 @@
                 <tr>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Claim ID</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code & Name</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Incident</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Amount</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Approved By</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 bg-white" *ngIf="processedClaims?.length; else noProcessed">
                 <tr *ngFor="let c of processedClaims" class="hover:bg-slate-50/60">
                   <td class="px-4 py-3 text-sm text-slate-900">{{ c._id }}</td>
                   <td class="px-4 py-3 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">{{ c.userPolicyId?._id || c.userPolicyId }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-700">
+                    <div class="flex items-center space-x-2">
+                      <span class="font-medium text-slate-900">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</span>
+                      <span class="text-slate-500">-</span>
+                      <span class="text-slate-600">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</span>
+                    </div>
+                  </td>
                   <td class="px-4 py-3 text-sm text-slate-700">{{ c.incidentDate | date: 'mediumDate' }}</td>
                   <td class="px-4 py-3 text-sm text-slate-700">₹{{ c.amountClaimed }}</td>
                   <td class="px-4 py-3 text-sm">
@@ -1007,6 +1036,12 @@
                       'bg-rose-100 text-rose-800': (c.status || '').toLowerCase() === 'rejected'
                     }" class="rounded-full px-2 py-1">
                       {{ c.status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-sm">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                      [ngClass]="verificationService.getVerificationTypeClasses(c.verificationType)">
+                      {{ verificationService.getVerificationTypeDisplay(c.verificationType) }}
                     </span>
                   </td>
                 </tr>
@@ -1035,17 +1070,24 @@
                 <tr>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Claim ID</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">User</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Code & Name</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Incident</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Amount</th>
                   <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Status</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Approved By</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 bg-white" *ngIf="allClaims?.length; else noAllClaims">
                 <tr *ngFor="let c of allClaims" class="hover:bg-slate-50/60">
                   <td class="px-4 py-3 text-sm text-slate-900">{{ c._id }}</td>
                   <td class="px-4 py-3 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
-                  <td class="px-4 py-3 text-sm text-slate-700">{{ c.userPolicyId?._id || c.userPolicyId }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-700">
+                    <div class="flex items-center space-x-2">
+                      <span class="font-medium text-slate-900">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</span>
+                      <span class="text-slate-500">-</span>
+                      <span class="text-slate-600">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</span>
+                    </div>
+                  </td>
                   <td class="px-4 py-3 text-sm text-slate-700">{{ c.incidentDate | date: 'mediumDate' }}</td>
                   <td class="px-4 py-3 text-sm text-slate-700">₹{{ c.amountClaimed }}</td>
                   <td class="px-4 py-3 text-sm">
@@ -1055,6 +1097,12 @@
                       'bg-rose-100 text-rose-800': (c.status || '').toLowerCase() === 'rejected'
                     }" class="rounded-full px-2 py-1">{{ c.status }}</span>
                     <button (click)="openClaimView(c)" class="ml-2 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
+                  </td>
+                  <td class="px-4 py-3 text-sm">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                      [ngClass]="verificationService.getVerificationTypeClasses(c.verificationType)">
+                      {{ verificationService.getVerificationTypeDisplay(c.verificationType) }}
+                    </span>
                   </td>
                 </tr>
               </tbody>
@@ -1144,5 +1192,70 @@
         </div>
       </div>
     </div>
+
+  <!-- Confirmation Modal -->
+  <div *ngIf="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="cancelAction()">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full"
+          [ngClass]="{
+            'bg-emerald-100': pendingAction?.action?.includes('approve'),
+            'bg-rose-100': pendingAction?.action?.includes('reject')
+          }">
+          <svg class="h-5 w-5" 
+            [ngClass]="{
+              'text-emerald-600': pendingAction?.action?.includes('approve'),
+              'text-rose-600': pendingAction?.action?.includes('reject')
+            }" 
+            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path *ngIf="pendingAction?.action?.includes('approve')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            <path *ngIf="pendingAction?.action?.includes('reject')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-800">{{ confirmModalData?.title }}</h3>
+      </div>
+      <div class="mb-6">
+        <p class="text-slate-600 mb-3">{{ confirmModalData?.message }}</p>
+        <div class="bg-slate-50 rounded-lg p-3 text-sm text-slate-700">
+          <div *ngIf="confirmModalData?.detail1">{{ confirmModalData?.detail1 }}</div>
+          <div *ngIf="confirmModalData?.detail2">{{ confirmModalData?.detail2 }}</div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3">
+        <button (click)="cancelAction()" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200 transition-colors">
+          Cancel
+        </button>
+        <button (click)="confirmAction()" class="rounded-full px-4 py-2 text-white shadow-sm transition-colors"
+          [ngClass]="{
+            'bg-emerald-600 hover:bg-emerald-700': pendingAction?.action?.includes('approve'),
+            'bg-rose-600 hover:bg-rose-700': pendingAction?.action?.includes('reject')
+          }">
+          {{ pendingAction?.action?.includes('approve') ? 'Approve' : 'Reject' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div *ngIf="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeSuccessModal()">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+          <svg class="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-800">{{ successModalData?.title }}</h3>
+      </div>
+      <div class="mb-6">
+        <p class="text-slate-600">{{ successModalData?.message }}</p>
+      </div>
+      <div class="flex justify-end">
+        <button (click)="closeSuccessModal()" class="rounded-full bg-emerald-600 px-4 py-2 text-white shadow-sm hover:bg-emerald-700 transition-colors">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
 
 

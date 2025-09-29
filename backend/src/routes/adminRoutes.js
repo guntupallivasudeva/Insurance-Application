@@ -24,6 +24,7 @@ router.post('/assignpolicy', adminAuth, adminController.assignPolicyToAgent);
 router.post('/unassign-policy', adminAuth, adminController.unassignPolicyAgent);
 router.get('/customerdetails', adminAuth, adminController.allCustomerData);
 router.post('/approvepolicy', adminAuth, adminController.approvePolicy);
+router.post('/rejectpolicy', adminAuth, adminController.rejectPolicy);
 router.post('/approveclaim', adminAuth, adminController.approveClaim);
 router.put('/claim/:id', adminAuth, adminController.updateClaim);
 

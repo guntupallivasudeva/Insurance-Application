@@ -43,6 +43,12 @@ const ClaimSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
      ref: 'Agent' 
     },
+  verificationType: 
+  { 
+    type: String, 
+    enum: ['None', 'Agent', 'Admin'], 
+    default: 'None' 
+  },
     createdAt:
     { type: Date, 
       default: Date.now 

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { CustomerService } from '../../services/customer.service';
+import { VerificationService } from '../../services/verification.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -31,6 +32,7 @@ export class CustomerDashboard implements OnInit {
   successMessage = '';
 
   // UI state
+  activeTab = 'policies'; // Default active tab
   showPurchaseModal = false;
   purchaseForm: any = { policyProductId: '', startDate: '', nomineeName: '', nomineeRelation: '' };
   purchaseError = '';
@@ -54,6 +56,14 @@ export class CustomerDashboard implements OnInit {
   // Policy details modal
   showDetailsModal = false;
   detailsContext: any = { policy: null, payments: [] };
+
+  // Success modal
+  showSuccessModal = false;
+  successModalData = {
+    title: '',
+    message: '',
+    icon: 'success' // 'success', 'payment', 'purchase', 'claim'
+  };
 
   // --- Helpers for premium scheduling ---
   nextDueDate(p: any): Date | null {
@@ -105,11 +115,28 @@ export class CustomerDashboard implements OnInit {
     return base;
   }
 
-  constructor(private auth: AuthService, private router: Router, private customer: CustomerService) {
+  constructor(private auth: AuthService, private router: Router, private customer: CustomerService, public verificationService: VerificationService) {
     const role = (this.auth.getRole() || 'Customer').toString();
     this.roleTitle = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
     const user = this.auth.getUser();
     this.userName = user?.name || user?.email || 'User';
+  }
+
+  setActiveTab(tab: string) {
+    this.activeTab = tab;
+  }
+
+  showSuccessMessage(title: string, message: string, icon: string = 'success') {
+    this.successModalData = { title, message, icon };
+    this.showSuccessModal = true;
+    // Auto close after 3 seconds
+    setTimeout(() => {
+      this.showSuccessModal = false;
+    }, 3000);
+  }
+
+  closeSuccessModal() {
+    this.showSuccessModal = false;
   }
 
   ngOnInit(): void {
@@ -227,6 +254,11 @@ export class CustomerDashboard implements OnInit {
     this.customer.purchasePolicy(payload).subscribe({
       next: () => {
         this.showPurchaseModal = false;
+        this.showSuccessMessage(
+          'Policy Purchased Successfully!', 
+          'Your policy has been purchased and is pending approval from an agent.',
+          'purchase'
+        );
         this.loadAll();
       },
       error: (err) => {
@@ -253,6 +285,11 @@ export class CustomerDashboard implements OnInit {
     this.customer.raiseClaim({ userPolicyId, incidentDate, description, amountClaimed: Number(amountClaimed) }).subscribe({
       next: () => {
         this.showClaimModal = false;
+        this.showSuccessMessage(
+          'Claim Submitted Successfully!',
+          'Your claim has been submitted and is under review. You will be notified of the status.',
+          'claim'
+        );
         this.successMessage = 'Claim submitted successfully.';
         // Refresh claims list (quick incremental fetch)
         this.customer.getMyClaims().subscribe({
@@ -308,6 +345,11 @@ export class CustomerDashboard implements OnInit {
       next: () => {
         this.cancelling = false;
         this.showCancelModal = false;
+        this.showSuccessMessage(
+          'Policy Cancelled Successfully',
+          'Your policy has been cancelled. You will receive a confirmation email shortly.',
+          'success'
+        );
         this.cancelContext = null;
         this.loadAll();
       },
@@ -357,6 +399,12 @@ export class CustomerDashboard implements OnInit {
     this.successMessage = '';
     this.customer.makePayment({ userPolicyId, method }).subscribe({
       next: (resp: any) => {
+        this.showPayModal = false;
+        this.showSuccessMessage(
+          'Payment Successful!',
+          `Payment of ₹${this.payContext.premium} has been processed successfully using ${method}.`,
+          'payment'
+        );
         this.successMessage = resp?.message || 'Payment successful for this month.';
         // Refresh only payments
         this.customer.getMyPayments().subscribe({
@@ -371,7 +419,6 @@ export class CustomerDashboard implements OnInit {
         if (resp?.meta?.paidCount != null) {
           this.payContext.paidCount = resp.meta.paidCount;
         }
-        this.showPayModal = false;
       },
       error: (err) => {
         this.payError = err?.error?.message || 'Payment failed';
@@ -490,5 +537,72 @@ export class CustomerDashboard implements OnInit {
   closePolicyDetails() {
     this.showDetailsModal = false;
     this.detailsContext = { policy: null, payments: [] };
+  }
+
+  // Get policy icon based on policy type
+  getPolicyIcon(policy: any): { icon: string; color: string; bgColor: string } {
+    const code = (policy.code || '').toLowerCase();
+    const title = (policy.title || '').toLowerCase();
+    
+    // Health/Medical Insurance
+    if (code.includes('health') || title.includes('health') || title.includes('medical')) {
+      return {
+        icon: 'health',
+        color: 'text-red-600',
+        bgColor: 'bg-red-100'
+      };
+    }
+    
+    // Auto/Car Insurance
+    if (code.includes('auto') || code.includes('car') || title.includes('auto') || title.includes('car')) {
+      return {
+        icon: 'car',
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100'
+      };
+    }
+    
+    // Life Insurance
+    if (code.includes('life') || title.includes('life')) {
+      return {
+        icon: 'life',
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100'
+      };
+    }
+    
+    // Home/House Insurance
+    if (code.includes('home') || code.includes('house') || title.includes('home') || title.includes('house')) {
+      return {
+        icon: 'home',
+        color: 'text-green-600',
+        bgColor: 'bg-green-100'
+      };
+    }
+    
+    // Bike/Motorcycle Insurance
+    if (code.includes('bike') || code.includes('motorcycle') || title.includes('bike') || title.includes('motorcycle')) {
+      return {
+        icon: 'bike',
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-100'
+      };
+    }
+    
+    // Travel Insurance
+    if (code.includes('travel') || title.includes('travel')) {
+      return {
+        icon: 'travel',
+        color: 'text-indigo-600',
+        bgColor: 'bg-indigo-100'
+      };
+    }
+    
+    // Default generic insurance icon
+    return {
+      icon: 'shield',
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-100'
+    };
   }
 }

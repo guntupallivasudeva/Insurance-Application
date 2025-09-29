@@ -238,6 +238,12 @@ export class AdminService {
     });
   }
 
+  rejectUserPolicy(userPolicyId: string): Observable<any> {
+    return this.http.post(`${this.adminApiUrl}/rejectpolicy`, { userPolicyId }, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   assignPolicyToAgent(policyProductId: string, agentId: string): Observable<any> {
     return this.http.post(`${this.adminApiUrl}/assignpolicy`, { policyProductId, agentId }, {
       headers: this.getAuthHeaders()

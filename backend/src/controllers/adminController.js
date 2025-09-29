@@ -62,7 +62,33 @@ const adminController = {
     async allClaims(req, res) {
         try {
             const Claim = (await import('../models/claim.js')).default;
-            const claims = await Claim.find().populate('userId userPolicyId decidedByAgentId');
+            const claims = await Claim.find()
+                .populate('userId')
+                .populate({
+                    path: 'userPolicyId',
+                    populate: {
+                        path: 'policyProductId',
+                        model: 'PolicyProduct'
+                    }
+                })
+                .populate('decidedByAgentId');
+            
+            // Update verificationType for existing claims if not set
+            for (let claim of claims) {
+                if (!claim.verificationType || claim.verificationType === 'None') {
+                    if (claim.status !== 'Pending') {
+                        // If claim is approved/rejected and has decidedByAgentId, it was decided by Agent
+                        if (claim.decidedByAgentId) {
+                            claim.verificationType = 'Agent';
+                        } else {
+                            // If no decidedByAgentId, it was likely decided by Admin
+                            claim.verificationType = 'Admin';
+                        }
+                        await claim.save();
+                    }
+                }
+            }
+            
             res.json({ success: true, claims });
         } catch (err) {
             res.status(500).json({ success: false, error: err.message });
@@ -86,6 +112,7 @@ const adminController = {
             const claim = await Claim.findById(claimId);
             if (!claim) return res.status(404).json({ success: false, message: 'Claim not found' });
             claim.status = status || 'Approved';
+            claim.verificationType = 'Admin';
             await claim.save();
             if (claim.userPolicyId) {
                 const userPolicy = await UserPolicy.findById(claim.userPolicyId);
@@ -186,6 +213,24 @@ const adminController = {
             const userPolicy = await UserPolicy.findById(userPolicyId);
             if (!userPolicy) return res.status(404).json({ success: false, message: 'User policy not found' });
             userPolicy.status = 'Approved';
+            userPolicy.verificationType = 'Admin';
+            await userPolicy.save();
+            res.json({
+                success: true,
+                userPolicyId: userPolicy._id,
+                status: userPolicy.status,
+                verificationType: userPolicy.verificationType
+            });
+        } catch (err) {
+            res.status(500).json({ success: false, error: err.message });
+        }
+    },
+    async rejectPolicy(req, res) {
+        try {
+            const { userPolicyId } = req.body;
+            const userPolicy = await UserPolicy.findById(userPolicyId);
+            if (!userPolicy) return res.status(404).json({ success: false, message: 'User policy not found' });
+            userPolicy.status = 'Rejected';
             userPolicy.verificationType = 'Admin';
             await userPolicy.save();
             res.json({
