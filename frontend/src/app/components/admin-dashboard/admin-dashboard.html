@@ -6,12 +6,111 @@
       <p class="text-gray-600 mt-1">Welcome, <span class="font-semibold">{{ userName }}</span></p>
     </div>
     <div class="flex items-center gap-3">
-      <button (click)="loadSummary()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-60" [disabled]="isLoading">
-        <span>{{ isLoading ? 'Refreshing...' : 'Refresh' }}</span>
+      <button (click)="refreshAll()" class="p-2 rounded-full text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 transition-colors disabled:opacity-60" [disabled]="isLoading" aria-label="Refresh all" title="Refresh">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
+        </svg>
       </button>
       <button (click)="logout()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
         Logout
       </button>
+    </div>
+  </div>
+
+  <!-- Database Status -->
+  <div class="mb-8">
+    <div class="bg-white rounded-lg shadow-md ring-1 ring-slate-200">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-700 font-semibold">Database Status</span>
+          <span *ngIf="dbStatus?.connection as c" class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+            [ngClass]="{
+              'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200': c.state === 'connected',
+              'bg-amber-50 text-amber-700 ring-1 ring-amber-200': c.state === 'connecting',
+              'bg-rose-50 text-rose-700 ring-1 ring-rose-200': c.state === 'disconnected' || c.state === 'disconnecting'
+            }">
+            <i class="fas fa-database"></i>
+            <span class="uppercase tracking-wide">{{ c.state }}</span>
+          </span>
+        </div>
+        <div class="text-xs text-slate-500">Server time: {{ dbStatus.serverTime | date:'medium' }}</div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 text-sm">
+        <div class="flex items-center gap-3">
+          <div class="h-8 w-8 flex items-center justify-center rounded-full bg-sky-50 text-sky-600">
+            <i class="fas fa-plug"></i>
+          </div>
+          <div>
+            <div class="text-slate-600">Host</div>
+            <div class="font-medium text-slate-800">{{ dbStatus.connection?.host || '-' }}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="h-8 w-8 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+            <i class="fas fa-database"></i>
+          </div>
+          <div>
+            <div class="text-slate-600">Database</div>
+            <div class="font-medium text-slate-800">{{ dbStatus.connection?.dbName || '-' }}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+            <i class="fas fa-signal"></i>
+          </div>
+          <div>
+            <div class="text-slate-600">State Code</div>
+            <div class="font-medium text-slate-800">{{ dbStatus.connection?.code }}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="h-8 w-8 flex items-center justify-center rounded-full bg-amber-50 text-amber-600">
+            <i class="fas fa-info-circle"></i>
+          </div>
+          <div>
+            <div class="text-slate-600">State</div>
+            <div class="font-medium text-slate-800 capitalize">{{ dbStatus.connection?.state }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-4 pb-4" *ngIf="dbStatus?.counts as cts">
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-user text-slate-500"></i><span class="text-xs text-slate-600">Users</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.users }}</span>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-user-tie text-slate-500"></i><span class="text-xs text-slate-600">Agents</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.agents }}</span>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-user-shield text-slate-500"></i><span class="text-xs text-slate-600">Admins</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.admins }}</span>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-file-alt text-slate-500"></i><span class="text-xs text-slate-600">Policies</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.policies }}</span>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-id-card text-slate-500"></i><span class="text-xs text-slate-600">User Policies</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.userPolicies }}</span>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-clipboard-check text-slate-500"></i><span class="text-xs text-slate-600">Claims</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.claims }}</span>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-wallet text-slate-500"></i><span class="text-xs text-slate-600">Payments</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.payments }}</span>
+          </div>
+          <div class="flex items-center gap-2 p-2 rounded-lg ring-1 ring-slate-100 bg-slate-50">
+            <i class="fas fa-history text-slate-500"></i><span class="text-xs text-slate-600">Audit Logs</span>
+            <span class="ml-auto text-sm font-semibold text-slate-800">{{ cts.auditLogs }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -195,9 +294,6 @@
     <div class="p-6">
   <div class="mb-2 flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Policy Applications</h3>
-        <button (click)="loadPendingPolicies()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60" [disabled]="isLoadingPolicies">
-          <span>{{ isLoadingPolicies ? 'Refreshing...' : 'Refresh' }}</span>
-        </button>
       </div>
       <div *ngIf="policiesError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ policiesError }}</div>
 
@@ -228,9 +324,19 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="approvePolicy(p._id)" class="inline-flex items-center rounded-full bg-emerald-600 px-3 py-1.5 text-white shadow-sm hover:bg-emerald-700 transition">Approve</button>
-                  <button (click)="rejectPolicy(p._id)" class="inline-flex items-center rounded-full bg-rose-600 px-3 py-1.5 text-white shadow-sm hover:bg-rose-700 transition">Reject</button>
-                  <button (click)="viewPolicyDetails(p)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">View</button>
+                  <button (click)="approvePolicy(p._id)" class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors" aria-label="Approve policy" title="Approve">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  <button (click)="rejectPolicy(p._id)" class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" aria-label="Reject policy" title="Reject">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <button (click)="viewPolicyDetails(p)" class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" aria-label="View policy" title="View">
+                    <i class="fas fa-eye w-5 h-5"></i>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -257,9 +363,6 @@
     <div class="p-6">
       <div class="mb-3 flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-800">Recently Approved Policies</h3>
-        <button (click)="loadApprovedPolicies()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60" [disabled]="approvedPoliciesLoading">
-          <span>{{ approvedPoliciesLoading ? 'Refreshing...' : 'Refresh' }}</span>
-        </button>
       </div>
       <div *ngIf="approvedPoliciesError" class="mb-3 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">{{ approvedPoliciesError }}</div>
       <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
@@ -311,19 +414,15 @@
     </div>
     
     <div class="p-6">
-      <div class="mb-3 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-800">Agents</h3>
+      <div class="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">👤</div>
+          <div>
+            <h3 class="text-lg font-semibold text-slate-800">Agents</h3>
+            <p class="text-sm text-slate-600">{{ agents.length || 0 }} total agents</p>
+          </div>
+        </div>
         <div class="flex items-center gap-2">
-          <button (click)="loadAgents()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="agentsLoading">
-            <svg *ngIf="!agentsLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
-            </svg>
-            <svg *ngIf="agentsLoading" class="animate-spin -ml-1 mr-1 h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>{{ agentsLoading ? 'Refreshing...' : 'Refresh' }}</span>
-          </button>
           <button (click)="openCreateAgent()" class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-white shadow-sm ring-1 ring-emerald-500/50 hover:bg-emerald-700 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
               <path fill-rule="evenodd" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5zM12.75 8.25a.75.75 0 00-1.5 0v3h-3a.75.75 0 000 1.5h3v3a.75.75 0 001.5 0v-3h3a.75.75 0 000-1.5h-3v-3z" clip-rule="evenodd" />
@@ -333,32 +432,46 @@
         </div>
       </div>
       <div *ngIf="agentsError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ agentsError }}</div>
-      <div *ngIf="agentsLoading && !agents?.length" class="p-4 text-sm text-slate-600">Loading agents...</div>
+      <div *ngIf="agentsLoading && !agents?.length" class="p-6 text-sm text-slate-600">Loading agents...</div>
 
-      <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm" *ngIf="agents?.length; else noAgentsBlock">
-        <table class="min-w-full divide-y divide-slate-200">
+      <div class="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm" *ngIf="agents?.length; else noAgentsBlock">
+        <table class="w-full">
           <thead class="bg-slate-50">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Agent ID</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Agent Code</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Name</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Email</th>
-              <!-- Branch & Phone removed per requirement -->
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
+            <tr class="divide-x divide-slate-200">
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Agent</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 bg-white">
-            <tr *ngFor="let a of agents" class="hover:bg-slate-50/60">
-              <td class="px-4 py-3 text-sm font-mono text-slate-700">{{ a._id }}</td>
-              <td class="px-4 py-3 text-sm font-mono text-slate-700">{{ a.agentCode || '—' }}</td>
-              <td class="px-4 py-3 text-sm text-slate-800">{{ a.name }}</td>
-              <td class="px-4 py-3 text-sm text-slate-700">{{ a.email }}</td>
-              <!-- Removed branch & phone cells -->
-              <td class="px-4 py-3 text-sm">
+          <tbody class="divide-y divide-slate-200 bg-white">
+            <tr *ngFor="let a of agents" class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
+                    {{ (a.name || a.email || 'A')?.slice(0,2) | uppercase }}
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-slate-800">{{ a.name }}</div>
+                    <div class="text-xs font-mono text-slate-500">{{ a.agentCode || '—' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-700">{{ a.email }}</td>
+              <td class="px-6 py-4 text-xs font-mono text-slate-500">{{ a._id }}</td>
+              <td class="px-6 py-4">
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="openAgentView(a)" class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
-                  <button (click)="openEditAgent(a)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">Edit</button>
-                  <button (click)="openDeleteModal('agent', a)" class="inline-flex items-center rounded-full bg-rose-600 px-3 py-1.5 text-white shadow-sm hover:bg-rose-700 transition">Delete</button>
+                  <button (click)="openAgentView(a)" class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors" aria-label="View agent" title="View">
+                    <i class="fas fa-eye w-5 h-5"></i>
+                  </button>
+                  <button (click)="openEditAgent(a)" class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors" aria-label="Edit agent" title="Edit">
+                    <i class="fas fa-edit w-5 h-5"></i>
+                  </button>
+                  <button (click)="openDeleteModal('agent', a)" class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" aria-label="Delete agent" title="Delete">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -366,7 +479,7 @@
         </table>
       </div>
       <ng-template #noAgentsBlock>
-        <div class="p-5 text-sm text-slate-600 rounded-xl ring-1 ring-slate-200 bg-white">No agents found. Click <span class="font-medium">Add Agent</span> to create one.</div>
+        <div class="p-8 text-center text-sm text-slate-600">No agents found. Click <span class="font-medium">Add Agent</span> to create one.</div>
       </ng-template>
 
       <!-- Manage Agent Modal -->
@@ -420,30 +533,89 @@
           </div>
         </div>
       </div>
+
+      <!-- Assign Agent to Policies (moved from Policy Products tab) -->
+      <div class="mt-10">
+        <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">🧩</div>
+            <div>
+              <h2 class="text-xl font-semibold text-slate-800">Assign Agent to Policies</h2>
+              <p class="text-sm text-slate-600">{{ policies.length || 0 }} policies</p>
+            </div>
+          </div>
+          
+        </div>
+
+        <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
+          <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Code</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Title</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Assigned Agent</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white" *ngIf="policies?.length; else noAssignPolicies">
+              <tr *ngFor="let p of policies" class="hover:bg-slate-50/60">
+                <td class="px-4 py-3 text-sm text-slate-900">
+                  <div class="flex items-center gap-2">
+                    <div class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
+                      {{ (p.code || 'PO').slice(0,2).toUpperCase() }}
+                    </div>
+                    <span>{{ p.code }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 text-sm text-slate-700">{{ p.title }}</td>
+                <td class="px-4 py-3 text-sm text-slate-700">
+                  <ng-container *ngIf="p.assignedAgentName; else unassignedPolicy">{{ p.assignedAgentName }}</ng-container>
+                  <ng-template #unassignedPolicy>—</ng-template>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <div class="flex flex-wrap gap-2">
+                    <button (click)="openPolicyProductView(p)" class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors" aria-label="View policy" title="View">
+                      <i class="fas fa-eye w-5 h-5"></i>
+                    </button>
+                    <button (click)="openAssignAgent(p)" class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" aria-label="Assign agent" title="Assign">
+                      <i class="fas fa-user-plus w-5 h-5"></i>
+                    </button>
+                    <button *ngIf="p.assignedAgentId || p.assignedAgentName" (click)="openUnassignModal(p)" class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" aria-label="Remove agent" title="Remove">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <ng-template #noAssignPolicies>
+            <div class="p-8 text-center text-sm text-slate-600">No policies available for assignment.</div>
+          </ng-template>
+        </div>
+      </div>
+
     </div>
   </div>
 
   <!-- Policy Products Tab -->
   <div *ngIf="activeTab === 'policies'" class="mt-8 bg-white rounded-lg shadow-md">
-    <div class="p-6 border-b border-gray-200">
-      <h2 class="text-xl font-semibold text-gray-900">Policy Products</h2>
-      <p class="text-gray-600 mt-1">Manage insurance policy products and assignments</p>
+    <div class="p-6 border-b border-slate-200">
+      <h2 class="text-xl font-semibold text-slate-900">Policy Products</h2>
+      <p class="text-slate-600 mt-1">Manage insurance policy products and assignments</p>
     </div>
     
     <div class="p-6">
-      <div class="mb-3 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-800">Policies</h3>
+      <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">📦</div>
+          <div>
+            <h3 class="text-lg font-semibold text-slate-800">Policies</h3>
+            <p class="text-sm text-slate-600">{{ policies.length || 0 }} total</p>
+          </div>
+        </div>
         <div class="flex items-center gap-2">
-          <button (click)="loadPolicies()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="policiesLoading">
-            <svg *ngIf="!policiesLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
-            </svg>
-            <svg *ngIf="policiesLoading" class="animate-spin -ml-1 mr-1 h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>{{ policiesLoading ? 'Refreshing...' : 'Refresh' }}</span>
-          </button>
           <button (click)="openCreatePolicy()" class="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-white shadow-sm ring-1 ring-emerald-500/50 hover:bg-emerald-700 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5">
               <path fill-rule="evenodd" d="M12 3.75a8.25 8.25 0 100 16.5 8.25 8.25 0 000-16.5zM12.75 8.25a.75.75 0 00-1.5 0v3h-3a.75.75 0 000 1.5h3v3a.75.75 0 001.5 0v-3h3a.75.75 0 000-1.5h-3v-3z" clip-rule="evenodd" />
@@ -469,23 +641,41 @@
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white" *ngIf="policies?.length; else noPoliciesCrud">
             <tr *ngFor="let p of policies" class="hover:bg-slate-50/60">
-              <td class="px-4 py-3 text-sm text-slate-900">{{ p.code }}</td>
+              <td class="px-4 py-3 text-sm text-slate-900">
+                <div class="flex items-center gap-2">
+                  <div class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold">
+                    {{ (p.code || 'PO').slice(0,2).toUpperCase() }}
+                  </div>
+                  <span>{{ p.code }}</span>
+                </div>
+              </td>
               <td class="px-4 py-3 text-sm text-slate-700">{{ p.title }}</td>
               <td class="px-4 py-3 text-sm text-slate-700">₹{{ p.premium }}</td>
               <td class="px-4 py-3 text-sm text-slate-700">{{ p.termMonths }}</td>
               <td class="px-4 py-3 text-sm text-slate-700">{{ p.minSumInsured ?? 0 }}</td>
               <td class="px-4 py-3 text-sm">
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="openPolicyProductView(p)" class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
-                  <button (click)="openEditPolicy(p)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">Edit</button>
-                  <button (click)="openDeleteModal('policy', p)" class="inline-flex items-center rounded-full bg-rose-600 px-3 py-1.5 text-white shadow-sm hover:bg-rose-700 transition">Delete</button>
+                  <button (click)="openPolicyProductView(p)" class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" aria-label="View policy" title="View">
+                    <i class="fas fa-eye w-5 h-5"></i>
+                  </button>
+                  <button (click)="openAssignAgent(p)" class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" aria-label="Assign agent" title="Assign">
+                    <i class="fas fa-user-plus w-5 h-5"></i>
+                  </button>
+                  <button (click)="openEditPolicy(p)" class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors" aria-label="Edit policy" title="Edit">
+                    <i class="fas fa-edit w-5 h-5"></i>
+                  </button>
+                  <button (click)="openDeleteModal('policy', p)" class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" aria-label="Delete policy" title="Delete">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
         <ng-template #noPoliciesCrud>
-          <div class="p-5 text-sm text-slate-600">No policies found.</div>
+          <div class="p-8 text-center text-sm text-slate-600">No policies found.</div>
         </ng-template>
       </div>
 
@@ -554,113 +744,6 @@
         </div>
       </div>
 
-      <!-- Assign Agent to Policies -->
-      <div class="mt-10">
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-xl font-semibold text-slate-800">Assign Agent to Policies</h2>
-          <button (click)="loadPolicies()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="policiesLoading">
-            <svg *ngIf="!policiesLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
-            </svg>
-            <svg *ngIf="policiesLoading" class="animate-spin -ml-1 mr-1 h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>{{ policiesLoading ? 'Refreshing...' : 'Refresh' }}</span>
-          </button>
-        </div>
-
-        <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm">
-          <table class="min-w-full divide-y divide-slate-200">
-            <thead class="bg-slate-50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Code</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Title</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Assigned Agent</th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 bg-white" *ngIf="policies?.length; else noAssignPolicies">
-              <tr *ngFor="let p of policies" class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 text-sm text-slate-900">{{ p.code }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700">{{ p.title }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700">
-                  <ng-container *ngIf="p.assignedAgentName; else unassignedPolicy">{{ p.assignedAgentName }}</ng-container>
-                  <ng-template #unassignedPolicy>—</ng-template>
-                </td>
-                <td class="px-4 py-3 text-sm">
-                  <div class="flex flex-wrap gap-2">
-                    <button (click)="openPolicyProductView(p)" class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1.5 text-slate-800 ring-1 ring-slate-300 hover:bg-slate-200 transition">View</button>
-                    <button (click)="openAssignAgent(p)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">Assign/Change</button>
-                    <button *ngIf="p.assignedAgentId || p.assignedAgentName" (click)="openUnassignModal(p)" class="inline-flex items-center rounded-full bg-rose-600 px-3 py-1.5 text-white shadow-sm hover:bg-rose-700 transition">Remove</button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <ng-template #noAssignPolicies>
-            <div class="p-5 text-sm text-slate-600">No policies available for assignment.</div>
-          </ng-template>
-        </div>
-      </div>
-
-      <!-- Unassign Agent Confirmation Modal -->
-      <div *ngIf="showUnassignModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="!unassignLoading && closeUnassignModal()">
-        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-800">Remove Assigned Agent</h3>
-            <button (click)="closeUnassignModal()" [disabled]="unassignLoading" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50">✕</button>
-          </div>
-          <div class="space-y-4 text-sm text-slate-700">
-            <p>Are you sure you want to remove the agent from this policy?</p>
-            <div class="rounded-xl bg-slate-50 p-4 text-xs text-slate-600 ring-1 ring-slate-200" *ngIf="unassignTarget">
-              <div><span class="font-semibold text-slate-700">Policy Code:</span> {{ unassignTarget?.code }}</div>
-              <div><span class="font-semibold text-slate-700">Policy Title:</span> {{ unassignTarget?.title || '—' }}</div>
-              <div><span class="font-semibold text-slate-700">Current Agent:</span> {{ unassignTarget?.assignedAgentName || '—' }}</div>
-            </div>
-            <div *ngIf="unassignError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">{{ unassignError }}</div>
-            <div class="flex items-center gap-2 text-xs" *ngIf="unassignLoading">
-              <svg class="h-4 w-4 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              <span>Removing...</span>
-            </div>
-          </div>
-          <div class="mt-6 flex justify-end gap-2">
-            <button (click)="closeUnassignModal()" [disabled]="unassignLoading" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200 disabled:opacity-50">Cancel</button>
-            <button (click)="confirmUnassignAgent()" [disabled]="unassignLoading" class="rounded-full bg-rose-600 px-4 py-2 text-white shadow-sm ring-1 ring-rose-500/50 hover:bg-rose-700 disabled:opacity-50">{{ unassignLoading ? 'Removing...' : 'Remove' }}</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Assign Agent Modal -->
-      <div *ngIf="showAssignModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeAssignModal()">
-        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
-          <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-800">Assign Agent</h3>
-            <button (click)="closeAssignModal()" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800">✕</button>
-          </div>
-          <div class="space-y-4">
-            <div class="text-sm text-slate-600">
-              <div><span class="font-medium text-slate-700">Policy:</span> {{ selectedPolicy?.title || selectedPolicy?.code }}</div>
-              <div *ngIf="selectedPolicy?.assignedAgentName"><span class="font-medium text-slate-700">Current Agent:</span> {{ selectedPolicy?.assignedAgentName }}</div>
-            </div>
-            <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Select Agent</label>
-              <select class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="selectedAgentId" [ngModelOptions]="{standalone:true}">
-                <option value="">-- choose agent --</option>
-                <option *ngFor="let a of agentList" [value]="a._id">{{ a.name }} ({{ a.email }})</option>
-              </select>
-            </div>
-            <div *ngIf="assignError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 text-sm shadow-sm">{{ assignError }}</div>
-          </div>
-          <div class="mt-6 flex justify-end gap-2">
-            <button (click)="closeAssignModal()" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200">Cancel</button>
-            <button (click)="assignAgent()" class="rounded-full bg-indigo-600 px-4 py-2 text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700">Assign</button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -676,16 +759,6 @@
         <h3 class="text-lg font-semibold text-gray-800">User Policies (All Customers)</h3>
           <div class="flex items-center gap-2 w-full md:w-auto">
             <input type="text" [(ngModel)]="userPoliciesSearch" [ngModelOptions]="{standalone:true}" placeholder="Search by name or email" class="w-full md:w-64 rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button (click)="loadCustomerDetails()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="customerDetailsLoading">
-              <svg *ngIf="!customerDetailsLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
-              </svg>
-              <svg *ngIf="customerDetailsLoading" class="animate-spin -ml-1 mr-1 h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="CurrentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              <span>{{ customerDetailsLoading ? 'Refreshing...' : 'Refresh' }}</span>
-            </button>
           </div>
         </div>
         <div *ngIf="customerDetailsError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ customerDetailsError }}</div>
@@ -707,15 +780,34 @@
             <tbody class="divide-y divide-slate-100 bg-white">
               <!-- user policies overview rows -->
               <tr *ngFor="let c of filteredUserPoliciesCustomers" class="hover:bg-slate-50/60">
-                <td class="px-4 py-3 text-sm text-slate-800">{{ c?.customer?.name || '—' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700 break-all">{{ c?.customer?.email || '—' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-700">{{ c?.policies?.length || 0 }}</td>
-                <td class="px-4 py-3 text-sm text-emerald-700">{{ policyCountByStatus(c?.policies, 'approved') }}</td>
-                <td class="px-4 py-3 text-sm text-amber-700">{{ policyCountByStatus(c?.policies, 'pending') }}</td>
-                <td class="px-4 py-3 text-sm text-red-700">{{ policyCountByStatus(c?.policies, 'cancelled') }}</td>
-                <td class="px-4 py-3 text-sm text-rose-700">{{ policyCountClaimed(c?.policies) }}</td>
-                <td class="px-4 py-3 text-sm">
-                  <button (click)="openUserPoliciesModal(c)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">View</button>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
+                      {{ (c?.customer?.name || c?.customer?.email || 'U').slice(0,2).toUpperCase() }}
+                    </div>
+                    <div class="text-sm font-medium text-slate-800">{{ c?.customer?.name || '—' }}</div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 text-sm text-slate-700 break-all">{{ c?.customer?.email || '—' }}</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-300">{{ c?.policies?.length || 0 }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 ring-1 ring-emerald-600/20">{{ policyCountByStatus(c?.policies, 'approved') }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-amber-600/20">{{ policyCountByStatus(c?.policies, 'pending') }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-800 ring-1 ring-rose-600/20">{{ policyCountByStatus(c?.policies, 'cancelled') }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-800 ring-1 ring-rose-600/20">{{ policyCountClaimed(c?.policies) }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <button (click)="openUserPoliciesModal(c)" class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" aria-label="View user policies" title="View">
+                    <i class="fas fa-eye w-5 h-5"></i>
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -736,85 +828,59 @@
     </div>
     
   <div class="p-6">
-    <div class="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h3 class="text-lg font-semibold text-slate-800">Customer Management</h3>
+    <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">👥</div>
+          <div>
+            <h3 class="text-lg font-semibold text-slate-800">Customer Management</h3>
+            <p class="text-sm text-slate-600">{{ customerDetails.length || 0 }} total customers</p>
+          </div>
+        </div>
         <div class="flex items-center gap-2 w-full md:w-auto">
           <input type="text" placeholder="Search customers by name or email..." class="w-full md:w-64 rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button (click)="loadCustomerDetails()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="customerDetailsLoading">
-            <svg *ngIf="!customerDetailsLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
-            </svg>
-            <svg *ngIf="customerDetailsLoading" class="animate-spin -ml-1 mr-1 h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>{{ customerDetailsLoading ? 'Refreshing...' : 'Refresh' }}</span>
-          </button>
         </div>
       </div>
       
       <div *ngIf="customerDetailsError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ customerDetailsError }}</div>
       <div *ngIf="customerDetailsLoading && !customerDetails?.length" class="p-4 text-sm text-slate-600">Loading customers...</div>
 
-      <div class="overflow-x-auto rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm" *ngIf="customerDetails?.length; else noCustomersBlock">
-        <table class="min-w-full divide-y divide-slate-200">
+      <div class="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm" *ngIf="customerDetails?.length; else noCustomersBlock">
+        <table class="w-full">
           <thead class="bg-slate-50">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Customer Info</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Contact</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Policy Count</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Payment Count</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Total Revenue</th>
-              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">Actions</th>
+            <tr class="divide-x divide-slate-200">
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Customer</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Contact</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Policies</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Payments</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Revenue</th>
+              <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-600">Actions</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 bg-white">
-            <tr *ngFor="let c of customerDetails" class="hover:bg-slate-50/60">
-              <td class="px-4 py-3">
-                <div class="flex items-center">
-                  <div class="h-10 w-10 flex-shrink-0">
-                    <div class="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
-                      {{ (c?.customer?.name || 'U').charAt(0).toUpperCase() }}
-                    </div>
+          <tbody class="divide-y divide-slate-200 bg-white">
+            <tr *ngFor="let c of customerDetails" class="hover:bg-slate-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
+                    {{ (c?.customer?.name || c?.customer?.email || 'U').slice(0,2).toUpperCase() }}
                   </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-slate-900">{{ c?.customer?.name || 'Unknown' }}</div>
-                    <div class="text-xs text-slate-500 font-mono">ID: {{ c?.customer?._id }}</div>
+                  <div>
+                    <div class="text-sm font-medium text-slate-800">{{ c?.customer?.name || 'Unknown' }}</div>
+                    <div class="text-[11px] font-mono text-slate-500">ID: {{ c?.customer?._id }}</div>
                   </div>
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-slate-700">
-                <div class="break-all">{{ c?.customer?.email || 'No email' }}</div>
+              <td class="px-6 py-4 text-sm text-slate-700 break-all">{{ c?.customer?.email || 'No email' }}</td>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-800 ring-1 ring-sky-600/20">{{ c?.policies?.length || 0 }} policies</span>
               </td>
-              <td class="px-4 py-3">
-                <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  {{ c?.policies?.length || 0 }} policies
-                </span>
+              <td class="px-6 py-4">
+                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 ring-1 ring-emerald-600/20">{{ c?.payments?.length || 0 }} payments</span>
               </td>
-              <td class="px-4 py-3">
-                <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                  <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
-                  </svg>
-                  {{ c?.payments?.length || 0 }} payments
-                </span>
-              </td>
-              <td class="px-4 py-3 text-sm font-semibold text-slate-900">
-                <div class="flex items-center">
-                  <span class="text-emerald-600">₹{{ getCustomerTotalPaid(c) | number:'1.2-2' }}</span>
-                </div>
-              </td>
-              <td class="px-4 py-3 text-sm">
+              <td class="px-6 py-4 text-sm font-medium text-emerald-600">₹{{ getCustomerTotalPaid(c) | number:'1.2-2' }}</td>
+              <td class="px-6 py-4">
                 <div class="flex flex-wrap gap-2">
-                  <button (click)="openCustomerModal(c)" class="inline-flex items-center rounded-full bg-indigo-600 px-3 py-1.5 text-white shadow-sm hover:bg-indigo-700 transition">
-                    <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                    </svg>
-                    View Details
+                  <button (click)="openCustomerModal(c)" class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" aria-label="View customer" title="View">
+                    <i class="fas fa-eye w-5 h-5"></i>
                   </button>
                 </div>
               </td>
@@ -823,7 +889,7 @@
         </table>
       </div>
       <ng-template #noCustomersBlock>
-        <div class="p-5 text-sm text-slate-600 rounded-xl ring-1 ring-slate-200 bg-white">No customers found. Customer data will appear here once available.</div>
+        <div class="p-8 text-center text-sm text-slate-600">No customers found. Customer data will appear here once available.</div>
       </ng-template>
     </div>
   </div>
@@ -1102,16 +1168,7 @@
         <h3 class="text-lg font-semibold text-slate-800">Claims Processing</h3>
         <div class="flex items-center gap-2 w-full md:w-auto">
           <input type="text" placeholder="Search claims by customer or policy..." class="w-full md:w-64 rounded-full border border-slate-300 bg-white/70 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <button (click)="loadPendingClaims()" class="inline-flex items-center gap-2 rounded-full bg-amber-600 px-4 py-2 text-white shadow-sm ring-1 ring-amber-500/50 hover:bg-amber-700 disabled:opacity-60 transition-colors" [disabled]="isLoadingPending">
-            <svg *ngIf="!isLoadingPending" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992V4.356M2.985 15.091v4.992h4.992M20.261 8.633A9 9 0 006.344 6.344M3.739 15.367A9 9 0 0017.656 17.656" />
-            </svg>
-            <svg *ngIf="isLoadingPending" class="animate-spin -ml-1 mr-1 h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-            <span>{{ isLoadingPending ? 'Refreshing...' : 'Refresh' }}</span>
-          </button>
+          
         </div>
       </div>
 
@@ -1160,8 +1217,8 @@
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
                 <td class="px-6 py-4">
-                  <div class="text-sm font-medium text-slate-800">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
-                  <div class="text-xs text-slate-500">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
+                  <div class="text-sm font-medium text-slate-800">{{ c._policyCode || c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
+                  <div class="text-xs text-slate-500">{{ c._policyTitle || c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
                 </td>
                 <td class="px-6 py-4 text-sm font-medium text-amber-600">₹{{ c.amountClaimed | number:'1.2-2' }}</td>
                 <td class="px-6 py-4">
@@ -1171,14 +1228,22 @@
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex flex-wrap gap-2">
-                    <button (click)="approve(c._id)" class="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-emerald-500/50 hover:bg-emerald-700 transition">
-                      ✓ Approve
+                    <!-- Edit Claim -->
+                    <button (click)="openEditClaim(c)" class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors" aria-label="Edit claim" title="Edit">
+                      <i class="fas fa-edit w-5 h-5"></i>
                     </button>
-                    <button (click)="reject(c._id)" class="inline-flex items-center gap-1 rounded-full bg-rose-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-rose-500/50 hover:bg-rose-700 transition">
-                      ✕ Reject
+                    <button (click)="approve(c._id)" class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors" aria-label="Approve claim" title="Approve">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
                     </button>
-                    <button (click)="openClaimView(c)" class="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700 transition">
-                      👁️ View
+                    <button (click)="reject(c._id)" class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" aria-label="Reject claim" title="Reject">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <button (click)="openClaimView(c)" class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" aria-label="View claim" title="View">
+                      <i class="fas fa-eye w-5 h-5"></i>
                     </button>
                   </div>
                 </td>
@@ -1209,11 +1274,7 @@
                 <p class="text-sm text-slate-600">Approved and rejected claims overview</p>
               </div>
             </div>
-            <button (click)="loadAllClaims()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="processedClaimsLoading">
-              <span *ngIf="processedClaimsLoading" class="animate-spin">⟳</span>
-              <span *ngIf="!processedClaimsLoading">🔄</span>
-              <span>{{ processedClaimsLoading ? 'Refreshing...' : 'Refresh' }}</span>
-            </button>
+            
           </div>
           <div *ngIf="processedClaimsError" class="mx-6 mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ processedClaimsError }}</div>
           <div class="overflow-hidden">
@@ -1295,9 +1356,7 @@
                 <p class="text-sm text-slate-600">Complete claims record</p>
               </div>
             </div>
-            <button (click)="loadAllClaims()" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-2 text-white shadow-sm ring-1 ring-sky-500/50 hover:bg-sky-700 disabled:opacity-60 transition-colors" [disabled]="allClaimsLoading">
-              <span>{{ allClaimsLoading ? 'Refreshing...' : 'Refresh' }}</span>
-            </button>
+            
           </div>
           <div *ngIf="allClaimsError" class="mx-6 mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ allClaimsError }}</div>
           <div class="overflow-hidden">
@@ -1341,8 +1400,8 @@
                     </span>
                   </td>
                   <td class="px-6 py-4">
-                    <button (click)="openClaimView(c)" class="inline-flex items-center gap-1 rounded-full bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700 transition">
-                      👁️ View
+                    <button (click)="openClaimView(c)" class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors" aria-label="View claim" title="View">
+                      <i class="fas fa-eye w-5 h-5"></i>
                     </button>
                   </td>
                 </tr>
@@ -1474,6 +1533,97 @@
           }">
           {{ pendingAction?.action?.includes('approve') ? 'Approve' : 'Reject' }}
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claim Edit Modal -->
+  <div *ngIf="editingClaim" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeEditClaim()">
+    <div class="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Edit Claim</h3>
+        <button (click)="closeEditClaim()" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800">✕</button>
+      </div>
+      <div class="grid grid-cols-1 gap-3 text-sm">
+        <div>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Incident Date</label>
+          <input type="date" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.incidentDate" [ngModelOptions]="{standalone:true}" />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Amount Claimed</label>
+          <input type="number" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.amountClaimed" [ngModelOptions]="{standalone:true}" placeholder="0" />
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
+          <textarea rows="3" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.description" [ngModelOptions]="{standalone:true}" placeholder="Describe the incident..."></textarea>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Decision Notes</label>
+          <textarea rows="2" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.decisionNotes" [ngModelOptions]="{standalone:true}" placeholder="Internal notes (optional)"></textarea>
+        </div>
+        <div *ngIf="actionError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">{{ actionError }}</div>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button (click)="closeEditClaim()" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200">Cancel</button>
+        <button (click)="saveClaimEdit()" class="rounded-full bg-emerald-600 px-4 py-2 text-white shadow-sm ring-1 ring-emerald-500/50 hover:bg-emerald-700">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unassign Agent Confirmation Modal (global) -->
+  <div *ngIf="showUnassignModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="!unassignLoading && closeUnassignModal()">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Remove Assigned Agent</h3>
+        <button (click)="closeUnassignModal()" [disabled]="unassignLoading" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50">✕</button>
+      </div>
+      <div class="space-y-4 text-sm text-slate-700">
+        <p>Are you sure you want to remove the agent from this policy?</p>
+        <div class="rounded-xl bg-slate-50 p-4 text-xs text-slate-600 ring-1 ring-slate-200" *ngIf="unassignTarget">
+          <div><span class="font-semibold text-slate-700">Policy Code:</span> {{ unassignTarget?.code }}</div>
+          <div><span class="font-semibold text-slate-700">Policy Title:</span> {{ unassignTarget?.title || '—' }}</div>
+          <div><span class="font-semibold text-slate-700">Current Agent:</span> {{ unassignTarget?.assignedAgentName || '—' }}</div>
+        </div>
+        <div *ngIf="unassignError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">{{ unassignError }}</div>
+        <div class="flex items-center gap-2 text-xs" *ngIf="unassignLoading">
+          <svg class="h-4 w-4 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span>Removing...</span>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button (click)="closeUnassignModal()" [disabled]="unassignLoading" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200 disabled:opacity-50">Cancel</button>
+        <button (click)="confirmUnassignAgent()" [disabled]="unassignLoading" class="rounded-full bg-rose-600 px-4 py-2 text-white shadow-sm ring-1 ring-rose-500/50 hover:bg-rose-700 disabled:opacity-50">{{ unassignLoading ? 'Removing...' : 'Remove' }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Agent Modal (global) -->
+  <div *ngIf="showAssignModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeAssignModal()">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-200" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Assign Agent</h3>
+        <button (click)="closeAssignModal()" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div class="text-sm text-slate-600">
+          <div><span class="font-medium text-slate-700">Policy:</span> {{ selectedPolicy?.title || selectedPolicy?.code }}</div>
+          <div *ngIf="selectedPolicy?.assignedAgentName"><span class="font-medium text-slate-700">Current Agent:</span> {{ selectedPolicy?.assignedAgentName }}</div>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Select Agent</label>
+          <select class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="selectedAgentId" [ngModelOptions]="{standalone:true}">
+            <option value="">-- choose agent --</option>
+            <option *ngFor="let a of agentList" [value]="a._id">{{ a.name }} ({{ a.email }})</option>
+          </select>
+        </div>
+        <div *ngIf="assignError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 text-sm shadow-sm">{{ assignError }}</div>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button (click)="closeAssignModal()" class="rounded-full bg-slate-100 px-4 py-2 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-200">Cancel</button>
+        <button (click)="assignAgent()" class="rounded-full bg-indigo-600 px-4 py-2 text-white shadow-sm ring-1 ring-indigo-500/50 hover:bg-indigo-700">Assign</button>
       </div>
     </div>
   </div>

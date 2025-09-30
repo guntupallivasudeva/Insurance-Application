@@ -43,6 +43,48 @@ export const loginAgent = async (req, res) => {
 };
 
 const agentController = {
+  // Update claim details (agent permitted fields)
+  async updateClaim(req, res) {
+    try {
+      const { id } = req.params;
+      // validate payload similar to admin but scoped for agents
+      const schema = Joi.object({
+        incidentDate: Joi.date().optional(),
+        description: Joi.string().trim().min(1).max(1000).optional(),
+        amountClaimed: Joi.number().positive().optional(),
+        decisionNotes: Joi.string().trim().allow('', null).optional()
+      }).min(1);
+      const { error, value } = schema.validate(req.body);
+      if (error) {
+        return res.status(400).json({ success: false, message: 'Validation error', errors: error.details.map(d => d.message) });
+      }
+
+      const claim = await Claim.findById(id);
+      if (!claim) {
+        return res.status(404).json({ success: false, message: 'Claim not found' });
+      }
+
+      // Ensure agent is assigned to this claim's policy
+      const userPolicy = await UserPolicy.findById(claim.userPolicyId);
+      if (!userPolicy || String(userPolicy.assignedAgentId) !== String(req.user.userId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+
+      // Apply updates
+      ['incidentDate', 'description', 'amountClaimed', 'decisionNotes'].forEach((k) => {
+        if (value[k] !== undefined) claim[k] = value[k];
+      });
+      await claim.save();
+
+      const populated = await Claim.findById(id)
+        .populate('userId', 'name email')
+        .populate('userPolicyId')
+        .populate('decidedByAgentId', 'name');
+      res.json({ success: true, claim: populated });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  },
   // View unique policy products assigned to agent
   async assignedPolicies(req, res) {
     try {

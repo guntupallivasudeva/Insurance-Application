@@ -223,6 +223,14 @@ export class AgentService {
     );
   }
 
+  updateClaim(id: string, payload: Partial<{ incidentDate: string | Date; description: string; amountClaimed: number; decisionNotes: string }>): Observable<any> {
+    return this.http.put(
+      `${this.baseUrl}/claim/${id}`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
   approveClaim(claimId: string, decisionNotes?: string): Observable<any> {
     return this.http.post(
       `${this.baseUrl}/approveclaim`,

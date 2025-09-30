@@ -207,6 +207,12 @@ export class AdminService {
     });
   }
 
+  getDbStatus(): Observable<any> {
+    return this.http.get(`${this.adminApiUrl}/db-status`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   // Test admin authentication by calling a protected endpoint
   testAdminAuth(): Observable<any> {
     return this.http.get(`${this.adminApiUrl}/summary`, {

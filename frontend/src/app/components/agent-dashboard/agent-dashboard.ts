@@ -68,12 +68,14 @@ export class AgentDashboard implements OnInit {
   showPolicyRequestDetailsModal = false;
   showApprovedCustomerDetailsModal = false;
   showPolicyHistoryModal = false;
+  showEditClaimModal = false;
   showSuccessModal = false;
   showErrorModal = false;
   showApproveConfirmModal = false;
   showRejectConfirmModal = false;
   selectedPolicy: Policy | null = null;
   selectedClaim: Claim | null = null;
+  editingClaim: Claim | null = null;
   selectedCustomer: Customer | null = null;
   selectedCustomerDetails: Customer | null = null;
   selectedPolicyRequest: PolicyRequest | null = null;
@@ -83,6 +85,7 @@ export class AgentDashboard implements OnInit {
   modalTitle = '';
   modalMessage = '';
   modalDetails = '';
+  claimForm: { incidentDate: string; amountClaimed: number | null; description: string; decisionNotes: string } = { incidentDate: '', amountClaimed: null, description: '', decisionNotes: '' };
 
   constructor(
     private auth: AuthService, 
@@ -376,6 +379,66 @@ export class AgentDashboard implements OnInit {
     this.showClaimModal = false;
     this.selectedClaim = null;
     this.decisionNotes = '';
+  }
+
+  // Edit Claim flow
+  openEditClaim(c: Claim) {
+    this.editingClaim = c;
+    this.claimForm = {
+      incidentDate: this.formatDateForInput(c.incidentDate),
+      amountClaimed: c.amountClaimed ?? null,
+      description: c.description || '',
+      decisionNotes: c.decisionNotes || ''
+    };
+    this.showEditClaimModal = true;
+  }
+
+  closeEditClaim() {
+    this.showEditClaimModal = false;
+    this.editingClaim = null;
+  }
+
+  saveClaimEdit() {
+    if (!this.editingClaim) return;
+    const payload: any = {};
+    if (this.claimForm.incidentDate) payload.incidentDate = new Date(this.claimForm.incidentDate).toISOString();
+    if (this.claimForm.amountClaimed != null) payload.amountClaimed = Number(this.claimForm.amountClaimed);
+    if (this.claimForm.description != null) payload.description = this.claimForm.description;
+    if (this.claimForm.decisionNotes != null) payload.decisionNotes = this.claimForm.decisionNotes;
+
+    this.agentService.updateClaim(this.editingClaim.claimId, payload).subscribe({
+      next: (res) => {
+        if (res?.success) {
+          // Update local list
+          const updated = res.claim;
+          const idx = this.claims.findIndex(cl => cl.claimId === this.editingClaim!.claimId);
+          if (idx > -1) {
+            this.claims[idx] = {
+              ...this.claims[idx],
+              incidentDate: updated.incidentDate || this.claims[idx].incidentDate,
+              description: updated.description ?? this.claims[idx].description,
+              amountClaimed: updated.amountClaimed ?? this.claims[idx].amountClaimed,
+              decisionNotes: updated.decisionNotes ?? this.claims[idx].decisionNotes
+            };
+          }
+          this.closeEditClaim();
+          this.showSuccessMessage('Success!', 'Claim updated successfully.');
+        }
+      },
+      error: (err) => {
+        console.error('Failed to update claim', err);
+        this.showErrorMessage('Error!', 'Failed to update claim.');
+      }
+    });
+  }
+
+  private formatDateForInput(date: string | Date | null | undefined): string {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   getStatusClass(status: string): string {

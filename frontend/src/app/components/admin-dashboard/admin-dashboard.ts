@@ -11,7 +11,7 @@ import { forkJoin } from 'rxjs';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ CommonModule, FormsModule],
   templateUrl: './admin-dashboard.html'
 })
 export class AdminDashboard implements OnInit {
@@ -255,6 +255,13 @@ export class AdminDashboard implements OnInit {
     totalRevenue: 0
   };
 
+  // Database status
+  dbStatus: {
+    connection?: { code: number; state: string; host?: string | null; dbName?: string | null };
+    counts?: { users: number; agents: number; admins: number; policies: number; userPolicies: number; claims: number; payments: number; auditLogs: number } | null;
+    serverTime?: string;
+  } = {};
+
   constructor(
     private auth: AuthService,
     private router: Router,
@@ -302,6 +309,7 @@ export class AdminDashboard implements OnInit {
 
   ngOnInit() {
     this.loadSummary();
+    this.loadDbStatus();
     this.loadPendingClaims();
     this.loadPendingPolicies();
     this.loadApprovedClaims();
@@ -311,6 +319,32 @@ export class AdminDashboard implements OnInit {
     this.loadAgents();
     this.loadPolicies();
     this.loadCustomerDetails();
+  }
+
+  // Single entry-point to refresh the whole dashboard at once
+  refreshAll() {
+    this.loadSummary();
+    this.loadDbStatus();
+    this.loadPendingClaims();
+    this.loadPendingPolicies();
+    this.loadApprovedClaims();
+    this.loadAllClaims();
+    this.loadApprovedPolicies();
+    this.loadUserPolicies();
+    this.loadAgents();
+    this.loadPolicies();
+    this.loadCustomerDetails();
+  }
+
+  loadDbStatus() {
+    this.adminService.getDbStatus().subscribe({
+      next: (res) => {
+        this.dbStatus = res || {};
+      },
+      error: () => {
+        this.dbStatus = { connection: { code: -1, state: 'unknown' } } as any;
+      }
+    });
   }
 
   loadSummary() {
@@ -774,7 +808,14 @@ export class AdminDashboard implements OnInit {
         const claims = Array.isArray(res?.claims) ? res.claims : (Array.isArray(res?.data) ? res.data : []);
         this.pendingClaims = claims
           .filter((c: any) => (c?.status || '').toLowerCase() === 'pending')
-          .slice(0, 5);
+          .slice(0, 5)
+          .map((c: any) => {
+            const prod = this.resolvePolicyProductForClaim(c);
+            const nested = c?.userPolicyId?.policyProductId;
+            const code = prod?.code ?? nested?.code ?? null;
+            const title = prod?.title ?? nested?.title ?? null;
+            return { ...c, _product: prod || nested || null, _policyCode: code, _policyTitle: title };
+          });
         this.isLoadingPending = false;
       },
       error: () => {
@@ -782,6 +823,27 @@ export class AdminDashboard implements OnInit {
         this.isLoadingPending = false;
       }
     });
+  }
+
+  // Attempt to resolve the Policy Product object for a given claim using multiple possible shapes
+  private resolvePolicyProductForClaim(c: any): any | null {
+    if (!c) return null;
+    // Common locations the product might appear
+    const ref = c.userPolicyId;
+    const direct = c.policyProductId || c._product;
+    const nested = ref?.policyProductId || ref?._product;
+
+    // If already an object with expected fields, return it
+    const candidate = direct || nested;
+    if (candidate && typeof candidate === 'object') return candidate;
+
+    // If it's an id string, try lookup from cached map built elsewhere
+    const id = typeof candidate === 'string'
+      ? candidate
+      : (typeof ref?.policyProductId === 'string' ? ref.policyProductId : null);
+    if (id && this.policyProductsById && this.policyProductsById[id]) return this.policyProductsById[id];
+
+    return null;
   }
 
   loadApprovedClaims() {

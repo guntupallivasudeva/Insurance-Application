@@ -43,4 +43,7 @@ router.get('/audit', adminAuth, adminController.getAuditLogs);
 // Get minimal KPIs summary (admin only)
 router.get('/summary', adminAuth, adminController.getSummaryKPIs);
 
+// Database status (connection + counts)
+router.get('/db-status', adminAuth, adminController.dbStatus);
+
 export default router;

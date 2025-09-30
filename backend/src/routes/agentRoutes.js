@@ -27,6 +27,8 @@ router.get('/assignedclaims', agentAuth, agentController.assignedClaims);
 router.get('/claims/:id', agentAuth, agentController.getClaimById);
 router.post('/approveclaim', agentAuth, agentController.approveClaim);
 router.post('/rejectclaim', agentAuth, agentController.rejectClaim);
+// Update claim details (agent)
+router.put('/claim/:id', agentAuth, agentController.updateClaim);
 
 // Payment management routes
 router.get('/assignedpayments', agentAuth, agentController.assignedPayments);

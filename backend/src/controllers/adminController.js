@@ -59,6 +59,59 @@ const updateClaimSchema = Joi.object({
 }).min(1);
 
 const adminController = {
+    async dbStatus(req, res) {
+        try {
+            const mongoose = (await import('mongoose')).default;
+            const conn = mongoose.connection;
+            const stateMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+            const state = stateMap[conn.readyState] || 'unknown';
+
+            // If not connected, return minimal info to avoid blocking calls
+            if (conn.readyState !== 1) {
+                return res.status(200).json({
+                    success: true,
+                    connection: {
+                        code: conn.readyState,
+                        state,
+                        host: conn?.host || null,
+                        dbName: conn?.name || null
+                    },
+                    counts: null,
+                    serverTime: new Date().toISOString()
+                });
+            }
+
+            // Lazy import models not already imported at file top
+            const Claim = (await import('../models/claim.js')).default;
+            const AuditLog = (await import('../models/auditLog.js')).default;
+            const Admin = (await import('../models/admin.js')).default;
+
+            const [users, agents, admins, policies, userPolicies, claims, payments, auditLogs] = await Promise.all([
+                User.countDocuments({}).catch(() => 0),
+                Agent.countDocuments({}).catch(() => 0),
+                Admin.countDocuments({}).catch(() => 0),
+                PolicyProduct.countDocuments({}).catch(() => 0),
+                UserPolicy.countDocuments({}).catch(() => 0),
+                Claim.countDocuments({}).catch(() => 0),
+                Payment.countDocuments({}).catch(() => 0),
+                AuditLog.countDocuments({}).catch(() => 0)
+            ]);
+
+            return res.status(200).json({
+                success: true,
+                connection: {
+                    code: conn.readyState,
+                    state,
+                    host: conn?.host || null,
+                    dbName: conn?.name || null
+                },
+                counts: { users, agents, admins, policies, userPolicies, claims, payments, auditLogs },
+                serverTime: new Date().toISOString()
+            });
+        } catch (err) {
+            return res.status(500).json({ success: false, error: err.message });
+        }
+    },
     async allClaims(req, res) {
         try {
             const Claim = (await import('../models/claim.js')).default;

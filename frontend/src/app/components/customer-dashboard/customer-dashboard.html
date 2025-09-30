@@ -680,51 +680,120 @@
 	</div>
 
 	<!-- Pay Modal -->
-	<div *ngIf="showPayModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" (click)="showPayModal=false">
-		<div class="bg-white rounded shadow-lg w-full max-w-md p-4" (click)="$event.stopPropagation()">
-			<div class="flex items-center justify-between mb-3">
-				<h3 class="text-lg font-semibold">Pay Installment</h3>
-				<button class="text-gray-500 hover:text-black" (click)="showPayModal=false">✕</button>
+	<div *ngIf="showPayModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+		<div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-auto" (click)="$event.stopPropagation()">
+			<!-- Modal Header -->
+			<div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 rounded-t-xl">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center space-x-3">
+						<div class="p-2 bg-white bg-opacity-20 rounded-lg">
+							<i class="fas fa-credit-card text-white text-xl"></i>
+						</div>
+						<div>
+							<h3 class="text-xl font-bold text-white">Make Payment</h3>
+							<p class="text-blue-100 text-sm">Secure payment processing</p>
+						</div>
+					</div>
+					<button class="text-white hover:text-blue-200 transition-colors p-1" (click)="showPayModal=false">
+						<i class="fas fa-times text-lg"></i>
+					</button>
+				</div>
 			</div>
-			<div class="space-y-3 text-sm">
-				<div class="grid grid-cols-2 gap-3">
-					<div>
-						<div class="text-gray-500">Policy Code</div>
-						<div class="font-semibold">{{ payContext.code }}</div>
-					</div>
-					<div>
-						<div class="text-gray-500">Title</div>
-						<div class="font-semibold truncate" title="{{ payContext.title }}">{{ payContext.title }}</div>
-					</div>
-				</div>
-				<div class="grid grid-cols-3 gap-3">
-					<div>
-						<div class="text-gray-500">Premium</div>
-						<div class="font-semibold">{{ payContext.premium | number:'1.0-2' }}</div>
-					</div>
-					<div>
-						<div class="text-gray-500">Term (mo)</div>
-						<div class="font-semibold">{{ payContext.termMonths }}</div>
-					</div>
-					<div>
-						<div class="text-gray-500">Paid</div>
-						<div class="font-semibold">{{ payContext.paidCount }}/{{ payContext.termMonths }}</div>
+
+			<!-- Modal Body -->
+			<div class="px-6 py-6">
+				<!-- Policy Information Card -->
+				<div class="bg-gray-50 rounded-lg p-4 mb-6">
+					<h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+						<i class="fas fa-shield-alt text-blue-600 mr-2"></i>
+						Policy Information
+					</h4>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<div class="text-xs text-gray-500 uppercase font-medium">Policy Code</div>
+							<div class="font-semibold text-gray-900 mt-1">{{ payContext.code }}</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500 uppercase font-medium">Policy Name</div>
+							<div class="font-semibold text-gray-900 mt-1 truncate" title="{{ payContext.title }}">{{ payContext.title }}</div>
+						</div>
 					</div>
 				</div>
-				<label class="block">
-					<span class="text-gray-700">Method</span>
-					<select [(ngModel)]="payForm.method" class="mt-1 w-full border rounded px-3 py-2">
-						<option value="Card">Card</option>
-						<option value="Netbanking">Netbanking</option>
-						<option value="Offline">Offline</option>
-						<option value="UPI">UPI</option>
-						<option value="Simulated">Simulated</option>
-					</select>
-				</label>
-				<div *ngIf="payError" class="text-red-600 text-xs">{{ payError }}</div>
-				<div class="flex justify-end gap-2 pt-2">
-					<button class="px-3 py-2 border rounded" (click)="showPayModal=false">Cancel</button>
-					<button class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700" (click)="submitPayment()">Pay {{ payContext.premium | number:'1.0-2' }}</button>
+
+				<!-- Payment Details -->
+				<div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-6">
+					<h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+						<i class="fas fa-calculator text-green-600 mr-2"></i>
+						Payment Details
+					</h4>
+					<div class="grid grid-cols-3 gap-4">
+						<div class="text-center">
+							<div class="text-xs text-gray-500 uppercase font-medium">Premium Amount</div>
+							<div class="text-2xl font-bold text-green-600 mt-1">₹{{ payContext.premium | number:'1.0-2' }}</div>
+						</div>
+						<div class="text-center">
+							<div class="text-xs text-gray-500 uppercase font-medium">Term Length</div>
+							<div class="text-lg font-semibold text-gray-700 mt-1">{{ payContext.termMonths }} months</div>
+						</div>
+						<div class="text-center">
+							<div class="text-xs text-gray-500 uppercase font-medium">Progress</div>
+							<div class="text-lg font-semibold text-blue-600 mt-1">{{ payContext.paidCount }}/{{ payContext.termMonths }}</div>
+							<div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+								<div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+									 [style.width.%]="(payContext.paidCount / payContext.termMonths) * 100"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Payment Method Selection -->
+				<div class="mb-6">
+					<label class="block text-sm font-semibold text-gray-700 mb-3">
+						<i class="fas fa-wallet text-blue-600 mr-2"></i>
+						Select Payment Method
+					</label>
+					<div class="grid grid-cols-2 gap-3">
+						<label *ngFor="let method of [
+              {value: 'Card', icon: 'fas fa-credit-card', label: 'Credit/Debit Card'},
+              {value: 'UPI', icon: 'fas fa-mobile-alt', label: 'UPI Payment'},
+              {value: 'Netbanking', icon: 'fas fa-university', label: 'Net Banking'},
+              {value: 'Offline', icon: 'fas fa-money-bill-wave', label: 'Cash/Offline Payment'}
+						]" 
+						class="relative">
+							<input type="radio" [(ngModel)]="payForm.method" [value]="method.value" 
+								   class="sr-only peer" name="paymentMethod">
+							<div class="flex items-center p-3 border-2 border-gray-200 rounded-lg cursor-pointer 
+										peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-gray-300 transition-all">
+								<i [class]="method.icon + ' text-gray-600 peer-checked:text-blue-600 mr-3'"></i>
+								<span class="text-sm font-medium text-gray-700 peer-checked:text-blue-700">{{ method.label }}</span>
+							</div>
+						</label>
+					</div>
+				</div>
+
+				<!-- Error Message -->
+				<div *ngIf="payError" class="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+					<div class="flex items-center">
+						<i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+						<span class="text-red-700 text-sm font-medium">{{ payError }}</span>
+					</div>
+				</div>
+
+				<!-- Action Buttons -->
+				<div class="flex space-x-3">
+					<button class="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 
+								   font-medium transition-colors flex items-center justify-center" 
+							(click)="showPayModal=false">
+						<i class="fas fa-times mr-2"></i>
+						Cancel
+					</button>
+					<button class="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg 
+								   hover:from-green-700 hover:to-emerald-700 font-medium transition-all duration-200 
+								   flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" 
+							(click)="submitPayment()">
+						<i class="fas fa-lock mr-2"></i>
+						Pay ₹{{ payContext.premium | number:'1.0-2' }}
+					</button>
 				</div>
 			</div>
 		</div>
