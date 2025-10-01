@@ -1,200 +1,189 @@
-<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 flex items-center justify-center p-4">
-  <div class="w-full max-w-md">
-    <!-- Header Card -->
-    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 mb-6">
-      <div class="flex items-center justify-center space-x-4 mb-6" role="banner">
-        <!-- Modern Logo -->
-        <div class="w-16 h-16 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl flex items-center justify-center shadow-lg">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-          </svg>
-        </div>
-        <div class="text-left">
-          <h1 class="text-2xl font-bold text-gray-900">SecureLife Insurance</h1>
-          <p class="text-gray-600 text-sm">Protecting Your Future</p>
-        </div>
-      </div>
-      <div class="text-center">
-        <h2 class="text-xl font-bold text-gray-900 mb-2">Join SecureLife</h2>
-        <p class="text-gray-600 text-sm">Create your account and start your journey</p>
-      </div>
-    </div>
-
-    <!-- Signup Form Card -->
-    <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
-
-
-      <!-- Success Message -->
-      <div *ngIf="showCongratulations" class="mb-6 p-6 bg-green-50 border-2 border-green-300 rounded-lg shadow-lg">
-        <div class="text-center">
-          <!-- Success Icon -->
-          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-            <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+<!-- Modern Signup Page -->
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 relative overflow-hidden">
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 bg-white/20 backdrop-blur-3xl"></div>
+  <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, rgba(16, 185, 129, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(45, 212, 191, 0.1) 0%, transparent 50%);"></div>
+  
+  <!-- Header -->
+  <header class="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo and Brand -->
+        <div class="flex items-center space-x-4">
+          <div class="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl flex items-center justify-center shadow-lg">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
             </svg>
           </div>
-          
-          <!-- Success Text -->
-          <h3 class="text-2xl font-bold text-green-800 mb-2">Congratulations!</h3>
-          <h4 class="text-lg font-semibold text-green-700 mb-3">Registration Successful!</h4>
-          <p class="text-sm text-green-600 mb-4">Your {{formData.role}} account has been created successfully!</p>
-          
-          <!-- Redirect message -->
-          <div class="flex justify-center items-center space-x-1 mb-4">
-            <p class="text-sm text-gray-600">Redirecting to login page...</p>
+          <h1 class="text-xl font-bold text-gray-900">SecureLife Insurance</h1>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="hidden md:flex items-center space-x-6">
+          <a routerLink="/home" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors duration-200">Home</a>
+          <a routerLink="/login" class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-4 py-2 rounded-lg font-medium hover:from-emerald-700 hover:to-teal-800 transition-all duration-200 shadow-md hover:shadow-lg">Sign In</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="relative z-10 flex items-center justify-center min-h-[calc(100vh-4rem)] p-4 overflow-y-auto">
+    <div class="w-full max-w-md">
+      <!-- Signup Form Container -->
+      <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+        <!-- Form Header -->
+        <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-center">
+          <div class="flex items-center justify-center space-x-3">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+            <h2 class="text-xl font-bold text-white">Sign Up</h2>
           </div>
-          
-          <!-- Manual Login Link -->
-          <div class="mt-4">
-            <a routerLink="/login" class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-              Go to Login Now
+        </div>
+
+        <!-- Form Content -->
+        <div class="p-4">
+          <!-- Success Message -->
+          <div *ngIf="showCongratulations" class="text-center">
+            <div class="w-20 h-20 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Welcome aboard!</h3>
+            <p class="text-gray-600 mb-4">Your {{formData.role}} account has been created successfully!</p>
+            <a routerLink="/login" class="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] inline-block">
+              Continue to Login
               <svg class="ml-2 -mr-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
               </svg>
             </a>
           </div>
-          
-          <!-- Additional celebration message -->
-          <div class="mt-4 p-3 bg-white bg-opacity-60 rounded-lg">
-            <p class="text-xs text-gray-700 font-medium">🌟 Welcome to SecureLife Insurance! 🌟</p>
-            <p class="text-xs text-gray-600">You can now access all our insurance services</p>
-          </div>
-        </div>
-      </div>
 
-      <form *ngIf="!showCongratulations" class="space-y-5" (ngSubmit)="onSubmit()">
-        <!-- Full Name Field -->
-        <div class="space-y-2">
-          <label for="name" class="block text-sm font-semibold text-gray-700">
-            Full Name
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-              </svg>
+          <form *ngIf="!showCongratulations" class="space-y-4" (ngSubmit)="onSubmit()">
+            <!-- Full Name Field -->
+            <div class="group">
+              <label for="name" class="flex items-center text-sm font-medium text-gray-700 mb-1">
+                <svg class="w-4 h-4 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                Full Name
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                minlength="3"
+                maxlength="30"
+                [(ngModel)]="formData.name"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                placeholder="Enter your full name"
+              />
             </div>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              minlength="3"
-              maxlength="30"
-              [(ngModel)]="formData.name"
-              class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-700 placeholder-gray-400"
-              placeholder="Enter your full name"
-            />
-          </div>
-        </div>
 
-        <!-- Email Field -->
-        <div class="space-y-2">
-          <label for="email" class="block text-sm font-semibold text-gray-700">
-            Email Address
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
-              </svg>
+            <!-- Email Field -->
+            <div class="group">
+              <label for="email" class="flex items-center text-sm font-medium text-gray-700 mb-1">
+                <svg class="w-4 h-4 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                </svg>
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                [(ngModel)]="formData.email"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                placeholder="Enter your email"
+              />
             </div>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              [(ngModel)]="formData.email"
-              class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-700 placeholder-gray-400"
-              placeholder="Enter your email"
-            />
-          </div>
-        </div>
 
-        <!-- Account Type Field -->
-        <div class="space-y-2">
-          <label for="role" class="block text-sm font-semibold text-gray-700">
-            Account Type
-          </label>
-          <div class="relative">
-            <select
-              id="role"
-              name="role"
-              [(ngModel)]="formData.role"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 appearance-none text-gray-700"
-            >
-              <option value="Customer">Customer - Purchase insurance policies</option>
-              <option value="Agent">Agent - Sell insurance policies</option>
-            </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </div>
-          </div>
-        </div>
+            <!-- Account Type Field -->
+            <div class="space-y-2">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <svg class="inline w-4 h-4 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 715.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Select Account Type
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <!-- Customer Option -->
+                <label class="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="Customer"
+                    required
+                    [(ngModel)]="formData.role"
+                    class="sr-only peer"
+                  />
+                  <div class="p-3 text-center border-2 border-gray-200 rounded-lg transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:shadow-md hover:border-gray-300 hover:shadow-sm">
+                    <svg class="w-5 h-5 mx-auto mb-1 text-gray-400 peer-checked:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="text-xs font-medium text-gray-600 peer-checked:text-emerald-700">Customer</span>
+                  </div>
+                </label>
 
-        <!-- Agent Branch Field (conditional) -->
-        <div *ngIf="isAgentRole()" class="space-y-2 bg-teal-50 p-4 rounded-xl border border-teal-200">
-          <div class="flex items-center mb-2">
-            <svg class="w-5 h-5 text-teal-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-            </svg>
-            <h4 class="text-sm font-semibold text-teal-900">Agent Information</h4>
-          </div>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-              </svg>
+                <!-- Agent Option -->
+                <label class="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="Agent"
+                    required
+                    [(ngModel)]="formData.role"
+                    class="sr-only peer"
+                  />
+                  <div class="p-3 text-center border-2 border-gray-200 rounded-lg transition-all duration-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:shadow-md hover:border-gray-300 hover:shadow-sm">
+                    <svg class="w-5 h-5 mx-auto mb-1 text-gray-400 peer-checked:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6z"/>
+                    </svg>
+                    <span class="text-xs font-medium text-gray-600 peer-checked:text-emerald-700">Agent</span>
+                  </div>
+                </label>
+              </div>
             </div>
-            <input
-              id="branch"
-              name="branch"
-              type="text"
-              [(ngModel)]="formData.branch"
-              class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-700 placeholder-gray-400"
-              placeholder="Enter branch or location"
-            />
-          </div>
-        </div>
 
-        <!-- Password Field -->
-        <div class="space-y-2">
-          <label for="password" class="block text-sm font-semibold text-gray-700">
-            Password
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-              </svg>
+
+            <!-- Password Field -->
+            <div class="group">
+              <label for="password" class="flex items-center text-sm font-medium text-gray-700 mb-1">
+                <svg class="w-4 h-4 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Password
+              </label>
+              <div class="relative">
+                <input
+                  id="password"
+                  name="password"
+                  [type]="showPassword ? 'text' : 'password'"
+                  required
+                  minlength="6"
+                  [(ngModel)]="formData.password"
+                  class="w-full px-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-500"
+                  placeholder="Create a secure password"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-emerald-500 focus:outline-none transition-colors duration-200"
+                >
+                  <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                  </svg>
+                </button>
+              </div>
             </div>
-            <input
-              id="password"
-              name="password"
-              [type]="showPassword ? 'text' : 'password'"
-              required
-              minlength="6"
-              [(ngModel)]="formData.password"
-              class="w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all duration-200 text-gray-700 placeholder-gray-400"
-              placeholder="Create a secure password"
-            />
-            <button
-              type="button"
-              (click)="togglePasswordVisibility()"
-              class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-teal-500 focus:outline-none transition-colors duration-200"
-            >
-              <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-              </svg>
-              <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
-              </svg>
-            </button>
-          </div>
-        </div>
 
         <!-- Create Account Button -->
         <button
@@ -232,25 +221,21 @@
         </div>
       </form>
 
-      <div *ngIf="!showCongratulations" class="mt-6">
-        <div class="relative">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-300"></div>
+          <!-- Sign In Section -->
+          <div *ngIf="!showCongratulations" class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+              Already have an account?
+              <a
+                routerLink="/login"
+                class="inline-flex items-center ml-1 text-emerald-600 hover:text-emerald-800 font-semibold transition-colors duration-200 hover:underline"
+              >
+                Sign in
+                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </p>
           </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white text-gray-500">Already have an account?</span>
-          </div>
-        </div>
-
-        <div class="mt-6">
-          <a
-            routerLink="/login"
-            class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Sign in instead
-          </a>
-        </div>
-      </div>
     </div>
   </div>
 </div>
