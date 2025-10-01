@@ -6,22 +6,20 @@
   
   <!-- Header -->
   <header class="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 w-full">
         <!-- Logo and Brand -->
         <div class="flex items-center space-x-4">
-          <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-          </div>
+          <svg class="h-10 w-10 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+          </svg>
           <h1 class="text-xl font-bold text-gray-900">SecureLife Insurance</h1>
         </div>
         
         <!-- Navigation -->
         <nav class="hidden md:flex items-center space-x-6">
           <a routerLink="/home" class="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200">Home</a>
-          <a routerLink="/register" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 shadow-md hover:shadow-lg">Sign Up</a>
+          <a routerLink="/register" class="bg-gradient-to-r from-blue-400 to-indigo-500 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-500 hover:to-indigo-600 transition-all duration-200 shadow-md hover:shadow-lg">Sign Up</a>
         </nav>
       </div>
     </div>
@@ -33,7 +31,7 @@
       <!-- Login Form Container -->
       <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
         <!-- Form Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-center">
+  <div class="bg-gradient-to-r from-blue-400 to-indigo-500 p-6 text-center">
           <div class="flex items-center justify-center space-x-3">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
@@ -55,7 +53,7 @@
             <p class="text-gray-600 mb-6">{{successMessage}}</p>
             <button 
               (click)="resetLoginState()"
-              class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              class="w-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-500 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
             >
               Try Again
             </button>
@@ -211,7 +209,7 @@
             <button
               type="submit"
               [disabled]="isLoading"
-              class="w-full group relative flex justify-center items-center py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              class="w-full group relative flex justify-center items-center py-3 px-6 bg-gradient-to-r from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-400/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <span *ngIf="!isLoading" class="flex items-center space-x-2">
                 <span>Sign In</span>
