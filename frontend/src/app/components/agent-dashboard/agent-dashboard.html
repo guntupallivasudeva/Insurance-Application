@@ -175,20 +175,22 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <!-- View Customers (icon-only) -->
-                <button 
-                  (click)="viewPolicyCustomers(policy)"
-                  class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors mr-2"
-                  title="View Customers" aria-label="View Customers">
-                  <i class="fas fa-users w-5 h-5"></i>
-                </button>
-                <!-- View Details (icon-only) -->
-                <button 
-                  (click)="viewPolicy(policy)"
-                  class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="View Details" aria-label="View Details">
-                  <i class="fas fa-eye"></i>
-                </button>
+                <div class="flex items-center space-x-2">
+                  <!-- View Customers (icon-only) -->
+                  <button 
+                    (click)="viewPolicyCustomers(policy)"
+                    class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors"
+                    title="View Customers" aria-label="View Customers">
+                    <i class="fas fa-users w-5 h-5"></i>
+                  </button>
+                  <!-- View Details (icon-only) -->
+                  <button 
+                    (click)="viewPolicy(policy)"
+                    class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="View Details" aria-label="View Details">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -268,36 +270,38 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <!-- Approve (icon-only) -->
-                <button 
-                  *ngIf="request.status === 'Pending'"
-                  (click)="approvePolicyRequest(request)"
-                  [disabled]="loading.approvingPolicy === request.userPolicyId"
-                  class="p-2 rounded-lg transition-colors mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                <div class="flex items-center space-x-2">
+                  <!-- Approve (icon-only) -->
+                  <button 
+                    *ngIf="request.status === 'Pending'"
+                    (click)="approvePolicyRequest(request)"
+                    [disabled]="loading.approvingPolicy === request.userPolicyId"
+                    class="p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   [ngClass]="{ 'text-green-600 hover:text-green-900 hover:bg-green-50': loading.approvingPolicy !== request.userPolicyId, 'text-gray-400': loading.approvingPolicy === request.userPolicyId }"
                   title="Approve" aria-label="Approve Policy Request">
                   <i class="fas fa-check"></i>
                 </button>
-                <!-- Reject (icon-only) -->
-                <button 
-                  *ngIf="request.status === 'Pending'"
-                  (click)="rejectPolicyRequest(request)"
-                  [disabled]="loading.rejectingPolicy === request.userPolicyId"
-                  class="p-2 rounded-lg transition-colors mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  <!-- Reject (icon-only) -->
+                  <button 
+                    *ngIf="request.status === 'Pending'"
+                    (click)="rejectPolicyRequest(request)"
+                    [disabled]="loading.rejectingPolicy === request.userPolicyId"
+                    class="p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   [ngClass]="{ 'text-red-600 hover:text-red-900 hover:bg-red-50': loading.rejectingPolicy !== request.userPolicyId, 'text-gray-400': loading.rejectingPolicy === request.userPolicyId }"
                   title="Reject" aria-label="Reject Policy Request">
                   <i class="fas fa-times"></i>
                 </button>
-                <!-- View Details (icon-only) -->
-                <button 
-                  (click)="viewPolicyRequestDetails(request)"
-                  class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                  <!-- View Details (icon-only) -->
+                  <button 
+                    (click)="viewPolicyRequestDetails(request)"
+                    class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
                   title="View Details" aria-label="View Policy Request Details">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                </button>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -382,33 +386,32 @@
                 <div class="text-xs text-gray-400 mt-1">{{ customer.verificationType }} Verification</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <!-- View Details (icon-only) -->
-                <button 
-                  (click)="viewApprovedCustomerDetails(customer)"
-                  class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors mr-2"
+                <div class="flex items-center space-x-2">
+                  <!-- View Details (icon-only) -->
+                  <button 
+                    (click)="viewApprovedCustomerDetails(customer)"
+                    class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
                   title="View Details" aria-label="View Customer Details">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+                  <!-- Policy History (icon-only) -->
+                  <button 
+                    (click)="viewCustomerPolicyHistory(customer)"
+                    class="p-2 text-amber-600 hover:text-amber-900 hover:bg-amber-50 rounded-lg transition-colors"
+                  title="Policy History" aria-label="View Policy History">
                   <i class="fas fa-history"></i>
                 </button>
-                <!-- Policy History (icon-only) -->
-                <button 
-                  (click)="viewCustomerPolicyHistory(customer)"
-                  class="p-2 text-amber-600 hover:text-amber-900 hover:bg-amber-50 rounded-lg transition-colors mr-2"
-                  title="Policy History" aria-label="View Policy History">
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-                <!-- Payments (icon-only) -->
-                <button 
-                  (click)="viewCustomerPayments(customer)"
-                  class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
-                  title="Payments" aria-label="View Payments">
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
+                  <!-- Payments (icon-only) -->
+                  <button 
+                    (click)="viewCustomerPayments(customer)"
+                    class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
+                    title="Payments" aria-label="View Payments">
+                    <i class="fas fa-rupee-sign"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -684,42 +687,44 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <!-- Approve (icon-only) -->
-                <button 
-                  *ngIf="claim.status === 'Pending'"
-                  (click)="approveClaim(claim.claimId)"
-                  class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors mr-2"
+                <div class="flex items-center space-x-2">
+                  <!-- Approve (icon-only) -->
+                  <button 
+                    *ngIf="claim.status === 'Pending'"
+                    (click)="approveClaim(claim.claimId)"
+                    class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
                   title="Approve" aria-label="Approve Claim">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </button>
-                <!-- Reject (icon-only) -->
-                <button 
-                  *ngIf="claim.status === 'Pending'"
-                  (click)="rejectClaim(claim.claimId)"
-                  class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors mr-2"
+                  <!-- Reject (icon-only) -->
+                  <button 
+                    *ngIf="claim.status === 'Pending'"
+                    (click)="rejectClaim(claim.claimId)"
+                    class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
                   title="Reject" aria-label="Reject Claim">
                   <i class="fas fa-times"></i>
                 </button>
-                <!-- Edit (icon-only, Font Awesome) -->
-                <button
-                  *ngIf="claim.status === 'Pending'"
-                  (click)="openEditClaim(claim)"
-                  class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors mr-2"
+                  <!-- Edit (icon-only, Font Awesome) -->
+                  <button
+                    *ngIf="claim.status === 'Pending'"
+                    (click)="openEditClaim(claim)"
+                    class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors"
                   title="Edit Claim" aria-label="Edit Claim">
                   <i class="fas fa-edit"></i>
                 </button>
-                <!-- View Details (icon-only) -->
-                <button 
-                  (click)="viewClaim(claim)"
-                  class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                  <!-- View Details (icon-only) -->
+                  <button 
+                    (click)="viewClaim(claim)"
+                    class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
                   title="View Details" aria-label="View Claim Details">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                </button>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>

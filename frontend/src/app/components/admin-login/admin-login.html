@@ -1,199 +1,179 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 flex items-center justify-center p-4">
-  <div class="w-full max-w-md">
-    <!-- Header Card -->
-    <div class="bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-8 mb-6">
-      <div class="text-center">
-        <!-- Admin Shield Logo -->
-        <div class="mx-auto w-16 h-16 bg-gradient-to-br from-red-600 to-rose-700 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-          </svg>
+<!-- Modern Admin Login Page -->
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 relative overflow-hidden">
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 bg-black/20 backdrop-blur-3xl"></div>
+  <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, rgba(244, 63, 94, 0.08) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(248, 113, 113, 0.08) 0%, transparent 50%);"></div>
+
+  <!-- Header -->
+  <header class="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg">
+    <div class="px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 w-full">
+        <!-- Admin Logo and Brand (keep admin shield) -->
+        <div class="flex items-center space-x-4">
+          <div class="w-10 h-10 bg-gradient-to-br from-red-600 to-rose-700 rounded-xl flex items-center justify-center shadow-lg">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <h1 class="text-xl font-bold text-white">SecureLife Insurance</h1>
         </div>
-        
-        <h1 class="text-2xl font-bold text-white mb-2">Admin Portal</h1>
-        <p class="text-gray-400 text-sm">Secure access for authorized personnel</p>
-        
-        <div class="mt-4 flex items-center justify-center space-x-2 text-xs">
-          <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          <span class="text-gray-500">Restricted Access</span>
-        </div>
+
+        <!-- Navigation -->
+        <nav class="hidden md:flex items-center space-x-6">
+          <a routerLink="/home" class="text-gray-300 hover:text-rose-300 font-medium transition-colors duration-200">Home</a>
+          <a routerLink="/login" class="bg-gradient-to-r from-rose-500 to-red-600 text-white px-4 py-2 rounded-lg font-medium hover:from-rose-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg">User Sign In</a>
+        </nav>
       </div>
     </div>
+  </header>
 
-    <!-- Login Form Card -->
-    <div class="bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-gray-700/50 p-8">
-      <form class="space-y-8" (ngSubmit)="onSubmit()">
-        <!-- Email Field -->
-        <div class="space-y-2">
-          <label for="email" class="block text-sm font-semibold text-gray-200">
-            Admin Email
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-              </svg>
-            </div>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              [(ngModel)]="formData.email"
-              (focus)="clearMessages()"
-              class="appearance-none block w-full pl-12 pr-4 py-3.5 border border-gray-600/50 rounded-xl placeholder-gray-500 bg-gray-700/50 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all duration-200 hover:bg-gray-700/70"
-              placeholder="Enter admin email"
-            />
+  <!-- Main Content -->
+  <main class="relative z-10 flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+    <div class="w-full max-w-md">
+      <!-- Admin Form Container -->
+  <div class="bg-gray-800/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 overflow-hidden">
+        <!-- Form Header -->
+        <div class="bg-gradient-to-r from-rose-500 to-red-600 p-6 text-center">
+          <div class="flex items-center justify-center space-x-3">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11s1.343 3 3 3 3-1.343 3-3zm0 0v1.5a2.5 2.5 0 005 0V11a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+            </svg>
+            <h2 class="text-xl font-bold text-white">Admin Sign In</h2>
           </div>
         </div>
 
-        <!-- Password Field -->
-        <div class="space-y-2">
-          <label for="password" class="block text-sm font-semibold text-gray-200">
-            Admin Password
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <input
-              id="password"
-              name="password"
-              [type]="showPassword ? 'text' : 'password'"
-              required
-              [(ngModel)]="formData.password"
-              (focus)="clearMessages()"
-              class="appearance-none block w-full pl-12 pr-12 py-3.5 border border-gray-600/50 rounded-xl placeholder-gray-500 bg-gray-700/50 backdrop-blur-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all duration-200 hover:bg-gray-700/70"
-              placeholder="Enter admin password"
-            />
-            <button
-              type="button"
-              (click)="togglePasswordVisibility()"
-              class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-300 focus:outline-none transition-colors duration-200"
-            >
-              <svg *ngIf="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-              </svg>
-              <svg *ngIf="showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Security Warning -->
-        <div class="bg-gradient-to-r from-amber-900/80 to-orange-900/80 backdrop-blur-sm border border-amber-700/50 rounded-xl p-4">
-          <div class="flex items-start space-x-3">
-            <div class="flex-shrink-0">
-              <div class="flex items-center justify-center w-8 h-8 bg-amber-500/20 rounded-full">
-                <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+        <!-- Form Content -->
+        <div class="p-6">
+          <form class="space-y-4" (ngSubmit)="onSubmit()">
+            <!-- Email Field -->
+            <div class="group">
+              <label for="email" class="flex items-center text-sm font-medium text-gray-200 mb-1">
+                <svg class="w-4 h-4 mr-2 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
                 </svg>
+                Admin Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                [(ngModel)]="formData.email"
+                (focus)="clearMessages()"
+                class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/60 focus:border-rose-500/60 transition-all duration-200 text-white placeholder-gray-400"
+                placeholder="Enter admin email"
+              />
+            </div>
+
+            <!-- Password Field -->
+            <div class="group">
+              <label for="password" class="flex items-center text-sm font-medium text-gray-200 mb-1">
+                <svg class="w-4 h-4 mr-2 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Admin Password
+              </label>
+              <div class="relative">
+                <input
+                  id="password"
+                  name="password"
+                  [type]="showPassword ? 'text' : 'password'"
+                  required
+                  [(ngModel)]="formData.password"
+                  (focus)="clearMessages()"
+                  class="w-full px-4 pr-12 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/60 focus:border-rose-500/60 transition-all duration-200 text-white placeholder-gray-400"
+                  placeholder="Enter admin password"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-rose-300 focus:outline-none transition-colors duration-200"
+                >
+                  <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                  </svg>
+                </button>
               </div>
             </div>
-            <div class="flex-1">
-              <h4 class="text-sm font-semibold text-amber-300">Security Notice</h4>
-              <p class="text-sm text-amber-200/90 mt-1">
-                This is a secure admin portal. All access attempts are logged and monitored.
-              </p>
-            </div>
-          </div>
-        </div>
 
-        <!-- Submit Button -->
-        <div>
-          <button
-            type="submit"
-            [disabled]="isLoading"
-            class="group relative w-full flex justify-center py-4 px-6 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
-          >
-            <span *ngIf="!isLoading" class="flex items-center space-x-2">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <span>Secure Admin Access</span>
-            </span>
-            <span *ngIf="isLoading" class="flex items-center space-x-2">
-              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Authenticating...</span>
-            </span>
-          </button>
-        </div>
-      </form>
-
-      <!-- Success Message -->
-      <div *ngIf="successMessage" class="mt-6 bg-gradient-to-r from-emerald-900/80 to-green-900/80 backdrop-blur-sm border border-emerald-700/50 rounded-xl p-4">
-        <div class="flex items-start space-x-3">
-          <div class="flex-shrink-0">
-            <div class="flex items-center justify-center w-8 h-8 bg-emerald-500/20 rounded-full">
-              <svg class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-              </svg>
+            <!-- Security Notice -->
+            <div class="bg-amber-900/20 border border-amber-700/40 rounded-xl p-4">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                  <div class="flex items-center justify-center w-8 h-8 bg-amber-600/20 rounded-full">
+                    <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-sm font-semibold text-amber-300">Security Notice</h4>
+                  <p class="text-sm text-amber-200/80 mt-1">This is a secure admin portal. All access attempts are logged and monitored.</p>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="flex-1">
-            <h4 class="text-sm font-semibold text-emerald-300">Success</h4>
-            <p class="text-sm text-emerald-200/90 mt-1">{{ successMessage }}</p>
-          </div>
-          <div class="flex-shrink-0">
-            <button (click)="clearMessages()" class="inline-flex bg-emerald-500/20 hover:bg-emerald-500/30 rounded-lg p-1.5 text-emerald-400 hover:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all duration-200">
-              <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              [disabled]="isLoading"
+              class="w-full flex justify-center items-center py-3 px-4 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              <svg *ngIf="isLoading" class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
+              <span *ngIf="!isLoading">Secure Admin Access</span>
+              <span *ngIf="isLoading">Authenticating...</span>
             </button>
-          </div>
-        </div>
-      </div>
+          </form>
 
-      <!-- Error Message -->
-      <div *ngIf="errorMessage" class="mt-6 bg-gradient-to-r from-red-900/80 to-rose-900/80 backdrop-blur-sm border border-red-700/50 rounded-xl p-4">
-        <div class="flex items-start space-x-3">
-          <div class="flex-shrink-0">
-            <div class="flex items-center justify-center w-8 h-8 bg-red-500/20 rounded-full">
-              <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-              </svg>
+          <!-- Success Message -->
+          <div *ngIf="successMessage" class="mt-4 p-4 bg-emerald-900/20 border border-emerald-700/40 rounded-xl">
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                  <svg class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h4 class="text-sm font-bold text-emerald-300">Success</h4>
+                <p class="text-sm text-emerald-200 mt-1">{{ successMessage }}</p>
+              </div>
+              <button (click)="clearMessages()" class="text-emerald-300 hover:text-emerald-200 text-sm">Dismiss</button>
             </div>
           </div>
-          <div class="flex-1">
-            <h4 class="text-sm font-semibold text-red-300">Authentication Failed</h4>
-            <p class="text-sm text-red-200/90 mt-1">{{ errorMessage }}</p>
-          </div>
-          <div class="flex-shrink-0">
-            <button (click)="clearMessages()" class="inline-flex bg-red-500/20 hover:bg-red-500/30 rounded-lg p-1.5 text-red-400 hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all duration-200">
-              <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <div class="mt-6">
-        <div class="relative">
-          <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-600"></div>
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="mt-4 p-4 bg-rose-900/20 border border-rose-700/40 rounded-xl">
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-8 h-8 bg-rose-500/20 rounded-full flex items-center justify-center">
+                  <svg class="h-5 w-5 text-rose-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="flex-1">
+                <h4 class="text-sm font-bold text-rose-300">Authentication Failed</h4>
+                <p class="text-sm text-rose-200 mt-1">{{ errorMessage }}</p>
+              </div>
+              <button (click)="clearMessages()" class="text-rose-300 hover:text-rose-200 text-sm">Dismiss</button>
+            </div>
           </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-gray-800 text-gray-400">Need help?</span>
-          </div>
-        </div>
 
-        <div class="mt-6 text-center">
-          <p class="text-xs text-gray-400">
-            Contact system administrator for access issues
-          </p>
-          <a routerLink="/home" class="mt-2 inline-block text-sm text-red-400 hover:text-red-300">
-            ← Back to Home
-          </a>
+          <!-- Help Section -->
+          <div class="mt-6 text-center">
+            <p class="text-xs text-gray-300">Contact system administrator for access issues</p>
+            <a routerLink="/home" class="mt-2 inline-block text-sm text-rose-300 hover:text-rose-200">← Back to Home</a>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </div>
