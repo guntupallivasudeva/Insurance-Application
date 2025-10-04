@@ -21,8 +21,6 @@ app.use(cors());
 app.use(express.json());
 
 
-
-
 // integrate account rest api routes with /api/v1 base URL
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/admin', adminRoutes);

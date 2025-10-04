@@ -32,7 +32,7 @@ export class CustomerDashboard implements OnInit {
   successMessage = '';
 
   // UI state
-  activeTab = 'policies'; // Default active tab
+  activeTab: string | null = null; // Start with null to show main dashboard
   showPurchaseModal = false;
   purchaseForm: any = { policyProductId: '', startDate: '', nomineeName: '', nomineeRelation: '' };
   purchaseError = '';
@@ -56,6 +56,10 @@ export class CustomerDashboard implements OnInit {
   // Policy details modal
   showDetailsModal = false;
   detailsContext: any = { policy: null, payments: [] };
+
+  // Payment details modal
+  showPaymentDetailsModal = false;
+  paymentDetailsContext: any = null;
 
   // Success modal
   showSuccessModal = false;
@@ -122,7 +126,7 @@ export class CustomerDashboard implements OnInit {
     this.userName = user?.name || user?.email || 'User';
   }
 
-  setActiveTab(tab: string) {
+  setActiveTab(tab: string | null) {
     this.activeTab = tab;
   }
 
@@ -604,5 +608,16 @@ export class CustomerDashboard implements OnInit {
       color: 'text-gray-600',
       bgColor: 'bg-gray-100'
     };
+  }
+
+  // View payment details method
+  viewPaymentDetails(payment: any) {
+    this.paymentDetailsContext = payment;
+    this.showPaymentDetailsModal = true;
+  }
+
+  closePaymentDetailsModal() {
+    this.showPaymentDetailsModal = false;
+    this.paymentDetailsContext = null;
   }
 }

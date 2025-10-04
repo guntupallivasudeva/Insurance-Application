@@ -5,19 +5,18 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AgentService, DashboardStats, Policy, Claim, Payment, Customer, CustomerPaymentHistory, PolicyRequest, PaymentCustomer } from '../../services/agent.service';
 import { VerificationService } from '../../services/verification.service';
-import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-agent-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './agent-dashboard.html',
   styleUrls: ['./agent-dashboard.css']
 })
 export class AgentDashboard implements OnInit {
   roleTitle = 'Agent';
   userName = 'User';
-  activeTab = 'policies';
+  activeTab: string | null = null; // Start with null to show main dashboard
   
   // Data properties
   dashboardStats: DashboardStats = {
@@ -84,7 +83,6 @@ export class AgentDashboard implements OnInit {
   decisionNotes = '';
   modalTitle = '';
   modalMessage = '';
-  modalDetails = '';
   claimForm: { incidentDate: string; amountClaimed: number | null; description: string; decisionNotes: string } = { incidentDate: '', amountClaimed: null, description: '', decisionNotes: '' };
 
   constructor(
@@ -100,18 +98,37 @@ export class AgentDashboard implements OnInit {
   }
 
   ngOnInit() {
+    // Check if there's a saved tab state from refresh
+    const savedTab = sessionStorage.getItem('agentDashboard.activeTab');
+    if (savedTab && savedTab !== 'null') {
+      this.activeTab = savedTab;
+    }
+    
+    // Load initial data immediately for fast rendering
     this.loadDashboardData();
   }
 
   loadDashboardData() {
+    // Load critical data immediately for main dashboard
     this.loadDashboardStats();
-    this.loadPolicies();
-    this.loadClaims();
-    this.loadPolicyRequests();
+    
+    // Load other data in background to prevent blocking UI
+    setTimeout(() => {
+      this.loadPolicies();
+      this.loadClaims();
+      this.loadPolicyRequests();
+    }, 0);
   }
 
-  setActiveTab(tab: string) {
+  setActiveTab(tab: string | null) {
     this.activeTab = tab;
+    
+    // Save the current tab state for refresh preservation
+    if (tab) {
+      sessionStorage.setItem('agentDashboard.activeTab', tab);
+    } else {
+      sessionStorage.removeItem('agentDashboard.activeTab');
+    }
     
     // Load data specific to the tab when it's activated
     if (tab === 'approved-customers' && this.approvedCustomers.length === 0) {
@@ -601,6 +618,8 @@ export class AgentDashboard implements OnInit {
   }
 
   logout() {
+    // Clear session storage for tab state
+    sessionStorage.removeItem('agentDashboard.activeTab');
     this.auth.logout();
     this.router.navigate(['/login']);
   }

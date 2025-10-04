@@ -90,8 +90,6 @@ const agentController = {
     try {
       // Only return policies where assignedAgentId matches the agent
       const agentId = req.query.agentId || req.user.userId;
-      // Debug log
-      console.log('AgentDashboard: assignedPolicies for agentId:', agentId);
       // Ensure agentId is ObjectId for query
       const mongoose = await import('mongoose');
       const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
@@ -138,9 +136,6 @@ const agentController = {
     try {
       const { policyProductId } = req.params;
       const agentId = req.user.userId;
-      
-      // Debug log
-      console.log('AgentDashboard: getPolicyCustomers for policyProductId:', policyProductId, 'agentId:', agentId);
       
       // Ensure agentId is ObjectId for query
       const mongoose = await import('mongoose');
@@ -212,8 +207,6 @@ const agentController = {
       const agentId = req.user.userId;
       
       // Debug log
-      console.log('AgentDashboard: getCustomerPayments for userPolicyId:', userPolicyId, 'agentId:', agentId);
-      
       // Ensure agentId is ObjectId for query
       const mongoose = await import('mongoose');
       const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
@@ -487,9 +480,6 @@ const agentController = {
     try {
       const agentId = req.user.userId;
       
-      // Debug log
-      console.log('AgentDashboard: getPolicyRequests for agentId:', agentId);
-      
       // Ensure agentId is ObjectId for query
       const mongoose = await import('mongoose');
       const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
@@ -529,9 +519,6 @@ const agentController = {
     try {
       const { userPolicyId } = req.params;
       const agentId = req.user.userId;
-      
-      // Debug log
-      console.log('AgentDashboard: approvePolicyRequest for userPolicyId:', userPolicyId, 'agentId:', agentId);
       
       // Validate userPolicyId format
       if (!userPolicyId || userPolicyId.length !== 24) {
@@ -600,8 +587,6 @@ const agentController = {
       const agentId = req.user.userId;
       
       // Debug log
-      console.log('AgentDashboard: rejectPolicyRequest for userPolicyId:', userPolicyId, 'agentId:', agentId);
-      
       // Validate userPolicyId format
       if (!userPolicyId || userPolicyId.length !== 24) {
         console.log('Invalid userPolicyId format:', userPolicyId);
@@ -659,8 +644,6 @@ const agentController = {
     try {
       const agentId = req.user.userId;
       
-      console.log('AgentDashboard: getApprovedCustomers for agentId:', agentId);
-      
       // Ensure proper ObjectId conversion
       const mongoose = await import('mongoose');
       const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
@@ -699,7 +682,6 @@ const agentController = {
         installmentsDone: 1 // Default value
       }));
       
-      console.log(`Found ${customers.length} approved customers`);
       res.json({ success: true, customers });
       
     } catch (err) {
@@ -712,7 +694,6 @@ const agentController = {
   async getPaymentCustomers(req, res) {
     try {
       const agentId = req.user.userId;
-      console.log('Getting payment customers for agent:', agentId);
 
       const mongoose = await import('mongoose');
       const agentObjectId = mongoose.default.Types.ObjectId.isValid(agentId) ? new mongoose.default.Types.ObjectId(agentId) : agentId;
@@ -724,8 +705,6 @@ const agentController = {
       .populate('userId', 'name email')
       .populate('policyProductId', 'code title premium termMonths minSumInsured maxSumInsured')
       .sort({ createdAt: -1 });
-
-      console.log(`Found ${userPolicies.length} user policies for agent`);
 
       // Get payments for these policies
       const paymentCustomers = [];
@@ -767,7 +746,6 @@ const agentController = {
         }
       }
 
-      console.log(`Found ${paymentCustomers.length} customers with payments`);
       res.status(200).json({ success: true, customers: paymentCustomers });
 
     } catch (error) {

@@ -1,17 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AdminService } from '../../services/admin.service';
 import { VerificationService } from '../../services/verification.service';
 import { PaymentService } from '../../services/payment.service';
 import { forkJoin } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [ CommonModule, FormsModule],
+  imports: [ CommonModule, FormsModule, RouterModule],
   templateUrl: './admin-dashboard.html'
 })
 export class AdminDashboard implements OnInit {
@@ -264,7 +266,8 @@ export class AdminDashboard implements OnInit {
 
   constructor(
     private auth: AuthService,
-    private router: Router,
+  private router: Router,
+  private location: Location,
     private adminService: AdminService,
     public verificationService: VerificationService,
     public paymentService: PaymentService
@@ -273,10 +276,39 @@ export class AdminDashboard implements OnInit {
     this.roleTitle = role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
     const user = this.auth.getUser();
     this.userName = user?.name || user?.email || 'User';
+    // Keep active tab synced on browser navigation within the same component instance
+    this.router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((evt: any) => {
+      const url = evt?.urlAfterRedirects || evt?.url || this.router.url || '';
+      this.updateActiveTabFromUrl(url);
+    });
+  }
+
+  // TrackBy helper to reduce DOM churn and flicker in ngFor card grids
+  trackById(_index: number, item: any) {
+    return item?._id || item?.id || item?.code || item?.email || _index;
   }
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
+    // keep URL in sync so cards open as separate routes
+    const base = '/admin-dashboard';
+    const current = this.router.url;
+    if (!current.endsWith('/' + tab)) {
+      // Navigate without reloading guards or losing state; still the same component
+      this.router.navigate([base, tab]);
+    }
+  }
+
+  // Back navigation for section pages. Uses browser history when available, otherwise
+  // navigates back to the fixed admin dashboard landing.
+  goBack() {
+    try {
+      if (window && window.history && window.history.length > 1) {
+        this.location.back();
+        return;
+      }
+    } catch {}
+    this.router.navigate(['/admin-dashboard']);
   }
 
   private calculatePaymentStats(): { totalPayments: number; totalRevenue: number } {
@@ -307,7 +339,23 @@ export class AdminDashboard implements OnInit {
     }, 0);
   }
 
+  private updateActiveTabFromUrl(url: string) {
+    try {
+      const seg = (url || '').split('/').filter(Boolean);
+      const idx = seg.indexOf('admin-dashboard');
+      const maybe = idx >= 0 ? seg[idx + 1] : '';
+      const allowed = new Set(['pending-policies','approved-policies','agents','policies','user-policies','customers','claims']);
+      // If a child segment exists and is allowed, set it; otherwise, clear to show only the main cards page
+      this.activeTab = maybe && allowed.has(maybe) ? maybe : '' as any;
+    } catch {
+      this.activeTab = '' as any;
+    }
+  }
+
   ngOnInit() {
+    // Derive activeTab for initial load
+    this.updateActiveTabFromUrl(this.router.url || '');
+
     this.loadSummary();
     this.loadDbStatus();
     this.loadPendingClaims();
@@ -323,6 +371,14 @@ export class AdminDashboard implements OnInit {
 
   // Single entry-point to refresh the whole dashboard at once
   refreshAll() {
+    // Ensure fresh DB status on explicit refresh
+    this.adminService.invalidateDbStatusCache();
+    this.adminService.invalidateAgentsCache();
+    this.adminService.invalidatePoliciesCache();
+    this.adminService.invalidateUserPoliciesCache();
+    this.adminService.invalidateClaimsCache();
+    this.adminService.invalidateCustomerDetailsCache();
+    this.adminService.invalidateSummaryCache();
     this.loadSummary();
     this.loadDbStatus();
     this.loadPendingClaims();
@@ -337,7 +393,7 @@ export class AdminDashboard implements OnInit {
   }
 
   loadDbStatus() {
-    this.adminService.getDbStatus().subscribe({
+    this.adminService.getDbStatusCached().subscribe({
       next: (res) => {
         this.dbStatus = res || {};
       },
@@ -350,13 +406,13 @@ export class AdminDashboard implements OnInit {
   loadSummary() {
     this.isLoading = true;
     this.errorMessage = '';
-    // Fetch exact counts from list endpoints to ensure correctness
+    // Use cached endpoints to compute counts efficiently without flicker
     forkJoin({
-      userPoliciesRes: this.adminService.getAllUserPolicies(),
-      claimsRes: this.adminService.getAllClaims(),
-      customersRes: this.adminService.getAllCustomers(),
-      agentsRes: this.adminService.getAllAgents(),
-      policiesRes: this.adminService.getAllPolicies()
+      userPoliciesRes: this.adminService.getAllUserPoliciesCached(),
+      claimsRes: this.adminService.getAllClaimsCached(),
+      customersRes: this.adminService.getAllCustomerDetailsCached(),
+      agentsRes: this.adminService.getAllAgentsCached(),
+      policiesRes: this.adminService.getAllPoliciesCached()
     }).subscribe({
       next: (all: any) => {
         const policiesList = Array.isArray(all?.userPoliciesRes?.policies)
@@ -392,7 +448,7 @@ export class AdminDashboard implements OnInit {
       },
       error: () => {
         // Fallback to summary endpoint if list endpoints fail
-        this.adminService.getSummaryKPIs().subscribe({
+        this.adminService.getSummaryKPIsCached().subscribe({
           next: (res: any) => {
             const userPolicies = Number(res?.policiesSold ?? 0); // approximation
             const claims = Number(res?.claimsPending ?? 0) + Number(res?.claimsApproved ?? 0);
@@ -400,7 +456,7 @@ export class AdminDashboard implements OnInit {
             const agents = Number(res?.agentsCount ?? 0);
 
             // Try to fetch policy products count separately
-            this.adminService.getAllPolicies().subscribe({
+            this.adminService.getAllPoliciesCached().subscribe({
               next: (polRes: any) => {
                 const policyProductsList = Array.isArray(polRes?.data) ? polRes.data : (Array.isArray(polRes) ? polRes : []);
                 this.kpis = { userPolicies, policies: policyProductsList.length, claims, customers, agents, totalPayments: 0, totalRevenue: 0 };
@@ -421,13 +477,44 @@ export class AdminDashboard implements OnInit {
     });
   }
 
+  // Lightweight summary update that only refreshes if needed
+  loadSummaryCached() {
+    // Use cache for navigation-only loads to prevent flicker
+    this.loadSummary();
+  }
+
+  // Comprehensive refresh after any action - invalidates all caches and reloads data
+  refreshAfterAction() {
+    // Invalidate all caches to ensure fresh data
+    this.adminService.invalidateDbStatusCache();
+    this.adminService.invalidateAgentsCache();
+    this.adminService.invalidatePoliciesCache();
+    this.adminService.invalidateUserPoliciesCache();
+    this.adminService.invalidateClaimsCache();
+    this.adminService.invalidateCustomerDetailsCache();
+    this.adminService.invalidateSummaryCache();
+    
+    // Reload all dashboard sections
+    this.loadSummary();
+    this.loadDbStatus();
+    this.loadPendingClaims();
+    this.loadPendingPolicies();
+    this.loadApprovedClaims();
+    this.loadAllClaims();
+    this.loadApprovedPolicies();
+    this.loadUserPolicies();
+    this.loadAgents();
+    this.loadPolicies();
+    this.loadCustomerDetails();
+  }
+
   // Load all claims once and derive processed (approved/rejected)
   loadAllClaims() {
     this.allClaimsLoading = true;
     this.processedClaimsLoading = true;
     this.allClaimsError = '';
     this.processedClaimsError = '';
-    this.adminService.getAllClaims().subscribe({
+    this.adminService.getAllClaimsCached().subscribe({
       next: (res: any) => {
         const claims = Array.isArray(res?.claims) ? res.claims : (Array.isArray(res?.data) ? res.data : []);
         const normStatus = (s: any) => (s || '').toString().toLowerCase();
@@ -458,7 +545,7 @@ export class AdminDashboard implements OnInit {
   loadPolicies() {
     this.policiesLoading = true;
     this.policiesCrudError = '';
-    this.adminService.getAllPolicies().subscribe({
+    this.adminService.getAllPoliciesCached().subscribe({
       next: (res: any) => {
         const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
         // sort by code numeric portion ascending, then by full code as fallback
@@ -494,6 +581,12 @@ export class AdminDashboard implements OnInit {
     this.managePolicyModal = true;
     this.originalPolicyCode = '';
     this.policyCodeDigits = nextDigits;
+    
+    // Ensure agents are loaded for the dropdown
+    if (!this.agents || this.agents.length === 0) {
+      console.log('Loading agents for policy modal...');
+      this.loadAgents();
+    }
   }
 
   openEditPolicy(p: any) {
@@ -549,33 +642,32 @@ export class AdminDashboard implements OnInit {
     if (this.policyFormMode === 'create') {
       this.adminService.addPolicy(payload).subscribe({
         next: (response) => {
+          console.log('Policy created successfully:', response);
           // If agent is selected, assign the policy to the agent
           if (this.policyForm.assignedAgentId) {
-            const policyId = response?.policy?._id;
+            console.log('Assigning policy to agent:', this.policyForm.assignedAgentId);
+            const policyId = response?.policy?._id || response?.data?._id;
             if (policyId) {
               this.adminService.assignPolicyToAgent(policyId, this.policyForm.assignedAgentId).subscribe({
-                next: () => {
+                next: (assignResponse) => {
+                  console.log('Agent assigned successfully:', assignResponse);
                   this.managePolicyModal = false;
-                  this.loadPolicies();
-                  this.loadSummary();
+                  this.refreshAfterAction();
                 },
                 error: (err) => {
                   console.error('Failed to assign agent:', err);
                   // Policy created but agent assignment failed
-                  this.managePolicyModal = false;
-                  this.loadPolicies();
-                  this.loadSummary();
+                  this.policyFormError = `Policy created but failed to assign agent: ${err?.error?.message || err.message}`;
                 }
               });
             } else {
-              this.managePolicyModal = false;
-              this.loadPolicies();
-              this.loadSummary();
+              console.error('Policy ID not found in response:', response);
+              this.policyFormError = 'Policy created but could not assign agent - policy ID not found';
             }
           } else {
+            console.log('No agent selected, policy created without assignment');
             this.managePolicyModal = false;
-            this.loadPolicies();
-            this.loadSummary();
+            this.refreshAfterAction();
           }
         },
         error: (err) => {
@@ -600,23 +692,20 @@ export class AdminDashboard implements OnInit {
             this.adminService.assignPolicyToAgent(id, this.policyForm.assignedAgentId).subscribe({
               next: () => {
                 this.managePolicyModal = false;
-                this.loadPolicies();
-                this.loadSummary();
+                this.refreshAfterAction();
               },
               error: (err) => {
                 console.error('Failed to assign agent during edit:', err);
                 // Policy updated but agent assignment failed
                 this.managePolicyModal = false;
-                this.loadPolicies();
-                this.loadSummary();
+                this.refreshAfterAction();
               }
             });
           } else {
             // Check if we need to unassign agent (if assignedAgentId is empty but policy had an agent)
             // For now, just close modal - you can add unassign logic here if needed
             this.managePolicyModal = false;
-            this.loadPolicies();
-            this.loadSummary();
+            this.refreshAfterAction();
           }
         },
         error: (err) => {
@@ -745,8 +834,7 @@ export class AdminDashboard implements OnInit {
         this.showDeleteModal = false;
         this.deleteTarget = null;
         this.deleteTargetType = '';
-        this.loadPolicies();
-        this.loadSummary();
+        this.refreshAfterAction();
         this.successMessage = 'Policy deleted successfully.';
       },
       error: (err) => {
@@ -849,7 +937,7 @@ export class AdminDashboard implements OnInit {
   loadApprovedClaims() {
     this.approvedClaimsLoading = true;
     this.approvedClaimsError = '';
-    this.adminService.getAllClaims().subscribe({
+    this.adminService.getAllClaimsCached().subscribe({
       next: (res: any) => {
         const claims = Array.isArray(res?.claims) ? res.claims : (Array.isArray(res?.data) ? res.data : []);
         this.approvedClaims = claims
@@ -868,7 +956,7 @@ export class AdminDashboard implements OnInit {
   loadPendingPolicies() {
     this.isLoadingPolicies = true;
     this.policiesError = '';
-    this.adminService.getAllUserPolicies().subscribe({
+    this.adminService.getAllUserPoliciesCached().subscribe({
       next: (res: any) => {
         // Controller returns { success, policies }
         const list = Array.isArray(res?.policies)
@@ -891,7 +979,7 @@ export class AdminDashboard implements OnInit {
   loadApprovedPolicies() {
     this.approvedPoliciesLoading = true;
     this.approvedPoliciesError = '';
-    this.adminService.getAllUserPolicies().subscribe({
+    this.adminService.getAllUserPoliciesCached().subscribe({
       next: (res: any) => {
         const list = Array.isArray(res?.policies) ? res.policies : (Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []));
         this.approvedPolicies = list
@@ -913,7 +1001,7 @@ export class AdminDashboard implements OnInit {
   loadUserPolicies() {
     this.userPoliciesLoading = true;
     this.userPoliciesError = '';
-    this.adminService.getAllUserPolicies().subscribe({
+    this.adminService.getAllUserPoliciesCached().subscribe({
       next: (res: any) => {
         const list = Array.isArray(res?.policies)
           ? res.policies
@@ -955,9 +1043,8 @@ export class AdminDashboard implements OnInit {
     this.pendingClaims = this.pendingClaims.filter(c => c._id !== claimId);
     this.adminService.approveClaim(claimId).subscribe({
       next: () => {
-        // refresh KPIs since counts may change
-        this.loadSummary();
-        this.loadApprovedClaims();
+        // Comprehensive refresh to update all sections
+        this.refreshAfterAction();
         this.showSuccessMessage('Success!', 'Claim has been approved successfully.');
       },
       error: () => {
@@ -986,7 +1073,7 @@ export class AdminDashboard implements OnInit {
     this.pendingClaims = this.pendingClaims.filter(c => c._id !== claimId);
     this.adminService.rejectClaim(claimId).subscribe({
       next: () => {
-        this.loadSummary();
+        this.refreshAfterAction();
         this.showSuccessMessage('Success!', 'Claim has been rejected.');
       },
       error: () => {
@@ -1033,6 +1120,7 @@ export class AdminDashboard implements OnInit {
         this.pendingClaims = this.pendingClaims.map(c => c._id === this.editingClaim._id ? { ...c, ...updated } : c);
         this.closeEditClaim();
         this.successMessage = 'Claim updated.';
+        this.refreshAfterAction();
       },
       error: (err) => {
         const msg = err?.error?.message || err?.message || 'Unknown error';
@@ -1069,9 +1157,7 @@ export class AdminDashboard implements OnInit {
     this.pendingPolicies = this.pendingPolicies.filter(p => p._id !== userPolicyId);
     this.adminService.approveUserPolicy(userPolicyId).subscribe({
       next: () => {
-        this.loadSummary();
-        this.loadApprovedPolicies();
-        this.loadUserPolicies();
+        this.refreshAfterAction();
         this.showSuccessMessage('Success!', 'Policy has been approved successfully.');
       },
       error: () => {
@@ -1100,8 +1186,7 @@ export class AdminDashboard implements OnInit {
     this.pendingPolicies = this.pendingPolicies.filter(p => p._id !== userPolicyId);
     this.adminService.rejectUserPolicy(userPolicyId).subscribe({
       next: () => {
-        this.loadSummary();
-        this.loadUserPolicies();
+        this.refreshAfterAction();
         this.showSuccessMessage('Success!', 'Policy has been rejected.');
       },
       error: () => {
@@ -1168,9 +1253,8 @@ export class AdminDashboard implements OnInit {
     request$.subscribe({
       next: () => {
         this.closeAssignModal();
-        // Refresh both areas that might display assignment
-        this.loadPolicies();
-        this.loadPendingPolicies();
+        // Refresh entire dashboard after assignment
+        this.refreshAfterAction();
       },
       error: (err) => {
         const msg = err?.error?.message || err?.message || 'Unknown error';
@@ -1189,9 +1273,8 @@ export class AdminDashboard implements OnInit {
     if (!policyProductId) return;
     this.adminService.unassignPolicyFromAgent(policyProductId).subscribe({
       next: () => {
-        // Refresh lists to reflect removal
-        this.loadPolicies();
-        this.loadPendingPolicies();
+        // Refresh entire dashboard after unassignment
+        this.refreshAfterAction();
         this.showUnassignModal = false;
         this.unassignTarget = null;
         this.unassignLoading = false;
@@ -1229,7 +1312,7 @@ export class AdminDashboard implements OnInit {
   loadAgents() {
     this.agentsLoading = true;
     this.agentsError = '';
-    this.adminService.getAllAgents().subscribe({
+    this.adminService.getAllAgentsCached().subscribe({
       next: (res: any) => {
         this.agents = Array.isArray(res?.agents) ? res.agents : (Array.isArray(res?.data) ? res.data : []);
         // sort by agent code
@@ -1317,14 +1400,11 @@ export class AdminDashboard implements OnInit {
           if (createdId && assignList.length) {
             this.assignPoliciesToAgentSequential(createdId, assignList, () => {
               this.manageAgentModal = false;
-              this.loadAgents();
-              this.loadPolicies();
-              this.loadSummary();
+              this.refreshAfterAction();
             });
           } else {
             this.manageAgentModal = false;
-            this.loadAgents();
-            this.loadSummary();
+            this.refreshAfterAction();
           }
         },
         error: (err) => {
@@ -1355,14 +1435,11 @@ export class AdminDashboard implements OnInit {
           if (assignList.length) {
             this.assignPoliciesToAgentSequential(id, assignList, () => {
               this.manageAgentModal = false;
-              this.loadAgents();
-              this.loadPolicies();
-              this.loadSummary();
+              this.refreshAfterAction();
             });
           } else {
             this.manageAgentModal = false;
-            this.loadAgents();
-            this.loadSummary();
+            this.refreshAfterAction();
           }
         },
         error: (err) => {
@@ -1392,8 +1469,7 @@ export class AdminDashboard implements OnInit {
         this.showDeleteModal = false;
         this.deleteTarget = null;
         this.deleteTargetType = '';
-        this.loadAgents();
-        this.loadSummary();
+        this.refreshAfterAction();
         this.successMessage = 'Agent deleted successfully.';
       },
       error: (err) => {
@@ -1432,7 +1508,7 @@ export class AdminDashboard implements OnInit {
   loadCustomerDetails() {
     this.customerDetailsLoading = true;
     this.customerDetailsError = '';
-    this.adminService.getAllCustomerDetails().subscribe({
+    this.adminService.getAllCustomerDetailsCached().subscribe({
       next: (res: any) => {
         this.customerDetails = Array.isArray(res?.data) ? res.data : [];
         // prefill product details from populated objects or cache; fetch as-needed in background

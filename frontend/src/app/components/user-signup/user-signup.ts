@@ -66,19 +66,45 @@ export class UserSignup {
           this.successMessage = `Congratulations! Your ${this.formData.role} account has been created successfully.`;
           this.showCongratulations = true;
           console.log('Registration successful:', response);
-          
-          // Reset form
-          this.resetForm();
-          
-          // Redirect to login page after showing success message
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 4000);
+
+          // Only auto-login for Customer or Agent
+          if (this.formData.role === 'Customer' || this.formData.role === 'Agent') {
+            // Show modal for 2 seconds, then login and navigate
+            setTimeout(() => {
+              const loginData = {
+                email: this.formData.email.toLowerCase(),
+                password: this.formData.password,
+                role: this.formData.role
+              };
+              this.http.post('http://localhost:8000/api/v1/users/login', loginData)
+                .subscribe({
+                  next: (loginRes: any) => {
+                    localStorage.setItem('token', loginRes.token);
+                    localStorage.setItem('user', JSON.stringify(loginRes.user));
+                    if (loginRes.user.role === 'Customer') {
+                      this.router.navigate(['/customer-dashboard']);
+                    } else if (loginRes.user.role === 'Agent') {
+                      this.router.navigate(['/agent-dashboard']);
+                    }
+                  },
+                  error: (loginErr) => {
+                    this.router.navigate(['/login']);
+                  }
+                });
+              this.resetForm();
+            }, 2000);
+          } else {
+            // For other roles, just show modal for 2 seconds then go to login
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+              this.resetForm();
+            }, 2000);
+          }
         },
         error: (error) => {
           this.isLoading = false;
           this.showCongratulations = false; // Hide success message if showing error
-          
+
           // Handle specific error messages from backend
           if (error.error?.error) {
             this.errorMessage = error.error.error;
@@ -99,7 +125,7 @@ export class UserSignup {
             this.errorMessage = 'Registration failed unexpectedly';
             this.errorSuggestion = 'Please try again or contact support';
           }
-          
+
           console.error('Registration error details:', error);
           console.error('Error response:', error.error);
         }
