@@ -444,8 +444,9 @@ export class CustomerDashboard implements OnInit {
   // Map a payment row to policy code/title for display
   policyLabelForPayment(pay: any): string {
     const pid = typeof pay?.userPolicyId === 'string' ? pay.userPolicyId : pay?.userPolicyId?._id;
-    // Search in all policies combined for consistency
-    const mp = this.allPoliciesCombined.find(x => (x?.userPolicyId || x?._id) === pid);
+    let mp = this.myPolicies.find(x => (x?.userPolicyId || x?._id) === pid)
+      || this.claimedPolicies.find(x => (x?.userPolicyId || x?._id) === pid)
+      || this.canceledPolicies.find(x => (x?.userPolicyId || x?._id) === pid);
     const code = mp?._product?.code || mp?.policy?.code || pid || '-';
     const title = mp?._product?.title || mp?.policy?.title || '';
     return title ? `${code} — ${title}` : `${code}`;
@@ -473,8 +474,7 @@ export class CustomerDashboard implements OnInit {
 
   paymentInstallmentLabel(pay: any): string {
     const upId = typeof pay.userPolicyId === 'string' ? pay.userPolicyId : pay?.userPolicyId?._id;
-    // Search in all policies combined, not just myPolicies
-    const mp = this.allPoliciesCombined.find(x => (x?.userPolicyId || x?._id) === upId);
+    const mp = this.myPolicies.find(x => (x?.userPolicyId || x?._id) === upId);
     const total = Number(mp?._product?.termMonths ?? mp?.policy?.termMonths ?? 0) || 0;
     const inst = this.paymentInstallments[pay._id] || '?';
     return total ? `${inst} / ${total}` : `${inst}`;
@@ -490,8 +490,7 @@ export class CustomerDashboard implements OnInit {
     const inst = this.paymentInstallments[pay._id];
     if (!inst) return '-';
     const upId = typeof pay.userPolicyId === 'string' ? pay.userPolicyId : pay?.userPolicyId?._id;
-    // Search in all policies combined, not just myPolicies
-    const mp = this.allPoliciesCombined.find(x => (x?.userPolicyId || x?._id) === upId);
+    const mp = this.myPolicies.find(x => (x?.userPolicyId || x?._id) === upId);
     if (!mp) return '-';
     const start = new Date(mp.startDate);
     if (isNaN(start.getTime())) return '-';
