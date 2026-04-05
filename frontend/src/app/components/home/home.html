@@ -1,0 +1,228 @@
+<!-- Navigation Header -->
+<nav class="bg-blue-900 shadow-lg sticky top-0 z-50">
+  <div class="w-full px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+      <!-- Logo and Company Name -->
+      <div class="flex items-center">
+        <div class="flex-shrink-0 flex items-center">
+          <svg class="h-10 w-10 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="text-white text-xl font-bold">SecureLife Insurance</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="hidden md:block">
+        <div class="ml-10 flex items-baseline space-x-4">
+          <a routerLink="/home" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Home</a>
+          <a routerLink="/register" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Register</a>
+          <a routerLink="/login" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition duration-300">Login</a>
+          <a routerLink="/admin-login" class="bg-blue-700 text-white hover:bg-blue-600 px-4 py-2 rounded-md text-sm font-medium transition duration-300">Admin Login</a>
+        </div>
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden">
+        <button (click)="toggleMenu()" class="text-white hover:text-gray-200 focus:outline-none focus:text-gray-200">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path *ngIf="!menuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            <path *ngIf="menuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div *ngIf="menuOpen" class="md:hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <a routerLink="/home" class="text-white hover:bg-blue-700 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+        <a routerLink="/register" class="text-white hover:bg-blue-700 block px-3 py-2 rounded-md text-base font-medium">Register</a>
+        <a routerLink="/login" class="text-white hover:bg-blue-700 block px-3 py-2 rounded-md text-base font-medium">Login</a>
+        <a routerLink="/admin-login" class="bg-blue-700 text-white hover:bg-blue-600 block px-3 py-2 rounded-md text-base font-medium">Admin Login</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white">
+  <div class="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+    <div class="text-center">
+      <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+        Protect What Matters Most
+      </h1>
+      <p class="mt-6 text-xl leading-8 text-blue-100 max-w-3xl mx-auto">
+        At SecureLife Insurance, we provide comprehensive coverage solutions tailored to your needs. 
+        From life and health to auto and home insurance, we've got you covered.
+      </p>
+      <div class="mt-10 flex justify-center space-x-4">
+        <a routerLink="/register" class="bg-white text-blue-900 px-8 py-3 rounded-md text-lg font-medium hover:bg-gray-100 transition duration-300">
+          Get Started
+        </a>
+        <a routerLink="/login" class="border border-white text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-white hover:text-blue-900 transition duration-300">
+          Sign In
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center">
+      <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+        Why Choose SecureLife Insurance?
+      </h2>
+      <p class="mt-4 text-lg text-gray-600">
+        We offer reliable, affordable, and comprehensive insurance solutions
+      </p>
+    </div>
+
+    <div class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="text-center">
+        <div class="flex justify-center">
+          <svg class="h-12 w-12 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <h3 class="mt-4 text-xl font-medium text-gray-900">Trusted Protection</h3>
+        <p class="mt-2 text-gray-600">50+ years of experience in providing reliable insurance coverage</p>
+      </div>
+
+      <div class="text-center">
+        <div class="flex justify-center">
+          <svg class="h-12 w-12 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
+            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+          </svg>
+        </div>
+        <h3 class="mt-4 text-xl font-medium text-gray-900">Quick Claims</h3>
+        <p class="mt-2 text-gray-600">Fast and hassle-free claim processing with 99% approval rate</p>
+      </div>
+
+      <div class="text-center">
+        <div class="flex justify-center">
+          <svg class="h-12 w-12 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+          </svg>
+        </div>
+        <h3 class="mt-4 text-xl font-medium text-gray-900">24/7 Support</h3>
+        <p class="mt-2 text-gray-600">Round-the-clock customer support whenever you need assistance</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Insurance Products Section -->
+<div class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center">
+      <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+        Our Insurance Products
+      </h2>
+      <p class="mt-4 text-lg text-gray-600">
+        Comprehensive coverage options for every aspect of your life
+      </p>
+    </div>
+
+    <div class="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div *ngFor="let product of insuranceProducts" class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition duration-300">
+        <div class="flex justify-center">
+          <div class="h-12 w-12 text-blue-600" [innerHTML]="product.icon"></div>
+        </div>
+        <h3 class="mt-4 text-xl font-semibold text-gray-900 text-center">{{product.title}}</h3>
+        <p class="mt-2 text-gray-600 text-center">{{product.description}}</p>
+        <div class="mt-4 text-center">
+          <button class="text-blue-600 hover:text-blue-800 font-medium">Learn More →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Statistics Section -->
+<div class="bg-blue-900 py-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 gap-8 md:grid-cols-4">
+      <div *ngFor="let stat of stats" class="text-center">
+        <div class="text-4xl font-bold text-white">{{stat.number}}</div>
+        <div class="mt-2 text-blue-200">{{stat.label}}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Call to Action Section -->
+<div class="bg-white py-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+      Ready to Get Protected?
+    </h2>
+    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+      Join thousands of satisfied customers who trust SecureLife Insurance for their protection needs. 
+      Get a quote today and see how much you can save.
+    </p>
+    <div class="mt-8 flex justify-center space-x-4">
+      <a routerLink="/register" class="bg-blue-600 text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-blue-700 transition duration-300">
+        Get Quote Now
+      </a>
+      <button class="border border-blue-600 text-blue-600 px-8 py-3 rounded-md text-lg font-medium hover:bg-blue-50 transition duration-300">
+        Contact Us
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-gray-800 text-white py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center">
+          <svg class="h-8 w-8 text-white mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="text-lg font-bold">SecureLife Insurance</span>
+        </div>
+        <p class="mt-4 text-gray-400">
+          Protecting what matters most to you and your family for over 50 years.
+        </p>
+      </div>
+      
+      <div>
+        <h3 class="text-lg font-semibold mb-4">Products</h3>
+        <ul class="space-y-2 text-gray-400">
+          <li><a href="#" class="hover:text-white">Life Insurance</a></li>
+          <li><a href="#" class="hover:text-white">Health Insurance</a></li>
+          <li><a href="#" class="hover:text-white">Auto Insurance</a></li>
+          <li><a href="#" class="hover:text-white">Home Insurance</a></li>
+        </ul>
+      </div>
+      
+      <div>
+        <h3 class="text-lg font-semibold mb-4">Support</h3>
+        <ul class="space-y-2 text-gray-400">
+          <li><a href="#" class="hover:text-white">Help Center</a></li>
+          <li><a href="#" class="hover:text-white">Contact Us</a></li>
+          <li><a href="#" class="hover:text-white">Claims</a></li>
+          <li><a href="#" class="hover:text-white">FAQ</a></li>
+        </ul>
+      </div>
+      
+      <div>
+        <h3 class="text-lg font-semibold mb-4">Contact</h3>
+        <ul class="space-y-2 text-gray-400">
+          <li>📞 1-800-SECURE</li>
+          <li>✉️ info@securelife.com</li>
+          <li>📍 123 Insurance Ave, City, State</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="mt-8 pt-8 border-t border-gray-700 text-center text-gray-400">
+      <p>&copy; 2025 SecureLife Insurance. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
