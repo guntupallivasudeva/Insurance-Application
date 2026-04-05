@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: Insurance-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    container_name: Insurance-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb+srv://Vasu:anu@cluster0.xc0pjwg.mongodb.net/Insurance-Application
+      - JWT_SECRET=JWT_SECRET_KEY
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: Insurance-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
