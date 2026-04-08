@@ -431,11 +431,45 @@ const adminController = {
     async deleteAgent(req, res) {
         try {
             const { id } = req.params;
-            const deleted = await Agent.findByIdAndDelete(id);
+            const deleted = await Agent.findById(id);
             if (!deleted) {
                 return res.status(404).json({ success: false, message: 'Agent not found' });
             }
-            res.json({ success: true, message: 'Agent deleted successfully', data: { deletedAgentId: id, deletedAgentEmail: deleted.email } });
+
+            // Keep policy/user-policy records, but remove the deleted agent from assignment columns.
+            const [policyProductResult, userPolicyResult] = await Promise.all([
+                PolicyProduct.updateMany(
+                    {
+                        $or: [
+                            { assignedAgentId: deleted._id },
+                            { assignedAgentName: deleted.name }
+                        ]
+                    },
+                    {
+                        $set: {
+                            assignedAgentId: null,
+                            assignedAgentName: null
+                        }
+                    }
+                ),
+                UserPolicy.updateMany(
+                    { assignedAgentId: deleted._id },
+                    { $set: { assignedAgentId: null } }
+                )
+            ]);
+
+            await Agent.findByIdAndDelete(id);
+
+            res.json({
+                success: true,
+                message: 'Agent deleted successfully and assignments cleared',
+                data: {
+                    deletedAgentId: id,
+                    deletedAgentEmail: deleted.email,
+                    unassignedPolicyProducts: policyProductResult.modifiedCount || 0,
+                    unassignedUserPolicies: userPolicyResult.modifiedCount || 0
+                }
+            });
         } catch (err) {
             if (err.name === 'CastError') {
                 return res.status(400).json({ success: false, message: 'Invalid agent ID format' });
