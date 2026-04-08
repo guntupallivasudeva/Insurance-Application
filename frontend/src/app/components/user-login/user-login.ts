@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+import { classifyConnectionIssue } from '../../utils/network-error';
 
 @Component({
   selector: 'app-user-login',
@@ -11,6 +13,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   templateUrl: './user-login.html'
 })
 export class UserLogin {
+  private userApiUrl = `${environment.apiUrl}/users`;
+
   formData = {
     email: '',
     password: '',
@@ -21,6 +25,7 @@ export class UserLogin {
   isLoading = false;
   errorMessage = '';
   errorSuggestion = '';
+  errorBadge = '';
   successMessage = '';
   showLoginSuccess = false;
   showPassword = false;
@@ -32,6 +37,12 @@ export class UserLogin {
   };
 
   constructor(private http: HttpClient, private router: Router) {}
+
+  private getBackendConnectionMessage(): string {
+    const backendOrigin = new URL(environment.apiUrl).origin;
+    const frontendOrigin = typeof window !== 'undefined' ? window.location.origin : 'this app';
+    return `Cannot reach the backend at ${backendOrigin}. Check that the server is running and allows requests from ${frontendOrigin}.`;
+  }
 
   validateForm(): boolean {
     // Reset error message
@@ -72,6 +83,7 @@ export class UserLogin {
     // Reset messages
     this.errorMessage = '';
     this.errorSuggestion = '';
+    this.errorBadge = '';
     this.successMessage = '';
     this.showLoginSuccess = false;
 
@@ -87,7 +99,7 @@ export class UserLogin {
     console.log('Login attempt with data:', { ...loginData, password: '[hidden]' });
 
     // Call backend API
-    this.http.post('http://localhost:8000/api/v1/users/login', loginData)
+    this.http.post(`${this.userApiUrl}/login`, loginData)
       .subscribe({
         next: (response: any) => {
           this.isLoading = false;
@@ -111,6 +123,7 @@ export class UserLogin {
         error: (error) => {
           this.isLoading = false;
           this.showLoginSuccess = false; // Hide success message if showing error
+          this.errorBadge = '';
           
           // Handle specific error messages from backend
           if (error.error?.error) {
@@ -129,8 +142,10 @@ export class UserLogin {
             this.errorMessage = 'Server temporarily unavailable';
             this.errorSuggestion = 'Please try again in a few moments';
           } else if (error.status === 0) {
-            this.errorMessage = 'Unable to connect to server';
-            this.errorSuggestion = 'Please check your internet connection';
+            const issue = classifyConnectionIssue(environment.apiUrl);
+            this.errorBadge = issue.label;
+            this.errorMessage = 'Unable to connect to backend server';
+            this.errorSuggestion = issue.message;
           } else {
             this.errorMessage = 'Login failed unexpectedly';
             this.errorSuggestion = 'Please try again or contact support';
