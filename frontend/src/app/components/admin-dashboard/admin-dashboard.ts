@@ -1464,7 +1464,12 @@ export class AdminDashboard implements OnInit {
     if (!id) return;
     this.deleteLoading = true;
     this.adminService.deleteAgent(id).subscribe({
-      next: () => {
+      next: (res: any) => {
+        const deletedAgentId = res?.data?.deletedAgentId || id;
+        const deletedAgentEmail = (res?.data?.deletedAgentEmail || '').toString().toLowerCase();
+        const deletedAgentName = (this.deleteTarget?.name || '').toString();
+
+        this.clearDeletedAgentAssignmentsFromView(deletedAgentId, deletedAgentName, deletedAgentEmail);
         this.deleteLoading = false;
         this.showDeleteModal = false;
         this.deleteTarget = null;
@@ -1478,6 +1483,47 @@ export class AdminDashboard implements OnInit {
         this.agentsError = `Failed to delete agent. ${msg}`;
       }
     });
+  }
+
+  private clearDeletedAgentAssignmentsFromView(agentId: string, agentName: string, agentEmail?: string) {
+    const norm = (v: any) => (v || '').toString().trim().toLowerCase();
+    const targetId = norm(agentId);
+    const targetName = norm(agentName);
+    const targetEmail = norm(agentEmail);
+
+    const shouldClear = (policy: any) => {
+      const policyAgentId = norm(policy?.assignedAgentId?._id || policy?.assignedAgentId);
+      const policyAgentName = norm(policy?.assignedAgentName);
+      const policyAgentEmail = norm(policy?.assignedAgentId?.email);
+      return (
+        (targetId && policyAgentId === targetId) ||
+        (targetName && policyAgentName === targetName) ||
+        (targetEmail && policyAgentEmail === targetEmail)
+      );
+    };
+
+    const clearPolicy = (policy: any) => {
+      if (!policy || !shouldClear(policy)) return;
+      policy.assignedAgentId = null;
+      policy.assignedAgentName = null;
+    };
+
+    (this.policies || []).forEach(clearPolicy);
+    (this.approvedPolicies || []).forEach(clearPolicy);
+    (this.pendingPolicies || []).forEach(clearPolicy);
+
+    (this.customerDetails || []).forEach((c: any) => {
+      if (!Array.isArray(c?.policies)) return;
+      c.policies.forEach((p: any) => {
+        clearPolicy(p);
+        clearPolicy(p?._product);
+      });
+    });
+
+    if (this.selectedPolicy && shouldClear(this.selectedPolicy)) {
+      this.selectedPolicy.assignedAgentId = null;
+      this.selectedPolicy.assignedAgentName = null;
+    }
   }
 
   // Unified delete modal handlers
@@ -1666,6 +1712,18 @@ export class AdminDashboard implements OnInit {
 
   // Badge text shown on policy chips/cards in Product Catalog.
   getPolicyTypeAbbreviation(policy: any): string {
+    const base = this.getBasePolicyAbbreviation(policy);
+    const duplicateCount = (this.policies || []).filter((p: any) => this.getBasePolicyAbbreviation(p) === base).length;
+
+    // If abbreviation collides (e.g., PI/TI/etc.), use first 2 letters + I for uniqueness/readability.
+    if (duplicateCount > 1) {
+      return this.getTitleBasedInsuranceAbbreviation(policy);
+    }
+
+    return base;
+  }
+
+  private getBasePolicyAbbreviation(policy: any): string {
     const title = (policy?.title || '').toString().trim().toLowerCase();
     const code = (policy?.code || '').toString().trim().toUpperCase();
 
@@ -1675,9 +1733,25 @@ export class AdminDashboard implements OnInit {
     if (title.includes('bike')) return 'BI';
     if (title.includes('travel')) return 'TI';
     if (title.includes('life')) return 'LI';
+    if (title.includes('insurance') || title.includes('product') || code.startsWith('POL')) return 'PI';
 
-    // Fallback: keep existing behavior for unknown policy types.
-    return (code || 'PO').slice(0, 2).toUpperCase();
+    return (code || 'PI').slice(0, 2).toUpperCase();
+  }
+
+  private getTitleBasedInsuranceAbbreviation(policy: any): string {
+    const title = (policy?.title || '').toString().trim();
+    const lettersOnly = title.replace(/[^a-zA-Z]/g, '').toUpperCase();
+
+    if (lettersOnly.length >= 2) {
+      return `${lettersOnly.slice(0, 2)}I`;
+    }
+
+    const code = (policy?.code || '').toString().replace(/[^a-zA-Z]/g, '').toUpperCase();
+    if (code.length >= 2) {
+      return `${code.slice(0, 2)}I`;
+    }
+
+    return 'PI';
   }
 
   private prefillCustomerPolicies() {

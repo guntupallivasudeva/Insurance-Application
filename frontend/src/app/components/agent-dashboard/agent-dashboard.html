@@ -25,7 +25,7 @@
             <i class="fas fa-user-tie text-3xl text-indigo-500"></i>
           </div>
           <div class="text-left">
-            <h2 class="text-2xl font-bold mb-1 text-slate-900">Welcome back, {{ userName }}!</h2>
+            <h2 class="text-2xl font-bold mb-1 text-slate-900">Welcome back, {{ userName | titlecase }}!</h2>
             <p class="text-slate-600">Manage your assigned policies and claims</p>
           </div>
         </div>
@@ -277,11 +277,11 @@
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10">
                     <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span class="text-sm font-medium text-blue-600">{{ request.customerName.charAt(0) }}</span>
+                      <span class="text-sm font-medium text-blue-600">{{ (request.customerName | titlecase).charAt(0) }}</span>
                     </div>
                   </div>
                   <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ request.customerName }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ request.customerName | titlecase }}</div>
                     <div class="text-sm text-gray-500">{{ request.customerEmail }}</div>
                   </div>
                 </div>
@@ -391,11 +391,11 @@
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10">
                     <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span class="text-sm font-medium text-blue-600">{{ customer.customerName.charAt(0) }}</span>
+                      <span class="text-sm font-medium text-blue-600">{{ (customer.customerName | titlecase).charAt(0) }}</span>
                     </div>
                   </div>
                   <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ customer.customerName }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ customer.customerName | titlecase }}</div>
                     <div class="text-sm text-gray-500">{{ customer.customerEmail }}</div>
                     <div *ngIf="customer.customerPhone" class="text-xs text-gray-400">{{ customer.customerPhone }}</div>
                   </div>
@@ -488,10 +488,10 @@
               class="py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex-shrink-0">
               <div class="flex items-center space-x-2">
                 <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span class="text-sm font-medium text-blue-600">{{ customer.customerName.charAt(0) }}</span>
+                  <span class="text-sm font-medium text-blue-600">{{ (customer.customerName | titlecase).charAt(0) }}</span>
                 </div>
                 <div class="text-left">
-                  <div class="font-medium">{{ customer.customerName }}</div>
+                  <div class="font-medium">{{ customer.customerName | titlecase }}</div>
                   <div class="text-xs text-gray-500">{{ customer.totalPayments }} payments</div>
                 </div>
               </div>
@@ -505,10 +505,10 @@
           <div class="bg-blue-50 rounded-lg p-4">
             <div class="flex items-center space-x-4">
               <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <span class="text-lg font-medium text-blue-600">{{ activePaymentCustomer.customerName.charAt(0) }}</span>
+                <span class="text-lg font-medium text-blue-600">{{ (activePaymentCustomer.customerName | titlecase).charAt(0) }}</span>
               </div>
               <div>
-                <h3 class="text-lg font-medium text-gray-900">{{ activePaymentCustomer.customerName }}</h3>
+                <h3 class="text-lg font-medium text-gray-900">{{ activePaymentCustomer.customerName | titlecase }}</h3>
                 <p class="text-sm text-gray-600">{{ activePaymentCustomer.customerEmail }}</p>
                 <div class="flex space-x-4 mt-1 text-sm text-gray-500">
                   <span>{{ activePaymentCustomer.totalPayments }} Total Payments</span>
@@ -708,7 +708,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div>
-                  <div class="text-sm font-medium text-gray-900">{{ claim.customerName }}</div>
+                  <div class="text-sm font-medium text-gray-900">{{ claim.customerName | titlecase }}</div>
                   <div class="text-sm text-gray-500">{{ claim.customerEmail }}</div>
                 </div>
               </td>
@@ -956,10 +956,10 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-slate-500 to-slate-600 rounded-full flex items-center justify-center">
-                        <span class="text-white font-semibold text-sm">{{ customer.customerName.charAt(0).toUpperCase() }}</span>
+                        <span class="text-white font-semibold text-sm">{{ (customer.customerName | titlecase).charAt(0) }}</span>
                       </div>
                       <div class="ml-4">
-                        <div class="text-sm font-semibold text-slate-900">{{ customer.customerName }}</div>
+                        <div class="text-sm font-semibold text-slate-900">{{ customer.customerName | titlecase }}</div>
                         <div class="text-sm text-slate-500 flex items-center">
                           <i class="fas fa-envelope text-slate-400 mr-1 text-xs"></i>
                           {{ customer.customerEmail }}
@@ -1051,7 +1051,7 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Customer</label>
-              <p class="text-sm text-gray-900">{{ selectedClaim.customerName }}</p>
+              <p class="text-sm text-gray-900">{{ selectedClaim.customerName | titlecase }}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Amount Claimed</label>
@@ -1148,7 +1148,7 @@
         <h3 class="text-lg font-semibold text-gray-900">Payment History</h3>
         <div *ngIf="customerPaymentHistory?.userPolicy" class="mt-2">
           <p class="text-sm text-gray-600">
-            <strong>Customer:</strong> {{ customerPaymentHistory?.userPolicy?.customerName || 'N/A' }} ({{ customerPaymentHistory?.userPolicy?.customerEmail || 'N/A' }})
+            <strong>Customer:</strong> {{ (customerPaymentHistory?.userPolicy?.customerName || 'N/A') | titlecase }} ({{ customerPaymentHistory?.userPolicy?.customerEmail || 'N/A' }})
           </p>
           <p class="text-sm text-gray-600">
             <strong>Policy:</strong> {{ customerPaymentHistory?.userPolicy?.policyCode || 'N/A' }} - {{ customerPaymentHistory?.userPolicy?.policyTitle || 'N/A' }}
@@ -1259,7 +1259,7 @@
   <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-96 overflow-y-auto" (click)="$event.stopPropagation()">
     <div class="p-6 border-b border-gray-200">
       <h3 class="text-lg font-semibold text-gray-900">Customer Details</h3>
-      <p class="text-sm text-gray-500 mt-1" *ngIf="selectedCustomerDetails">{{ selectedCustomerDetails.customerName }} - {{ selectedCustomerDetails.customerEmail }}</p>
+      <p class="text-sm text-gray-500 mt-1" *ngIf="selectedCustomerDetails">{{ selectedCustomerDetails.customerName | titlecase }} - {{ selectedCustomerDetails.customerEmail }}</p>
     </div>
     <div class="p-6" *ngIf="selectedCustomerDetails">
       <div class="space-y-6">
@@ -1273,7 +1273,7 @@
             </div>
             <div>
               <label class="text-sm font-medium text-gray-600">Full Name:</label>
-              <p class="text-sm text-gray-900">{{ selectedCustomerDetails.customerName || 'N/A' }}</p>
+              <p class="text-sm text-gray-900">{{ (selectedCustomerDetails.customerName || 'N/A') | titlecase }}</p>
             </div>
             <div>
               <label class="text-sm font-medium text-gray-600">Email Address:</label>
@@ -1410,7 +1410,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h4 class="text-sm font-medium text-gray-500">Customer Information</h4>
-              <p class="mt-1 text-sm text-gray-900">{{ selectedPolicyRequest.customerName }}</p>
+              <p class="mt-1 text-sm text-gray-900">{{ selectedPolicyRequest.customerName | titlecase }}</p>
               <p class="text-sm text-gray-600">{{ selectedPolicyRequest.customerEmail }}</p>
             </div>
             <div>
@@ -1480,11 +1480,11 @@
           <div class="flex items-center space-x-4">
             <div class="flex-shrink-0 h-12 w-12">
               <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <span class="text-lg font-medium text-blue-600">{{ selectedApprovedCustomer.customerName.charAt(0) }}</span>
+                <span class="text-lg font-medium text-blue-600">{{ (selectedApprovedCustomer.customerName | titlecase).charAt(0) }}</span>
               </div>
             </div>
             <div>
-              <h4 class="text-lg font-medium text-gray-900">{{ selectedApprovedCustomer.customerName }}</h4>
+              <h4 class="text-lg font-medium text-gray-900">{{ selectedApprovedCustomer.customerName | titlecase }}</h4>
               <p class="text-sm text-gray-600">{{ selectedApprovedCustomer.customerEmail }}</p>
               <p *ngIf="selectedApprovedCustomer.customerPhone" class="text-sm text-gray-500">{{ selectedApprovedCustomer.customerPhone }}</p>
             </div>
@@ -1578,7 +1578,7 @@
       
         <div *ngIf="selectedApprovedCustomer" class="space-y-4">
           <div class="bg-blue-50 p-4 rounded-lg">
-            <h4 class="text-sm font-medium text-blue-800 mb-2">Customer: {{ selectedApprovedCustomer.customerName }}</h4>
+            <h4 class="text-sm font-medium text-blue-800 mb-2">Customer: {{ selectedApprovedCustomer.customerName | titlecase }}</h4>
             <div class="text-sm text-blue-700">
               <p><strong>Current Policy:</strong> {{ selectedApprovedCustomer.policyTitle }}</p>
               <p><strong>Policy Code:</strong> {{ selectedApprovedCustomer.policyCode }}</p>
@@ -1691,7 +1691,7 @@
         <div class="mt-2 px-7 py-3">
           <p class="text-sm text-gray-500">Are you sure you want to approve this policy request?</p>
           <div *ngIf="pendingActionRequest" class="mt-3 p-3 bg-gray-50 rounded-lg text-left">
-            <p class="text-xs text-gray-600"><strong>Customer:</strong> {{ pendingActionRequest.customerName }}</p>
+            <p class="text-xs text-gray-600"><strong>Customer:</strong> {{ pendingActionRequest.customerName | titlecase }}</p>
             <p class="text-xs text-gray-600"><strong>Policy:</strong> {{ pendingActionRequest.policyTitle }}</p>
             <p class="text-xs text-gray-600"><strong>Premium:</strong> ₹{{ pendingActionRequest.premium | number:'1.2-2' }}</p>
           </div>
@@ -1721,7 +1721,7 @@
         <div class="mt-2 px-7 py-3">
           <p class="text-sm text-gray-500">Are you sure you want to reject this policy request?</p>
           <div *ngIf="pendingActionRequest" class="mt-3 p-3 bg-gray-50 rounded-lg text-left">
-            <p class="text-xs text-gray-600"><strong>Customer:</strong> {{ pendingActionRequest.customerName }}</p>
+            <p class="text-xs text-gray-600"><strong>Customer:</strong> {{ pendingActionRequest.customerName | titlecase }}</p>
             <p class="text-xs text-gray-600"><strong>Policy:</strong> {{ pendingActionRequest.policyTitle }}</p>
             <p class="text-xs text-gray-600"><strong>Premium:</strong> ₹{{ pendingActionRequest.premium | number:'1.2-2' }}</p>
           </div>
