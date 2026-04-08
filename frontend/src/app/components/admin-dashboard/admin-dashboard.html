@@ -331,7 +331,7 @@
         <div class="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
           <div class="space-y-1">
             <p><span class="font-medium text-slate-700">Policy ID:</span> {{ selectedPolicy?._id }}</p>
-            <p><span class="font-medium text-slate-700">User:</span> {{ selectedPolicy?.userId?.name || selectedPolicy?.userId?.email || selectedPolicy?.userId }}</p>
+            <p><span class="font-medium text-slate-700">User:</span> {{ selectedPolicy?.userId?.name ? (selectedPolicy?.userId?.name | titlecase) : (selectedPolicy?.userId?.email || selectedPolicy?.userId) }}</p>
             <p><span class="font-medium text-slate-700">Status:</span> {{ selectedPolicy?.status }}</p>
             <p><span class="font-medium text-slate-700">Verification:</span> {{ selectedPolicy?.verificationType }}</p>
           </div>
@@ -378,7 +378,7 @@
             <tr *ngFor="let p of pendingPolicies; trackBy: trackById" class="hover:bg-slate-50/60">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ p._id }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.policyProductId?.code || policyByRef(p.policyProductId)?.code || '—' }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.userId?.name || p.userId?.email || p.userId || '—' }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.userId?.name ? (p.userId?.name | titlecase) : (p.userId?.email || p.userId || '—') }}</td>
               <td class="px-6 py-4 text-sm text-gray-700">{{ p.policyProductId?.title || p.policyProductId?.code || p.policyProductId || '—' }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.startDate | date: 'mediumDate' }}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ p.endDate | date: 'mediumDate' }}</td>
@@ -441,7 +441,7 @@
             <span class="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-medium text-emerald-800">{{ p.status }}</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-sm text-slate-700 mb-4">
-            <div><span class="text-slate-500">User:</span> {{ p.userId?.name || p.userId?.email || p.userId || '—' }}</div>
+            <div><span class="text-slate-500">User:</span> {{ p.userId?.name ? (p.userId?.name | titlecase) : (p.userId?.email || p.userId || '—') }}</div>
             <div><span class="text-slate-500">Code:</span> {{ p.policyProductId?.code || policyByRef(p.policyProductId)?.code || '—' }}</div>
             <div><span class="text-slate-500">Start:</span> {{ p.startDate | date: 'mediumDate' }}</div>
             <div><span class="text-slate-500">End:</span> {{ p.endDate | date: 'mediumDate' }}</div>
@@ -496,7 +496,7 @@
                 {{ (a.name || a.email || 'A')?.slice(0,2) | uppercase }}
               </div>
               <div>
-                <div class="text-sm font-semibold text-slate-800">{{ (a.name || a.email || 'Agent').charAt(0).toUpperCase() + (a.name || a.email || 'Agent').slice(1).toLowerCase() }}</div>
+                <div class="text-sm font-semibold text-slate-800">{{ a.name ? (a.name | titlecase) : (a.email || 'Agent') }}</div>
                 <div class="text-xs font-mono text-slate-500">{{ a.agentCode || '—' }}</div>
               </div>
             </div>
@@ -533,11 +533,11 @@
           <div *ngIf="agentFormError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ agentFormError }}</div>
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Name</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Name <span class="text-red-500 ml-1">*</span></label>
               <input type="text" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="agentForm.name" (input)="onAgentNameInput()" [ngModelOptions]="{standalone:true}" placeholder="Agent Name" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Email <span class="text-red-500 ml-1">*</span></label>
               <input type="email" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="agentForm.email" (input)="onAgentEmailInput()" [ngModelOptions]="{standalone:true}" placeholder="agent@example.com" />
             </div>
             <!-- Agent Code (editable; digits-only input; 'AGT' prefix shown) -->
@@ -547,7 +547,7 @@
                 <span class="px-3 text-slate-600 select-none">AGT</span>
                 <input type="text" class="w-full p-2.5 outline-none" [(ngModel)]="agentCodeDigits" (input)="onAgentCodeDigitsInput()" [ngModelOptions]="{standalone:true}" placeholder="01" inputmode="numeric" pattern="[0-9]{2,}" title="Enter at least two digits (e.g., 01)" />
               </div>
-              <p class="mt-1 text-[11px] text-slate-500">Type the number only (e.g., 01). We’ll save it as AGT01.</p>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Agent Code <span class="text-red-500 ml-1">*</span></label>
             </div>
             <div *ngIf="agentFormMode === 'create'">
               <label class="mb-1 block text-sm font-medium text-slate-700">Password (default)</label>
@@ -612,7 +612,7 @@
                 </td>
                 <td class="px-4 py-3 text-sm text-slate-700">{{ p.title }}</td>
                 <td class="px-4 py-3 text-sm text-slate-700">
-                  <ng-container *ngIf="p.assignedAgentName; else unassignedPolicy">{{ p.assignedAgentName }}</ng-container>
+                  <ng-container *ngIf="p.assignedAgentName; else unassignedPolicy">{{ p.assignedAgentName | titlecase }}</ng-container>
                   <ng-template #unassignedPolicy>—</ng-template>
                 </td>
                 <td class="px-4 py-3 text-sm">
@@ -718,7 +718,7 @@
           <div *ngIf="policyFormError" class="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 shadow-sm">{{ policyFormError }}</div>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div *ngIf="policyFormMode === 'create'; else editCodeBlock">
-              <label class="mb-1 block text-sm font-medium text-slate-700">Policy Code</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Policy Code <span class="text-red-500 ml-1">*</span></label>
               <div class="flex items-center rounded-xl border border-slate-300 overflow-hidden">
                 <span class="px-3 text-slate-600 select-none">POL</span>
                 <input type="text" class="w-full p-2.5 outline-none" [(ngModel)]="policyCodeDigits" (input)="onPolicyCodeDigitsInput()" [ngModelOptions]="{standalone:true}" placeholder="01" inputmode="numeric" pattern="[0-9]{2,}" title="Enter at least two digits (e.g., 01)" />
@@ -726,7 +726,7 @@
               <p class="mt-1 text-[11px] text-slate-500">Type the number only (e.g., 01). We'll save it as POL01. Auto-generated but editable.</p>
             </div>
             <ng-template #editCodeBlock>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Code Number</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Code Number <span class="text-red-500 ml-1">*</span></label>
               <div class="flex items-center gap-2">
                 <span class="rounded-lg bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 select-none">POL</span>
                 <input type="text" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyCodeDigits" [ngModelOptions]="{standalone:true}" placeholder="01" (input)="onCodeDigitsChange()" />
@@ -734,19 +734,19 @@
               <p class="mt-1 text-[11px] text-slate-500">Current full code: <span class="font-mono">{{ policyForm.code }}</span></p>
             </ng-template>
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Title</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Title <span class="text-red-500 ml-1">*</span></label>
               <input type="text" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.title" [ngModelOptions]="{standalone:true}" placeholder="Policy Title" />
             </div>
             <div class="md:col-span-2">
-              <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Description <span class="text-red-500 ml-1">*</span></label>
               <textarea rows="2" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.description" [ngModelOptions]="{standalone:true}" placeholder="Short description"></textarea>
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Premium</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Premium <span class="text-red-500 ml-1">*</span></label>
               <input type="number" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.premium" [ngModelOptions]="{standalone:true}" placeholder="1000" />
             </div>
             <div>
-              <label class="mb-1 block text-sm font-medium text-slate-700">Term (Months)</label>
+              <label class="mb-1 block text-sm font-medium text-slate-700">Term (Months) <span class="text-red-500 ml-1">*</span></label>
               <input type="number" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.termMonths" [ngModelOptions]="{standalone:true}" placeholder="12" />
             </div>
             <div>
@@ -761,7 +761,7 @@
               <label class="mb-1 block text-sm font-medium text-slate-700">Assign Agent (Optional)</label>
               <select class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="policyForm.assignedAgentId" [ngModelOptions]="{standalone:true}">
                 <option value="">-- No Agent Assigned --</option>
-                <option *ngFor="let agent of agents" [value]="agent._id">{{ agent.name }} - ({{ agent.agentCode }})</option>
+                <option *ngFor="let agent of agents" [value]="agent._id">{{ agent.name | titlecase }} - ({{ agent.agentCode }})</option>
               </select>
               <p class="mt-1 text-[11px] text-slate-500">You can assign an agent to this policy now or later</p>
               <!-- Debug info -->
@@ -819,7 +819,7 @@
                     <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-600 text-xs font-medium">
                       {{ (c?.customer?.name || c?.customer?.email || 'U').slice(0,2).toUpperCase() }}
                     </div>
-                    <div class="text-sm font-medium text-slate-800">{{ c?.customer?.name || '—' }}</div>
+                    <div class="text-sm font-medium text-slate-800">{{ (c?.customer?.name || '—') | titlecase }}</div>
                   </div>
                 </td>
                 <td class="px-6 py-4 text-sm text-slate-700 break-all">{{ c?.customer?.email || '—' }}</td>
@@ -898,7 +898,7 @@
                     {{ (c?.customer?.name || c?.customer?.email || 'U').slice(0,2).toUpperCase() }}
                   </div>
                   <div>
-                    <div class="text-sm font-medium text-slate-800">{{ c?.customer?.name || 'Unknown' }}</div>
+                    <div class="text-sm font-medium text-slate-800">{{ (c?.customer?.name || 'Unknown') | titlecase }}</div>
                     <div class="text-[11px] font-mono text-slate-500">ID: {{ c?.customer?._id }}</div>
                   </div>
                 </div>
@@ -937,7 +937,7 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
               <div class="text-xs uppercase tracking-wide text-slate-500 mb-1">Customer</div>
-              <div class="text-sm font-semibold text-slate-800">{{ selectedCustomer.customer?.name }}</div>
+              <div class="text-sm font-semibold text-slate-800">{{ selectedCustomer.customer?.name | titlecase }}</div>
               <div class="text-xs text-slate-600 break-all">{{ selectedCustomer.customer?.email }}</div>
               <div class="mt-1 text-[11px] font-mono text-slate-500">ID: {{ selectedCustomer.customer?._id }}</div>
             </div>
@@ -986,10 +986,10 @@
                     </td>
                     <td class="px-3 py-2 text-sm text-slate-700">
                       <ng-container *ngIf="p?.assignedAgentId; else agentFromProductModal">
-                        {{ p?.assignedAgentId?.name || '—' }} <span class="text-slate-500">({{ p?.assignedAgentId?.email || '—' }})</span>
+                        {{ (p?.assignedAgentId?.name || '—') | titlecase }} <span class="text-slate-500">({{ p?.assignedAgentId?.email || '—' }})</span>
                       </ng-container>
                       <ng-template #agentFromProductModal>
-                        <ng-container *ngIf="p?._product?.assignedAgentName; else noAgentModal">{{ p?._product?.assignedAgentName }}</ng-container>
+                        <ng-container *ngIf="p?._product?.assignedAgentName; else noAgentModal">{{ p?._product?.assignedAgentName | titlecase }}</ng-container>
                       </ng-template>
                       <ng-template #noAgentModal>—</ng-template>
                     </td>
@@ -1039,14 +1039,14 @@
     <div *ngIf="showUserPoliciesModal" class="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-sm overflow-auto py-10" (click)="closeUserPoliciesModal()">
       <div class="w-full max-w-5xl rounded-xl bg-white p-5 shadow-xl ring-1 ring-slate-200 md:max-h-[85vh] overflow-auto" (click)="$event.stopPropagation()">
         <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-slate-800">User Policies - {{ selectedUserPoliciesCustomer?.customer?.name || 'Customer' }}</h3>
+          <h3 class="text-lg font-semibold text-slate-800">User Policies - {{ (selectedUserPoliciesCustomer?.customer?.name || 'Customer') | titlecase }}</h3>
           <button (click)="closeUserPoliciesModal()" class="rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-800">✕</button>
         </div>
         <div *ngIf="selectedUserPoliciesCustomer" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
             <div class="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
               <div class="uppercase tracking-wide text-slate-500 mb-1">Customer</div>
-              <div class="text-sm font-semibold text-slate-800">{{ selectedUserPoliciesCustomer.customer?.name }}</div>
+              <div class="text-sm font-semibold text-slate-800">{{ selectedUserPoliciesCustomer.customer?.name | titlecase }}</div>
               <div class="text-[11px] text-slate-600 break-all">{{ selectedUserPoliciesCustomer.customer?.email }}</div>
               <div class="mt-1 text-[11px] font-mono text-slate-500">ID: {{ selectedUserPoliciesCustomer.customer?._id }}</div>
             </div>
@@ -1167,7 +1167,7 @@
                 <div *ngIf="deleteTarget?.premium != null"><span class="font-semibold text-slate-700">Premium:</span> ₹{{ deleteTarget?.premium }}</div>
               </div>
               <div *ngSwitchCase="'agent'">
-                <div><span class="font-semibold text-slate-700">Name:</span> {{ deleteTarget?.name }}</div>
+                <div><span class="font-semibold text-slate-700">Name:</span> {{ deleteTarget?.name | titlecase }}</div>
                 <div><span class="font-semibold text-slate-700">Email:</span> {{ deleteTarget?.email }}</div>
                 <div class="mt-1 text-[11px] font-mono text-slate-500">ID: {{ deleteTarget?._id }}</div>
               </div>
@@ -1247,7 +1247,7 @@
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
+                <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name ? (c.userId?.name | titlecase) : (c.userId?.email || c.userId) }}</td>
                 <td class="px-6 py-4">
                   <div class="text-sm font-medium text-slate-800">{{ c._policyCode || c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
                   <div class="text-xs text-slate-500">{{ c._policyTitle || c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
@@ -1337,7 +1337,7 @@
                       </div>
                     </div>
                   </td>
-                  <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
+                  <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name ? (c.userId?.name | titlecase) : (c.userId?.email || c.userId) }}</td>
                   <td class="px-6 py-4">
                     <div class="text-sm font-medium text-slate-800">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
                     <div class="text-xs text-slate-500">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
@@ -1412,7 +1412,7 @@
                       </div>
                     </div>
                   </td>
-                  <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name || c.userId?.email || c.userId }}</td>
+                  <td class="px-6 py-4 text-sm text-slate-700">{{ c.userId?.name ? (c.userId?.name | titlecase) : (c.userId?.email || c.userId) }}</td>
                   <td class="px-6 py-4">
                     <div class="text-sm font-medium text-slate-800">{{ c.userPolicyId?.policyProductId?.code || 'N/A' }}</div>
                     <div class="text-xs text-slate-500">{{ c.userPolicyId?.policyProductId?.title || 'N/A' }}</div>
@@ -1453,7 +1453,7 @@
         <div class="grid grid-cols-1 gap-3 text-sm">
           <div><span class="font-medium text-slate-700">Agent ID:</span> {{ selectedAgentView?._id }}</div>
           <div><span class="font-medium text-slate-700">Agent Code:</span> {{ selectedAgentView?.agentCode || '—' }}</div>
-          <div><span class="font-medium text-slate-700">Name:</span> {{ selectedAgentView?.name }}</div>
+          <div><span class="font-medium text-slate-700">Name:</span> {{ selectedAgentView?.name | titlecase }}</div>
           <div><span class="font-medium text-slate-700">Email:</span> {{ selectedAgentView?.email }}</div>
         </div>
         <div class="mt-6 flex justify-end">
@@ -1479,7 +1479,7 @@
           <div class="space-y-1">
             <div><span class="font-medium text-slate-700">Min Sum Insured:</span> ₹{{ p.minSumInsured ?? 0 }}</div>
             <div><span class="font-medium text-slate-700">Max Sum Insured:</span> ₹{{ p.maxSumInsured ?? 0 }}</div>
-            <div><span class="font-medium text-slate-700">Assigned Agent:</span> {{ p.assignedAgentName || '—' }}</div>
+            <div><span class="font-medium text-slate-700">Assigned Agent:</span> {{ (p.assignedAgentName || p.assignedAgentId?.name || '—') | titlecase }}</div>
           </div>
           <div class="md:col-span-2">
             <div class="mt-2 text-[13px] text-slate-700 whitespace-pre-line"><span class="font-medium text-slate-700">Description:</span> {{ p.description || '—' }}</div>
@@ -1501,7 +1501,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm" *ngIf="selectedClaimView as c">
           <div class="space-y-1">
             <div><span class="font-medium text-slate-700">Claim ID:</span> {{ c._id }}</div>
-            <div><span class="font-medium text-slate-700">User:</span> {{ c.userId?.name || c.userId?.email || c.userId }}</div>
+            <div><span class="font-medium text-slate-700">User:</span> {{ c.userId?.name ? (c.userId?.name | titlecase) : (c.userId?.email || c.userId) }}</div>
             <div><span class="font-medium text-slate-700">Policy:</span> {{ c.userPolicyId?._id || c.userPolicyId }}</div>
             <div><span class="font-medium text-slate-700">Status:</span> {{ c.status }}</div>
           </div>
@@ -1572,15 +1572,15 @@
       </div>
       <div class="grid grid-cols-1 gap-3 text-sm">
         <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">Incident Date</label>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Incident Date <span class="text-red-500 ml-1">*</span></label>
           <input type="date" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.incidentDate" [ngModelOptions]="{standalone:true}" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">Amount Claimed</label>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Amount Claimed <span class="text-red-500 ml-1">*</span></label>
           <input type="number" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.amountClaimed" [ngModelOptions]="{standalone:true}" placeholder="0" />
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Description <span class="text-red-500 ml-1">*</span></label>
           <textarea rows="3" class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="claimForm.description" [ngModelOptions]="{standalone:true}" placeholder="Describe the incident..."></textarea>
         </div>
         <div>
@@ -1608,7 +1608,7 @@
         <div class="rounded-xl bg-slate-50 p-4 text-xs text-slate-600 ring-1 ring-slate-200" *ngIf="unassignTarget">
           <div><span class="font-semibold text-slate-700">Policy Code:</span> {{ unassignTarget?.code }}</div>
           <div><span class="font-semibold text-slate-700">Policy Title:</span> {{ unassignTarget?.title || '—' }}</div>
-          <div><span class="font-semibold text-slate-700">Current Agent:</span> {{ unassignTarget?.assignedAgentName || '—' }}</div>
+          <div><span class="font-semibold text-slate-700">Current Agent:</span> {{ (unassignTarget?.assignedAgentName || '—') | titlecase }}</div>
         </div>
         <div *ngIf="unassignError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800">{{ unassignError }}</div>
         <div class="flex items-center gap-2 text-xs" *ngIf="unassignLoading">
@@ -1636,13 +1636,13 @@
       <div class="space-y-4">
         <div class="text-sm text-slate-600">
           <div><span class="font-medium text-slate-700">Policy:</span> {{ selectedPolicy?.title || selectedPolicy?.code }}</div>
-          <div *ngIf="selectedPolicy?.assignedAgentName"><span class="font-medium text-slate-700">Current Agent:</span> {{ selectedPolicy?.assignedAgentName }}</div>
+          <div *ngIf="selectedPolicy?.assignedAgentName"><span class="font-medium text-slate-700">Current Agent:</span> {{ selectedPolicy?.assignedAgentName | titlecase }}</div>
         </div>
         <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">Select Agent</label>
+          <label class="mb-1 block text-sm font-medium text-slate-700">Select Agent <span class="text-red-500 ml-1">*</span></label>
           <select class="w-full rounded-xl border border-slate-300 p-2.5" [(ngModel)]="selectedAgentId" [ngModelOptions]="{standalone:true}">
             <option value="">-- choose agent --</option>
-            <option *ngFor="let a of agentList" [value]="a._id">{{ a.name }} ({{ a.email }})</option>
+            <option *ngFor="let a of agentList" [value]="a._id">{{ a.name | titlecase }} ({{ a.email }})</option>
           </select>
         </div>
         <div *ngIf="assignError" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 text-sm shadow-sm">{{ assignError }}</div>
