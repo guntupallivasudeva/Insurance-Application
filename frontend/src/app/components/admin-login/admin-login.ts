@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AdminLoginRequest } from '../../services/admin.service';
+import { environment } from '../../../environments/environment';
+import { classifyConnectionIssue } from '../../utils/network-error';
 
 @Component({
   selector: 'app-admin-login',
@@ -20,12 +22,20 @@ export class AdminLogin {
   isLoading = false;
   successMessage = '';
   errorMessage = '';
+  errorBadge = '';
   showPassword = false;
+
+  private getBackendConnectionMessage(): string {
+    const backendOrigin = new URL(environment.apiUrl).origin;
+    const frontendOrigin = typeof window !== 'undefined' ? window.location.origin : 'this app';
+    return `Cannot reach the backend at ${backendOrigin}. Check that the server is running and allows requests from ${frontendOrigin}.`;
+  }
 
   onSubmit() {
     this.isLoading = true;
     this.successMessage = '';
     this.errorMessage = '';
+    this.errorBadge = '';
     
     // Basic validation
     if (!this.formData.email || !this.formData.password) {
@@ -77,6 +87,7 @@ export class AdminLogin {
       error: (error) => {
         this.isLoading = false;
         console.error('Admin login error:', error);
+        this.errorBadge = '';
         
         // Handle different error scenarios based on backend response structure
         if (error.status === 404) {
@@ -91,7 +102,9 @@ export class AdminLogin {
             this.errorMessage = errorMsg || 'Please check your input and try again.';
           }
         } else if (error.status === 0) {
-          this.errorMessage = 'Unable to connect to server. Please check your connection and ensure the backend is running.';
+          const issue = classifyConnectionIssue(environment.apiUrl);
+          this.errorBadge = issue.label;
+          this.errorMessage = issue.message;
         } else {
           this.errorMessage = 'Server error. Please try again later.';
         }

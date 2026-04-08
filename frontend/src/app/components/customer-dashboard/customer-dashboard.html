@@ -35,7 +35,7 @@
               <i class="fas fa-users text-3xl text-indigo-500"></i>
             </div>
             <div class="text-left">
-              <h2 class="text-2xl font-bold mb-1 text-slate-900">Welcome back, {{ userName }}!</h2>
+              <h2 class="text-2xl font-bold mb-1 text-slate-900">Welcome back, {{ userName | titlecase }}!</h2>
               <p class="text-slate-600">Manage your insurance policies with ease</p>
             </div>
           </div>
@@ -338,7 +338,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div *ngIf="p._product?.assignedAgentName || p._product?.assignedAgentId" class="text-sm text-slate-900">
-                  {{ p._product?.assignedAgentName || p._product?.assignedAgentId?.name || p._product?.assignedAgentId?.email || p._product?.assignedAgentId?.agentCode || 'Agent' }}
+                  {{ (p._product?.assignedAgentName || p._product?.assignedAgentId?.name || p._product?.assignedAgentId?.email || p._product?.assignedAgentId?.agentCode || 'Agent') | titlecase }}
                 </div>
                 <span *ngIf="!p._product?.assignedAgentName && !p._product?.assignedAgentId" class="text-sm text-slate-500">Unassigned</span>
               </td>
@@ -426,7 +426,7 @@
                     <div class="text-sm text-gray-500">{{ p.endDate | date:'mediumDate' }}</div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
-                    <div *ngIf="p.agentDetails" class="text-sm text-gray-900">{{ p.agentDetails.name }}</div>
+                    <div *ngIf="p.agentDetails" class="text-sm text-gray-900">{{ p.agentDetails.name | titlecase }}</div>
                     <span *ngIf="!p.agentDetails" class="text-sm text-gray-500">Unassigned</span>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -694,7 +694,7 @@
           <div *ngIf="pol.agentDetails" class="bg-slate-50 rounded-lg p-3 mb-4">
             <div class="text-xs font-medium text-slate-500 mb-1">Assigned Agent</div>
             <div class="space-y-1">
-              <div class="text-sm font-medium text-slate-900">{{ pol.agentDetails.name }}</div>
+              <div class="text-sm font-medium text-slate-900">{{ pol.agentDetails.name | titlecase }}</div>
               <div class="text-xs text-slate-600">{{ pol.agentDetails.agentCode }}</div>
               <div class="text-xs text-slate-600">{{ pol.agentDetails.email }}</div>
             </div>
@@ -783,7 +783,7 @@
 			</div>
 			<div class="space-y-3">
 				<label class="block">
-					<span class="text-sm text-gray-700">Start Date</span>
+          <span class="text-sm text-gray-700">Start Date <span class="text-red-500 ml-1">*</span></span>
 					<input type="date" [(ngModel)]="purchaseForm.startDate" class="mt-1 w-full border rounded px-3 py-2"/>
 				</label>
 				<div class="grid grid-cols-2 gap-3">
@@ -817,7 +817,7 @@
 			</div>
 			<div class="space-y-3">
 				<label class="block">
-					<span class="text-sm text-gray-700">Policy</span>
+          <span class="text-sm text-gray-700">Policy <span class="text-red-500 ml-1">*</span></span>
 					<select [(ngModel)]="claimForm.userPolicyId" class="mt-1 w-full border rounded px-3 py-2">
 						<option value="">Select Policy</option>
 						<option *ngFor="let pol of approvedClaimablePolicies()" [value]="pol.userPolicyId || pol._id">
@@ -826,15 +826,15 @@
 					</select>
 				</label>
 				<label class="block">
-					<span class="text-sm text-gray-700">Incident Date</span>
+          <span class="text-sm text-gray-700">Incident Date <span class="text-red-500 ml-1">*</span></span>
 					<input type="date" [(ngModel)]="claimForm.incidentDate" class="mt-1 w-full border rounded px-3 py-2"/>
 				</label>
 				<label class="block">
-					<span class="text-sm text-gray-700">Description</span>
+          <span class="text-sm text-gray-700">Description <span class="text-red-500 ml-1">*</span></span>
 					<textarea [(ngModel)]="claimForm.description" rows="3" class="mt-1 w-full border rounded px-3 py-2" placeholder="Describe the incident"></textarea>
 				</label>
 				<label class="block">
-					<span class="text-sm text-gray-700">Amount Claimed</span>
+          <span class="text-sm text-gray-700">Amount Claimed <span class="text-red-500 ml-1">*</span></span>
 					<input type="number" [(ngModel)]="claimForm.amountClaimed" class="mt-1 w-full border rounded px-3 py-2" placeholder="0.00"/>
 				</label>
 				<div *ngIf="claimError" class="text-red-600 text-sm">{{ claimError }}</div>
@@ -917,7 +917,7 @@
 				<div class="mb-6">
 					<label class="block text-sm font-semibold text-gray-700 mb-3">
 						<i class="fas fa-wallet text-blue-600 mr-2"></i>
-						Select Payment Method
+            Select Payment Method <span class="text-red-500 ml-1">*</span>
 					</label>
 					<div class="grid grid-cols-2 gap-3">
 						<label *ngFor="let method of [
@@ -1025,7 +1025,7 @@
 				<!-- Nominee -->
 				<div *ngIf="dp.nominee" class="border rounded p-4 bg-gray-50">
 					<div class="text-gray-500 mb-2">Nominee</div>
-					<div class="font-medium">{{ dp.nominee?.name }} <span class="text-gray-400">({{ dp.nominee?.relation }})</span></div>
+          <div class="font-medium">{{ dp.nominee?.name | titlecase }} <span class="text-gray-400">({{ dp.nominee?.relation }})</span></div>
 				</div>
 
 				   <!-- Agent Details as 3 columns -->
@@ -1038,7 +1038,7 @@
 						   </div>
 						   <div>
 							   <div class="text-gray-500">Name</div>
-							   <div class="font-medium">{{ dp.agentDetails.name || '-' }}</div>
+                 <div class="font-medium">{{ (dp.agentDetails.name || '-') | titlecase }}</div>
 						   </div>
 						   <div>
 							   <div class="text-gray-500">Email</div>
