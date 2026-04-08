@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { shareReplay, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface AdminLoginRequest {
   email: string;
@@ -32,8 +33,8 @@ export interface AdminErrorResponse {
   providedIn: 'root'
 })
 export class AdminService {
-  private userApiUrl = 'http://localhost:8000/api/v1/users';
-  private adminApiUrl = 'http://localhost:8000/api/v1/admin';
+  private userApiUrl = `${environment.apiUrl}/users`;
+  private adminApiUrl = `${environment.apiUrl}/admin`;
 
   // Simple in-memory cache for DB status so navigating between routes
   // doesn't trigger a re-fetch or re-render flicker on the dashboard.

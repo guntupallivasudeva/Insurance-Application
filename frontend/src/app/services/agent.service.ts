@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface DashboardStats {
   totalPolicies: number;
@@ -158,7 +159,7 @@ export interface Payment {
   providedIn: 'root'
 })
 export class AgentService {
-  private baseUrl = 'http://localhost:8000/api/v1/agents';
+  private baseUrl = `${environment.apiUrl}/agents`;
 
   constructor(private http: HttpClient) {}
 
