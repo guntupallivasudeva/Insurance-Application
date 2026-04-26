@@ -7,9 +7,19 @@ import agentRoutes from './routes/agentRoutes.js';
 
 const app = express();
 
+const toOrigin = (value) => {
+  if (!value) return null;
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_PREVIEW_URL
+  toOrigin(process.env.FRONTEND_URL),
+  toOrigin(process.env.FRONTEND_PREVIEW_URL)
 ].filter(Boolean);
 
 const isLocalOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
