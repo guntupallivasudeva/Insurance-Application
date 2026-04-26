@@ -263,12 +263,91 @@ Primary route groups:
 - Agent operations: `/agents/*`
 - Customer operations: `/customers/*`
 
-Representative endpoints:
+### Endpoint Reference by Role
 
-- User: `POST /users/register`, `POST /users/login`, `PATCH /users/update-role`
-- Admin: `POST /admin/addpolicies`, `GET /admin/getpolicies`, `GET /admin/summary`
-- Agent: `POST /agents/login`, `GET /agents/assignedpolicies`, `GET /agents/dashboard`
-- Customer: `GET /customers/policies`, `POST /customers/purchase`, `POST /customers/raiseclaim`
+Auth notes:
+
+- Public means no auth middleware on the route.
+- Protected means JWT plus role-based middleware is required.
+
+#### Health
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| GET | /health | Public | API liveness check. |
+
+#### User Routes (`/users`)
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| POST | /users/register | Public | Register a new user account. |
+| POST | /users/login | Public | Login user and issue auth token. |
+| PATCH | /users/update-role | Public | Update user role mapping. |
+
+#### Admin Routes (`/admin`)
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| POST | /admin/addpolicies | Public | Create a new policy product. |
+| GET | /admin/getpolicies | Protected (Admin) | Get all policy products. |
+| PUT | /admin/updatepolicies/:id | Protected (Admin) | Update policy product by id. |
+| DELETE | /admin/deletepolicies/:id | Protected (Admin) | Delete policy product by id. |
+| GET | /admin/userpolicies | Protected (Admin) | View all user policy records. |
+| GET | /admin/payments | Protected (Admin) | View all payment records. |
+| POST | /admin/createagent | Protected (Admin) | Create an agent account. |
+| PUT | /admin/updateagent/:id | Protected (Admin) | Update agent details by id. |
+| DELETE | /admin/deleteagent/:id | Protected (Admin) | Delete agent by id. |
+| POST | /admin/assignpolicy | Protected (Admin) | Assign policy product to an agent. |
+| POST | /admin/unassign-policy | Protected (Admin) | Remove policy assignment from agent. |
+| GET | /admin/customerdetails | Protected (Admin) | Fetch customer profile details. |
+| POST | /admin/approvepolicy | Protected (Admin) | Approve a policy request. |
+| POST | /admin/rejectpolicy | Protected (Admin) | Reject a policy request. |
+| POST | /admin/approveclaim | Protected (Admin) | Approve claim workflow step. |
+| PUT | /admin/claim/:id | Protected (Admin) | Update claim by id. |
+| GET | /admin/allclaims | Protected (Admin) | Get all claims. |
+| GET | /admin/policy/:id | Protected (Admin) | Get policy details by id. |
+| GET | /admin/claim/:id | Protected (Admin) | Get claim details by id. |
+| GET | /admin/agents | Protected (Admin) | List all agents. |
+| GET | /admin/audit | Protected (Admin) | Fetch audit logs. |
+| GET | /admin/summary | Protected (Admin) | Fetch dashboard KPI summary. |
+| GET | /admin/db-status | Protected (Admin) | Check DB health/status summary. |
+
+#### Agent Routes (`/agents`)
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| POST | /agents/login | Public | Login agent and issue auth token. |
+| GET | /agents/assignedpolicies | Protected (Agent) | List policies assigned to logged-in agent. |
+| GET | /agents/policy-customers/:policyProductId | Protected (Agent) | Get customers mapped to a policy product. |
+| GET | /agents/customer-payments/:userPolicyId | Protected (Agent) | Get payment records for a customer policy. |
+| POST | /agents/approvepolicy | Protected (Agent) | Approve customer policy request. |
+| GET | /agents/policy-requests | Protected (Agent) | List pending policy requests. |
+| POST | /agents/approve-policy-request/:userPolicyId | Protected (Agent) | Approve policy request by user policy id. |
+| POST | /agents/reject-policy-request/:userPolicyId | Protected (Agent) | Reject policy request by user policy id. |
+| GET | /agents/approved-customers | Protected (Agent) | List approved customers for agent scope. |
+| GET | /agents/assignedclaims | Protected (Agent) | List claims assigned to agent. |
+| GET | /agents/claims/:id | Protected (Agent) | Get claim details by id. |
+| POST | /agents/approveclaim | Protected (Agent) | Approve claim decision. |
+| POST | /agents/rejectclaim | Protected (Agent) | Reject claim decision. |
+| PUT | /agents/claim/:id | Protected (Agent) | Update claim details by id. |
+| GET | /agents/assignedpayments | Protected (Agent) | List assigned payment records. |
+| GET | /agents/payment-customers | Protected (Agent) | List customers linked to payment tasks. |
+| GET | /agents/dashboard | Protected (Agent) | Fetch agent dashboard stats. |
+
+#### Customer Routes (`/customers`)
+
+| Method | Path | Auth | Purpose |
+| --- | --- | --- | --- |
+| GET | /customers/policies | Protected (Customer) | View available policy products. |
+| POST | /customers/purchase | Protected (Customer) | Purchase selected policy. |
+| POST | /customers/pay | Protected (Customer) | Submit policy payment. |
+| GET | /customers/payments | Protected (Customer) | Get payment history. |
+| GET | /customers/mypolicies | Protected (Customer) | View customer-owned policies. |
+| POST | /customers/raiseclaim | Protected (Customer) | Raise a new claim. |
+| GET | /customers/myclaims | Protected (Customer) | View customer claims. |
+| POST | /customers/cancelpolicy | Protected (Customer) | Request policy cancellation. |
+| GET | /customers/policy/:id | Protected (Customer) | Get policy details by id. |
+| GET | /customers/claim/:id | Protected (Customer) | Get claim details by id. |
 
 ## Deployment (Vercel)
 
