@@ -1,213 +1,364 @@
-# Insurance-Application
+# Insurance Application
 
-Full-stack insurance application with:
-- Angular frontend in `frontend/`
-- Express + MongoDB backend in `backend/`
+A full-stack role-based insurance management system built with Angular, Express, and MongoDB.
+
+This project supports three business roles with separate workflows:
+
+- Customer: browse/purchase policies, make payments, raise claims, and track status.
+- Agent: review assigned policy requests and claims, then approve or reject them.
+- Admin: manage policy catalog, agents, assignments, approvals, audits, and dashboards.
 
 The backend API base path is `/api/v1`.
 
-## Quick Start (Local)
+## Table of Contents
 
-1. Open two terminals.
-2. Start backend from `backend/`.
-3. Start frontend from `frontend/`.
-4. Open `http://localhost:4200`.
+1. [Application Overview](#application-overview)
+2. [Core Features](#core-features)
+3. [Architecture](#architecture)
+4. [Tech Stack](#tech-stack)
+5. [Project Structure](#project-structure)
+6. [Environment Variables](#environment-variables)
+7. [Local Setup (Step-by-Step)](#local-setup-step-by-step)
+8. [Run with Docker Compose](#run-with-docker-compose)
+9. [API Overview](#api-overview)
+10. [Deployment (Vercel)](#deployment-vercel)
+11. [Verification Checklist](#verification-checklist)
+12. [Troubleshooting](#troubleshooting)
+13. [Security Notes](#security-notes)
 
-Detailed steps are below.
+## Application Overview
 
-## Prerequisites
+The Insurance Application is designed to digitalize policy lifecycle operations:
 
-1. Node.js 22 or later.
-2. npm (comes with Node.js).
-3. MongoDB running locally, or a MongoDB Atlas connection string.
+- Product and policy definition by admins.
+- Policy onboarding and approval flow through agents/admins.
+- Payment collection and tracking.
+- Claim creation, review, and resolution.
 
-## Step-by-Step Local Run
+The frontend is a single-page Angular application. It communicates with an Express API that persists data in MongoDB via Mongoose models.
 
-### 1) Backend setup
+## Core Features
 
-1. Go to backend folder:
+### User and Access Management
 
-```powershell
-cd backend
+- User registration and login.
+- Role-aware route handling and authorization.
+- JWT-based authentication in API flows.
+
+### Customer Features
+
+- View available policy products.
+- Purchase policy.
+- Make premium payments.
+- View payment history and owned policies.
+- Raise and track claims.
+- Cancel policy requests.
+
+### Agent Features
+
+- Login as agent.
+- View assigned policy products and customer mappings.
+- Approve/reject policy requests.
+- View assigned claims and process claim decisions.
+- Track assigned payment-related data and dashboard metrics.
+
+### Admin Features
+
+- Create/update/delete policy products.
+- Create/update/delete agent accounts.
+- Assign/unassign policy products to agents.
+- Approve/reject policy and claim workflows.
+- View customers, claims, payments, and audit logs.
+- Access summary KPI and DB status endpoints.
+
+## Architecture
+
+Request flow:
+
+1. Angular frontend sends HTTP requests to backend API.
+2. Express routes apply auth middleware (role based) where required.
+3. Controllers implement business logic.
+4. Mongoose models persist and query data in MongoDB.
+5. Response is returned as JSON to the frontend.
+
+Backend CORS allows:
+
+- Explicit frontend origins from environment variables.
+- Localhost/127.0.0.1 origins for local development.
+- Vercel preview/production style origins.
+
+## Tech Stack
+
+- Frontend: Angular 20, RxJS, Tailwind CSS, Font Awesome.
+- Backend: Node.js, Express 5, Mongoose, Joi, JWT, bcryptjs.
+- Database: MongoDB (local or Atlas).
+- Deployment: Vercel (separate frontend/backend projects).
+- Containers: Docker + Docker Compose.
+
+## Project Structure
+
+```text
+Insurance-Application/
+	backend/
+		api/index.js                # Vercel serverless entry
+		src/
+			app.js                    # Express app + CORS + route mount
+			index.js                  # Local server bootstrap
+			config/db.js              # MongoDB connection
+			controllers/              # Business logic
+			middleware/               # Auth/role middleware
+			models/                   # Mongoose schemas
+			routes/                   # API route modules
+	frontend/
+		src/
+			app/components/           # Role-specific UI screens
+			app/services/             # API service wrappers
+			app/guards/               # Route guards
+			environments/             # API environment targets
+	docker-compose.yml
 ```
 
-2. Install dependencies:
+## Environment Variables
+
+Create `backend/.env` from `backend/.env.example`.
+
+Required for backend runtime:
+
+```dotenv
+PORT=8000
+MONGODB_URL=<your_mongodb_connection_string>
+JWT_SECRET=<your_jwt_secret_key>
+FRONTEND_URL=<frontend_origin>
+FRONTEND_PREVIEW_URL=<optional_preview_origin>
+```
+
+Notes:
+
+- `MONGODB_URL` is mandatory. App startup fails if missing.
+- `FRONTEND_URL` should be an origin only, for example `http://localhost:4200`.
+- Do not commit real secrets. `.env` is gitignored.
+
+## Local Setup (Step-by-Step)
+
+### Prerequisites
+
+1. Node.js 22+.
+2. npm.
+3. MongoDB running locally or a MongoDB Atlas connection string.
+4. Git.
+
+### 1) Clone and install backend
 
 ```powershell
+git clone <your-repo-url>
+cd Insurance-Application/backend
 npm install
 ```
 
-3. Create `.env` from template:
+### 2) Configure backend environment
 
 ```powershell
 copy .env.example .env
 ```
 
-4. Edit `backend/.env` and set values:
+Edit `backend/.env` and provide real values.
+
+Examples:
+
+- Local MongoDB:
 
 ```dotenv
-PORT=8000
-MONGODB_URL=<your_mongodb_connection_string>
-FRONTEND_URL=http://localhost:4200 (optional for local, required in production)
-FRONTEND_PREVIEW_URL=
+MONGODB_URL=mongodb://127.0.0.1:27017/insurance_application
 ```
 
-Notes:
-- For MongoDB Atlas, replace `MONGODB_URL` with your Atlas URI.
-- Keep `FRONTEND_URL` as an origin only (no path).
+- MongoDB Atlas:
 
-5. Run backend:
+```dotenv
+MONGODB_URL=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>
+```
+
+### 3) Start backend
 
 ```powershell
 npm run dev
 ```
 
-6. Verify backend health:
+Expected log:
 
-Open `http://localhost:8000/api/v1/health` and confirm you get:
+- `Connected to MongoDB`
+- `Server is ready at http://localhost:8000/api/v1`
+
+Health check:
+
+```powershell
+curl http://localhost:8000/api/v1/health
+```
+
+Expected response:
 
 ```json
 {"ok":true}
 ```
 
-### 2) Frontend setup
+### 4) Install and start frontend
 
-1. Open a new terminal and go to frontend folder:
-
-```powershell
-cd frontend
-```
-
-2. Install dependencies:
+Open a second terminal:
 
 ```powershell
+cd ../frontend
 npm install
+npm start
 ```
 
-3. Confirm local API URL in `frontend/src/environments/environment.ts` is:
+Frontend default local URL:
+
+- `http://localhost:4200`
+
+### 5) Verify frontend API target
+
+For local dev, confirm:
+
+- `frontend/src/environments/environment.ts`
+- `frontend/src/environments/environment.development.ts`
+
+Both should point to:
 
 ```ts
 apiUrl: 'http://localhost:8000/api/v1'
 ```
 
-4. Run frontend:
+## Run with Docker Compose
 
-```powershell
-npm start
-```
-
-5. Open:
-
-`http://localhost:4200`
-
-### 3) Local verification checklist
-
-1. Home page loads.
-2. Signup/login works.
-3. Browser network calls go to `http://localhost:8000/api/v1/...`.
-4. No CORS errors in browser console.
-
-## Step-by-Step Vercel Deployment
-
-Deploy backend and frontend as two separate Vercel projects from the same repository.
-
-### 1) Deploy backend project
-
-1. In Vercel, click Add New Project.
-2. Import this repository.
-3. Set Root Directory: `backend`
-4. Framework Preset: `Other`
-5. Install Command: `npm ci`
-6. Build Command: leave empty
-7. Output Directory: leave empty
-8. Deploy.
-
-Then set backend environment variables in Vercel Project Settings:
-- `MONGODB_URL`
-- `JWT_SECRET`
-- `FRONTEND_URL`
-- `FRONTEND_PREVIEW_URL` (optional)
-
-Recommended values for your current deployment:
-- `FRONTEND_URL=https://insurance-frontend-vert.vercel.app`
-- `FRONTEND_PREVIEW_URL=` (or your preview URL)
-
-Redeploy backend after adding env vars.
-
-Verify backend:
-- `https://insurance-backend-chi.vercel.app/api/v1/health`
-
-### 2) Deploy frontend project
-
-1. In Vercel, click Add New Project again.
-2. Import the same repository.
-3. Set Root Directory: `frontend`
-4. Framework Preset: `Angular`
-5. Install Command: `npm ci`
-6. Build Command: `npm run build`
-7. Output Directory: `dist/frontend/browser`
-8. Deploy.
-
-`frontend/vercel.json` already handles SPA rewrites.
-
-### 3) Confirm production API URL
-
-In `frontend/src/environments/environment.prod.ts`, the API URL is:
-
-```ts
-apiUrl: 'https://insurance-backend-chi.vercel.app/api/v1'
-```
-
-If you change this value, commit and push, then redeploy frontend.
-
-### 4) Production verification checklist
-
-1. Open frontend: `https://insurance-frontend-vert.vercel.app/home`
-2. Test login.
-3. In DevTools Network tab, confirm requests go to:
-	`https://insurance-backend-chi.vercel.app/api/v1/...`
-4. Confirm no CORS errors.
-
-## CI/CD
-
-GitHub Actions workflow:
-- `.github/workflows/ci.yml`
-
-It runs on push and pull request to `main`:
-1. Backend install + syntax checks.
-2. Frontend install + production build.
-
-Vercel handles deployment from connected Git branches.
-
-## Optional: Run with Docker Compose
-
-From project root:
+From repository root:
 
 ```powershell
 docker-compose up --build
 ```
 
 Services:
+
 - MongoDB: `localhost:27017`
 - Backend: `localhost:8000`
 - Frontend (nginx): `localhost:8080`
 
+Important:
+
+- `docker-compose.yml` passes `MONGODB_URL` and `JWT_SECRET` from host environment.
+- Define those in your shell or an `.env` file in the project root before running compose.
+
+## API Overview
+
+Base URL (local):
+
+- `http://localhost:8000/api/v1`
+
+Health endpoint:
+
+- `GET /health`
+
+Primary route groups:
+
+- User auth and role updates: `/users/*`
+- Admin operations: `/admin/*`
+- Agent operations: `/agents/*`
+- Customer operations: `/customers/*`
+
+Representative endpoints:
+
+- User: `POST /users/register`, `POST /users/login`, `PATCH /users/update-role`
+- Admin: `POST /admin/addpolicies`, `GET /admin/getpolicies`, `GET /admin/summary`
+- Agent: `POST /agents/login`, `GET /agents/assignedpolicies`, `GET /agents/dashboard`
+- Customer: `GET /customers/policies`, `POST /customers/purchase`, `POST /customers/raiseclaim`
+
+## Deployment (Vercel)
+
+Deploy backend and frontend as separate Vercel projects from the same repository.
+
+### Backend deployment (`backend/`)
+
+1. Create a new Vercel project.
+2. Set Root Directory to `backend`.
+3. Framework Preset: `Other`.
+4. Deploy.
+
+Backend uses `backend/vercel.json` with `api/index.js` as entry.
+
+Set backend environment variables in Vercel:
+
+- `MONGODB_URL`
+- `JWT_SECRET`
+- `FRONTEND_URL`
+- `FRONTEND_PREVIEW_URL` (optional)
+
+Verify backend after deploy:
+
+- `https://<your-backend-domain>/api/v1/health`
+
+### Frontend deployment (`frontend/`)
+
+1. Create another Vercel project.
+2. Set Root Directory to `frontend`.
+3. Framework Preset: `Angular`.
+4. Build command: `npm run build`.
+5. Output directory: `dist/frontend/browser`.
+
+Frontend uses `frontend/vercel.json` for SPA rewrites.
+
+### Production API URL
+
+Update `frontend/src/environments/environment.prod.ts` to your deployed backend URL, for example:
+
+```ts
+apiUrl: 'https://insurance-backend-chi.vercel.app/api/v1'
+```
+
+Redeploy frontend after changing this value.
+
+## Verification Checklist
+
+Local:
+
+1. Backend responds at `/api/v1/health`.
+2. Frontend loads at `http://localhost:4200`.
+3. Signup/login works.
+4. Browser network calls target backend API URL.
+5. No CORS errors in browser console.
+
+Production:
+
+1. Frontend opens without blank routes (SPA rewrite works).
+2. API calls resolve to production backend URL.
+3. Auth-protected flows work for customer/agent/admin.
+4. No backend CORS rejections for your frontend origin.
+
 ## Troubleshooting
 
-### Error: frontend calling `http://localhost:8000` in production
+### `MONGODB_URL is required`
 
-1. Redeploy frontend from Vercel after latest commit.
-2. Confirm production build uses `environment.prod.ts`.
-3. Confirm network requests point to `https://insurance-backend-chi.vercel.app/api/v1`.
+- Cause: missing `MONGODB_URL` in `backend/.env`.
+- Fix: create or update `backend/.env` from `backend/.env.example`.
 
-### Error: CORS blocked
+### Frontend cannot connect to backend
 
-1. Set backend `FRONTEND_URL` to your frontend origin.
-2. Redeploy backend.
-3. Retry login after hard refresh (`Ctrl+F5`).
+- Confirm backend is running on port `8000`.
+- Confirm frontend environment `apiUrl` is correct.
+- Check browser DevTools Network tab for failing URL.
+
+### CORS blocked in browser
+
+- Set `FRONTEND_URL` in backend environment to exact frontend origin.
+- Optionally set `FRONTEND_PREVIEW_URL` for preview deployments.
+- Restart or redeploy backend after env updates.
+
+### Port conflict on `4200` or `8000`
+
+- Stop existing process using that port, or run frontend on a different port.
+- If backend port changes, also update frontend `apiUrl`.
 
 ## Security Notes
 
-1. Never commit real secrets.
-2. Keep `.env` files local only.
-3. Use strong, unique `JWT_SECRET` in production.
+1. Never commit `.env` files or real credentials.
+2. Use strong JWT secrets, especially in production.
+3. Use different secrets across local/staging/production.
+4. Restrict MongoDB network access when using Atlas.
+5. Rotate production secrets on a regular schedule.
